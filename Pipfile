@@ -5,11 +5,18 @@ verify_ssl = true
 
 
 [packages]
-
 django = "*"
 gunicorn = "*"
 django-heroku = "*"
-
+dash = "*"
+dash-renderer = "*"
+dash-html-components = "*"
+dash-core-components = "*"
+plotly = "*"
+matplotlib = "*"
+seaborn = "*"
+scipy = "*"
+numpy = "*"
 
 [requires]
 
