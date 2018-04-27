@@ -375,19 +375,21 @@ def init_model(run_iter = 'abf', param_iter = 'aag'):
 
   global nn_params
   global nn2_params
-  nn_params = pickle.load(open('%s_%s_nn.pkl' % (run_iter, 
-                                              param_iter,
-                                              )))
-  nn2_params = pickle.load(open('%s_%s_nn2.pkl' % (run_iter, 
-                                              param_iter,
-                                              )))
+  with open('%s_%s_nn.pkl' % (run_iter, param_iter), 'rb') as f:
+    # load in python3.6 a pickle that was dumped from python2.7
+    nn_params = pickle.load(f, encoding = 'latin1')
+  with open('%s_%s_nn2.pkl' % (run_iter, param_iter), 'rb') as f:
+    nn2_params = pickle.load(f, encoding = 'latin1')
 
   global normalizer
   global rate_model
   global bp_model
-  bp_model = pickle.load(open('bp_model_%s.pkl' % ('v3')))
-  rate_model = pickle.load(open('rate_model_%s.pkl' % ('v3')))
-  normalizer = pickle.load(open('normalizer_%s.pkl' % ('v3')))
+  with open('bp_model_%s.pkl' % ('v3'), 'rb') as f:
+    bp_model = pickle.load(f, encoding = 'latin1')
+  with open('rate_model_%s.pkl' % ('v3'), 'rb') as f:
+    rate_model = pickle.load(f, encoding = 'latin1')
+  with open('normalizer_%s.pkl' % ('v3'), 'rb') as f:
+    normalizer = pickle.load(f, encoding = 'latin1')
 
   init_flag = True
 

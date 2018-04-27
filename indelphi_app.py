@@ -1,10 +1,14 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import inDelphi
 
 # Dash server setup
 app = dash.Dash('')
 server = app.server
+
+# Model init
+inDelphi.init_model()
 
 ##
 # App layout
@@ -20,6 +24,8 @@ app.layout = html.Div([
   # Input text box 2
   html.Label('DNA sequence 2'),
   dcc.Input(id = 'textbox2', value = 'ACGT', type = 'text'),
+
+  html.Div(id = 'seq_display'),
 
   # remainder
   dcc.RadioItems(
@@ -54,6 +60,14 @@ def callback_a(dropdown_value):
 def callback_b(dropdown_value):
   return 'You\'ve selected "{}"'.format(dropdown_value)
 
+@app.callback(
+  dash.dependencies.Output('seq_display', 'children'),
+  [dash.dependencies.Input('textbox1', 'value'),
+   dash.dependencies.Input('textbox2', 'value'),
+  ])
+def cb_displayseq(text1, text2):
+  seq = text1 + text2
+  return seq
 
 # CSS
 app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
