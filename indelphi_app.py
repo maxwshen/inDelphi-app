@@ -1,7 +1,10 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import plotly.graph_objs as go
+
 import inDelphi
+
 
 # Dash server setup
 app = dash.Dash('')
@@ -35,22 +38,12 @@ app.layout = html.Div([
 
   html.Table(id = 'fs_table'),
 
+  dcc.Graph(
+    style = {'height': 300},
+    id = 'plot-fs'
+  ),
+
   html.Div('-----' * 5),
-
-  # remainder
-  dcc.RadioItems(
-    id='dropdown-a',
-    options=[{'label': i, 'value': i} for i in ['Canada', 'USA', 'Mexico']],
-    value='Canada'
-  ),
-  html.Div(id='output-a'),
-
-  dcc.RadioItems(
-    id='dropdown-b',
-    options=[{'label': i, 'value': i} for i in ['MTL', 'NYC', 'SF']],
-    value='MTL'
-  ),
-  html.Div(id='output-b')
 
 ])
 
@@ -59,19 +52,6 @@ app.layout = html.Div([
 ##
 # Callbacks
 ##
-@app.callback(
-  dash.dependencies.Output('output-a', 'children'),
-  [dash.dependencies.Input('dropdown-a', 'value')])
-def callback_a(dropdown_value):
-  return 'You\'ve selected "{}"'.format(dropdown_value)
-
-
-@app.callback(
-  dash.dependencies.Output('output-b', 'children'),
-  [dash.dependencies.Input('dropdown-a', 'value')])
-def callback_b(dropdown_value):
-  return 'You\'ve selected "{}"'.format(dropdown_value)
-
 @app.callback(
   dash.dependencies.Output('seq_display', 'children'),
   [dash.dependencies.Input('textbox1', 'value'),
@@ -94,15 +74,41 @@ def cb_display_fstable(text1, text2):
   fs_df = inDelphi.get_frameshift_fqs(pred_df)
   max_rows = 10
   return html.Table(
-        # Header
-        [html.Tr([html.Th(col) for col in fs_df.columns])] +
+    # Header
+    [html.Tr([html.Th(col) for col in fs_df.columns])] +
 
-        # Body
-        [html.Tr([
-            html.Td(fs_df.iloc[i][col]) for col in fs_df.columns
-        ]) for i in range(min(len(fs_df), max_rows))]
-    )
+    # Body
+    [html.Tr([
+        html.Td(fs_df.iloc[i][col]) for col in fs_df.columns
+    ]) for i in range(min(len(fs_df), max_rows))]
+  )
 
+@app.callback(
+  dash.dependencies.Output('plot-fs', 'figure'),
+  [dash.dependencies.Input('textbox1', 'value'),
+   dash.dependencies.Input('textbox2', 'value'),
+  ])
+def cb_display_plot_fs(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  ans = inDelphi.predict(seq, cutsite)
+  pred_df, stats = ans
+  fs_df = inDelphi.get_frameshift_fqs(pred_df)
+  X = ['+0', '+1', '+2']
+  Y = [float(fs_df[fs_df['Frame'] == s]['Predicted frequency']) for s in X]
+  return {
+    'data': [
+      go.Bar(
+        x = X,
+        y = Y,
+        marker = go.Marker(color = 'rgb(55, 83, 109)'),
+      ),
+    ],
+    'layout': go.Layout(
+      title = 'Frameshift frequency',
+      margin = go.Margin(l = 40, r = 0, t = 40, b = 30)
+    ),
+  }
 
 ###################################################################
 ###################################################################
