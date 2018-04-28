@@ -300,11 +300,11 @@ def get_frameshift_fqs(pred_df):
     fsd['+%s' % (fs)] += fq
 
   d = defaultdict(list)
-  d['Frame'] = fsd.keys()
-  d['Predicted frequency'] = fsd.values()
+  d['Frame'] = list(fsd.keys())
+  d['Predicted frequency'] = list(fsd.values())
   df = pd.DataFrame(d)
   df = df.sort_values(by = 'Frame')
-  df.reset_index(drop = True)
+  df = df.reset_index(drop = True)
   return df
 
 def get_indel_length_fqs(pred_df):
