@@ -17,6 +17,7 @@ matplotlib = "*"
 seaborn = "*"
 scipy = "*"
 numpy = "*"
+sklearn = "*"
 
 [requires]
 
