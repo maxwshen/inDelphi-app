@@ -273,6 +273,7 @@ def predict(seq, cutsite):
   pred_del_df, total_phi_score = __predict_dels(seq, cutsite)
   pred_df = __predict_ins(seq, cutsite, 
                               pred_del_df, total_phi_score)
+  pred_df['Predicted frequency'] *= 100
 
   # Build stats
   stats = __build_stats(seq, cutsite, pred_df, total_phi_score)

@@ -13,6 +13,9 @@ server = app.server
 # Model init
 inDelphi.init_model()
 
+# Remove these plotly modebar buttons to limit interactivity
+modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
+
 ###################################################################
 ###################################################################
 ##
@@ -39,8 +42,15 @@ app.layout = html.Div([
   html.Table(id = 'fs_table'),
 
   dcc.Graph(
-    style = {'height': 300},
-    id = 'plot-fs'
+    id = 'plot-fs',
+    style = dict(
+      height = 400, 
+      width = 350,
+    ),
+    config = dict(
+      modeBarButtonsToRemove = modebarbuttons_2d,
+      displaylogo = False,
+    ),
   ),
 
   html.Div('-----' * 5),
@@ -57,7 +67,7 @@ app.layout = html.Div([
   [dash.dependencies.Input('textbox1', 'value'),
    dash.dependencies.Input('textbox2', 'value'),
   ])
-def cb_displayseq(text1, text2):
+def cb_displaytext_seq(text1, text2):
   seq = text1 + text2
   return seq
 
@@ -66,7 +76,7 @@ def cb_displayseq(text1, text2):
   [dash.dependencies.Input('textbox1', 'value'),
    dash.dependencies.Input('textbox2', 'value'),
   ])
-def cb_display_fstable(text1, text2):
+def cb_table_fs(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
   ans = inDelphi.predict(seq, cutsite)
@@ -88,27 +98,57 @@ def cb_display_fstable(text1, text2):
   [dash.dependencies.Input('textbox1', 'value'),
    dash.dependencies.Input('textbox2', 'value'),
   ])
-def cb_display_plot_fs(text1, text2):
+def cb_plot_fs(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
-  ans = inDelphi.predict(seq, cutsite)
-  pred_df, stats = ans
+  pred_df, stats = inDelphi.predict(seq, cutsite)
   fs_df = inDelphi.get_frameshift_fqs(pred_df)
   X = ['+0', '+1', '+2']
   Y = [float(fs_df[fs_df['Frame'] == s]['Predicted frequency']) for s in X]
-  return {
-    'data': [
+  return dict(
+    data = [
       go.Bar(
         x = X,
         y = Y,
-        marker = go.Marker(color = 'rgb(55, 83, 109)'),
+        text = ['%.0f%%' % (s) for s in Y],
+        textposition = 'auto',
+        opacity = 0.6,
+        marker = dict(
+          color = 'rgb(158, 202, 225)',
+          line = dict(
+            color = 'rgb(8, 48, 107)',
+            width = 1.5,
+          ),
+        ),
       ),
     ],
-    'layout': go.Layout(
-      title = 'Frameshift frequency',
-      margin = go.Margin(l = 40, r = 0, t = 40, b = 30)
+    layout = go.Layout(
+      # title = 'Frameshift frequency (%)',
+      # margin = go.Margin(l = 40, r = 0, t = 40, b = 30),
+      xaxis = dict(
+        title = 'Frame',
+        showline = False,
+        tickvals = list(range(3)),
+        ticktext = ['+0', '+1', '+2'],
+      ),
+      yaxis = dict(
+        title = 'Frameshift frequency (%)',
+        titlefont = dict(
+          family = 'Arial',
+        ),
+        showgrid = False,
+        zeroline = False,
+        showline = True,
+        ticks = 'outside',
+        tick0 = 0,
+        ticklen = 3,
+        tickwidth = 0.5,
+      ),
+      font = dict(
+        family = 'Arial',
+      ),
     ),
-  }
+  )
 
 ###################################################################
 ###################################################################
