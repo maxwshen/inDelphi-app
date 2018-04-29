@@ -258,6 +258,12 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score):
 ##
 def predict(seq, cutsite):
   # Predict 1 bp insertions and all deletions (MH and MH-less)
+  #
+  # If no errors, returns a tuple (pred_df, stats)
+  # where pred_df is a dataframe and stats is a dict
+  #  
+  # If errors, returns a string
+  #
   if init_flag == False:
     init_model()
 

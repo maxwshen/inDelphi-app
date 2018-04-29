@@ -20,6 +20,7 @@ def trace_template(stats, color):
   return go.Bar(
     x = X,
     y = Y,
+    text = ['Cumulative: %.2f%%' % (100*sum(Y[:idx])) for idx in range(len(Y))],
     opacity = 0.6,
     width = 0.01, # touching
     marker = dict(

@@ -76,8 +76,6 @@ app.layout = html.Div([
     ),
   ),
 
-  html.Table(id = 'fs_table'),
-
   dcc.Graph(
     id = 'plot-fs',
     style = dict(
@@ -116,6 +114,16 @@ app.layout = html.Div([
 
   html.Div('-----' * 5),
 
+  dcc.Graph(
+    id = 'plot-table-genotypes',
+    style = dict(
+    ),
+    config = dict(
+      modeBarButtonsToRemove = modebarbuttons_2d,
+      displaylogo = False,
+    ),
+  ),
+
   dt.DataTable(
     id = 'table-genotypes',
     rows = [{}], # init rows
@@ -137,10 +145,11 @@ app.layout = html.Div([
   )
 )
 
-###################################################################
-###################################################################
+#######################################################################
+#########################      CALLBACKS      #########################
+#######################################################################
 ##
-# Callbacks
+# Header Callbacks
 ##
 @app.callback(
   Output('seq_display', 'children'),
@@ -148,29 +157,80 @@ app.layout = html.Div([
    Input('textbox2', 'value'),
   ])
 def cb_displaytext_seq(text1, text2):
-  seq = text1 + text2
+  seq = text1 + ' | ' + text2
   return seq
 
+##
+# General stats callbacks
+##
 @app.callback(
-  Output('fs_table', 'children'),
+  Output('plot-genstats-precision', 'figure'),
   [Input('textbox1', 'value'),
    Input('textbox2', 'value'),
   ])
-def cb_table_fs(text1, text2):
+def cb_plot_genstats_precision(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
-  ans = inDelphi.predict(seq, cutsite)
-  pred_df, stats = ans
-  fs_df = inDelphi.get_frameshift_fqs(pred_df)
-  max_rows = 10
-  return html.Table(
-    # Header
-    [html.Tr([html.Th(col) for col in fs_df.columns])] +
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  xval = inDelphi.get_precision(pred_df)
+  return dict(
+    data = [
+      generalStats.trace_precision,
+    ],
+    layout = generalStats.layout('Precision score', xval),
+  )
 
-    # Body
-    [html.Tr([
-        html.Td(fs_df.iloc[i][col]) for col in fs_df.columns
-    ]) for i in range(min(len(fs_df), max_rows))]
+##
+# Indel length and frameshift callbacks
+@app.callback(
+  Output('plot-indel-len', 'figure'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
+  ])
+def cb_plot_indel_len(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  lendf = inDelphi.get_indel_length_fqs(pred_df)
+
+  X = [int(s) for s in lendf['Indel length']]
+  Y = [s for s in lendf['Predicted frequency']]
+  return dict(
+    data = [
+      go.Bar(
+        x = X,
+        y = Y,
+        opacity = 0.6,
+        width = 0.9, 
+        hoverinfo = 'y',
+        marker = dict(
+          color = 'rgb(200, 20, 20)',
+          line = dict(
+            width = 0,
+          ),
+        ),
+      )
+    ],
+    layout = go.Layout(
+      xaxis = dict(
+        autorange = 'reversed',
+        title = 'Indel length',
+        ticks = 'outside',
+        ticklen = 3,
+        tickwidth = 0.5,
+        tick0 = 0,
+        dtick = 5,
+        zeroline = False,
+      ),
+      yaxis = dict(
+        title = 'Frequency (%)',
+        hoverformat = '.2f%%',
+        zeroline = False,
+      ),
+      font = dict(
+        family = 'Arial',
+      ),
+    ),
   )
 
 @app.callback(
@@ -190,7 +250,6 @@ def cb_plot_fs(text1, text2):
       go.Bar(
         x = X,
         y = Y,
-        text = ['%.0f%%' % (s) for s in Y],
         textfont = dict(
           family = 'Arial',
         ),
@@ -227,6 +286,7 @@ def cb_plot_fs(text1, text2):
         tick0 = 0,
         ticklen = 3,
         tickwidth = 0.5,
+        hoverformat = '.2f%%',
       ),
       font = dict(
         family = 'Arial',
@@ -235,65 +295,66 @@ def cb_plot_fs(text1, text2):
   )
 
 
-@app.callback(
-  Output('plot-genstats-precision', 'figure'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
-  ])
-def cb_plot_genstats_precision(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
-  xval = inDelphi.get_precision(pred_df)
-  return dict(
-    data = [
-      generalStats.trace_precision,
-    ],
-    layout = generalStats.layout('Precision score', xval),
-  )
 
-@app.callback(
-  Output('plot-indel-len', 'figure'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
-  ])
-def cb_plot_indel_len(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
-  lendf = inDelphi.get_indel_length_fqs(pred_df)
-
-  X = [-1*int(s) for s in lendf['Indel length']]
-  Y = [s for s in lendf['Predicted frequency']]
-  return dict(
-    data = [
-      go.Bar(
-        x = X,
-        y = Y,
-        opacity = 0.6,
-        width = 0.9, 
-        marker = dict(
-          color = 'rgb(200, 20, 20)',
-          line = dict(
-            width = 0,
-          ),
-        ),
-      )
-    ],
-    # layout = 
-  )
-
+##
+# Genotype table callbacks
+## 
 @app.callback(
   Output('table-genotypes', 'rows'), 
   [Input('textbox1', 'value'),
    Input('textbox2', 'value'),
   ])
-def update_datatable(text1, text2):
+def cb_update_genotype_table(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
+  inDelphi.add_genotype_column(pred_df, stats)
   return pred_df.to_dict('records')
 
+@app.callback(
+  Output('plot-table-genotypes', 'figure'),
+  [Input('table-genotypes', 'rows'),
+   Input('table-genotypes', 'selected_row_indices')
+  ])
+def cb_update_genotype_plot(rows, selected_row_indices):
+  df = pd.DataFrame(rows)
+  colors =  ['#0074D9'] * len(df)
+  for idx in (selected_row_indices or []):
+    colors[idx] = '#FF851B'
+  return dict(
+    data = [
+      go.Bar(
+        x = df['Genotype'],
+        y = df['Predicted frequency'],
+        marker = dict(
+          color = colors,
+          line = dict(
+            width = 0,
+          ),
+        ),
+      ), 
+    ],
+  )
+
+@app.callback(
+  Output('table-genotypes', 'selected_row_indices'),
+  [Input('plot-table-genotypes', 'clickData')],
+  [State('table-genotypes', 'selected_row_indices')]
+  )
+def cb_update_datatable_selected(clickData, selected_row_indices):
+  # Update selections in table based on clicking plot
+  if clickData:
+    for point in clickData['points']:
+      if point['pointNumber'] in selected_row_indices:
+        selected_row_indices.remove(point['pointNumber'])
+      else:
+        selected_row_indices.append(point['pointNumber'])
+  return selected_row_indices
+
+
+##
+# Download callbacks
+##
 @app.callback(
   Output('csv-download-link', 'href'), 
   [Input('textbox1', 'value'),
@@ -302,11 +363,14 @@ def update_datatable(text1, text2):
 def update_link(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
+
   pred_df, stats = inDelphi.predict(seq, cutsite)
-  
+  inDelphi.add_genotype_column(pred_df, stats)
+
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownload?value={}'.format(time)
   pred_df.to_csv('user-csvs/%s.csv' % (time))
+
   return link_fn
 
 @app.server.route('/dash/urlToDownload') 
