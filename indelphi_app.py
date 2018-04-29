@@ -8,6 +8,7 @@ import dash_html_components as html
 import dash_table_experiments as dt
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
+import flask
 
 import inDelphi
 import generalStats
@@ -116,6 +117,11 @@ app.layout = html.Div([
     sortable = True,
     selected_row_indices = [],
   )
+
+  html.A(
+    'Download CSV', 
+    id = 'csv-download-link'
+  ),
 
 ], 
   style = dict(
@@ -280,6 +286,25 @@ def update_datatable(text1, text2):
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
   return pred_df.to_dict('records')
+
+@app.callback(
+  Output('csv-download-link', 'href'), 
+  [Input('my-dropdown', 'value')])
+def update_link(value):
+    return '/dash/urlToDownload?value={}'.format(value)
+
+@app.server.route('/dash/urlToDownload') 
+def download_csv():
+    value = flask.request.args.get('value')
+    # create a dynamic csv or file here using `StringIO` 
+    # (instead of writing to the file system)
+    strIO = StringIO.StringIO()
+    strIO.write('You have selected {}'.format(value)) 
+    strIO.seek(0)    
+    return send_file(strIO,
+                     mimetype='text/csv',
+                     attachment_filename='downloadFile.csv',
+                     as_attachment=True)
 
 ###################################################################
 ###################################################################
