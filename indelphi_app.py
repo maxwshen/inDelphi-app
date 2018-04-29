@@ -1,20 +1,29 @@
+import numpy as np
+import pandas as pd
+from scipy.stats import entropy
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dt
 import plotly.graph_objs as go
 
 import inDelphi
+import generalStats
 
 
 # Dash server setup
 app = dash.Dash('')
 server = app.server
 
-# Model init
+# init
 inDelphi.init_model()
+generalStats.init_all_traces()
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
+
+
 
 ###################################################################
 ###################################################################
@@ -22,22 +31,41 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 # App layout
 ##
 app.layout = html.Div([
-  html.H1('inDelphi'),
-  html.Div('Description'),
 
-  # Input text box 1
-  html.Label('DNA sequence 1'),
-  dcc.Input(id = 'textbox1', 
-            value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
-            type = 'text'),
+  # Non-scrolling header
+  html.Div(
+    [
+      html.H1('inDelphi'),
+      html.Div('Description',
+        style = dict(
+          textAlign = 'center',
+        )
+      ),
 
-  # Input text box 2
-  html.Label('DNA sequence 2'),
-  dcc.Input(id = 'textbox2', 
-            value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
-            type = 'text'),
+      # Input text box 1
+      html.Div([
+        html.Label('DNA sequence 1'),
+        dcc.Input(id = 'textbox1', 
+                  value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
+                  type = 'text'),
+        ], 
+        style = dict(
+          textAlign = 'center',
+        )
+      ),
 
-  html.Div(id = 'seq_display'),
+      # Input text box 2
+      html.Label('DNA sequence 2'),
+      dcc.Input(id = 'textbox2', 
+                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
+                type = 'text'),
+
+      html.Div(id = 'seq_display'),
+    ],
+    style = dict(
+      # position = 'fixed',
+    ),
+  ),
 
   html.Table(id = 'fs_table'),
 
@@ -53,9 +81,38 @@ app.layout = html.Div([
     ),
   ),
 
+  dcc.Graph(
+    id = 'plot-genstats-precision',
+    style = dict(
+      height = 400, 
+      width = 500,
+    ),
+    config = dict(
+      modeBarButtonsToRemove = modebarbuttons_2d,
+      displaylogo = False,
+    ),
+  ),
+
+  dcc.Graph(
+    id = 'plot-indel-len',
+    style = dict(
+      height = 400, 
+      width = 600,
+    ),
+    config = dict(
+      modeBarButtonsToRemove = modebarbuttons_2d,
+      displaylogo = False,
+    ),
+  ),
+
   html.Div('-----' * 5),
 
-])
+], 
+  style = dict(
+    width = '800px',
+    margin = '0 auto',
+  )
+)
 
 ###################################################################
 ###################################################################
@@ -111,8 +168,12 @@ def cb_plot_fs(text1, text2):
         x = X,
         y = Y,
         text = ['%.0f%%' % (s) for s in Y],
+        textfont = dict(
+          family = 'Arial',
+        ),
         textposition = 'auto',
         opacity = 0.6,
+        # width = 1,  # touching
         marker = dict(
           color = 'rgb(158, 202, 225)',
           line = dict(
@@ -148,6 +209,55 @@ def cb_plot_fs(text1, text2):
         family = 'Arial',
       ),
     ),
+  )
+
+
+@app.callback(
+  dash.dependencies.Output('plot-genstats-precision', 'figure'),
+  [dash.dependencies.Input('textbox1', 'value'),
+   dash.dependencies.Input('textbox2', 'value'),
+  ])
+def cb_plot_genstats_precision(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  xval = inDelphi.get_precision(pred_df)
+  return dict(
+    data = [
+      generalStats.trace_precision,
+    ],
+    layout = generalStats.layout('Precision score', xval),
+  )
+
+@app.callback(
+  dash.dependencies.Output('plot-indel-len', 'figure'),
+  [dash.dependencies.Input('textbox1', 'value'),
+   dash.dependencies.Input('textbox2', 'value'),
+  ])
+def cb_plot_indel_len(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  lendf = inDelphi.get_indel_length_fqs(pred_df)
+
+  X = [-1*int(s) for s in lendf['Indel length']]
+  Y = [s for s in lendf['Predicted frequency']]
+  return dict(
+    data = [
+      go.Bar(
+        x = X,
+        y = Y,
+        opacity = 0.6,
+        width = 0.9, 
+        marker = dict(
+          color = 'rgb(200, 20, 20)',
+          line = dict(
+            width = 0,
+          ),
+        ),
+      )
+    ],
+    # layout = 
   )
 
 ###################################################################

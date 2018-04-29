@@ -316,13 +316,13 @@ def get_indel_length_fqs(pred_df):
 
   crit = (pred_df['Category'] == 'ins')
   ins1_fq = sum(pred_df[crit]['Predicted frequency'])
-  d['Indel Length'].append('+1')
+  d['Indel length'].append('+1')
   d['Predicted frequency'].append(ins1_fq)
 
   for del_len in set(pred_df['Length']):
     crit = (pred_df['Category'] == 'del') & (pred_df['Length'] == del_len)
     fq = sum(pred_df[crit]['Predicted frequency'])
-    d['Indel Length'].append('-%s' % (del_len))
+    d['Indel length'].append('-%s' % (del_len))
     d['Predicted frequency'].append(fq)
 
   df = pd.DataFrame(d)
@@ -339,6 +339,10 @@ def get_highest_frequency_length(pred_df):
   highest_fq = max(idd['Predicted frequency'])
   row = idd[idd['Predicted frequency'] == highest_fq]
   return row.iloc[0]
+
+def get_precision(pred_df):
+  # Returns a row of pred_df
+  return 1 - entropy(pred_df['Predicted frequency']) / np.log(len(pred_df))
 
 ##
 # Data reformatting
