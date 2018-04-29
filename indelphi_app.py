@@ -1,4 +1,4 @@
-import pickle, copy, os, datetime
+import pickle, copy, os, datetime, subprocess
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -23,6 +23,11 @@ server = app.server
 # init
 inDelphi.init_model()
 generalStats.init_all_traces()
+if not os.path.isdir('user-csvs/'):
+  os.mkdir('user-csvs/')
+else:
+  subprocess.check_output('rm -rf user-csvs/*', shell = True)
+
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
@@ -301,7 +306,7 @@ def update_link(text1, text2):
   
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownload?value={}'.format(time)
-  pred_df.to_csv('%s.csv' % (time))
+  pred_df.to_csv('user-csvs/%s.csv' % (time))
   return link_fn
 
 @app.server.route('/dash/urlToDownload') 
@@ -311,8 +316,7 @@ def download_csv():
   # (instead of writing to the file system)
   local_csv_fn = value.split('/')[-1]
   return flask.send_file(
-    # value,
-    open(local_csv_fn + '.csv', 'rb'),
+    open('user-csvs/%s' % (local_csv_fn + '.csv'), 'rb'),
     mimetype = 'text/csv',
     attachment_filename = 'inDelphi_output.csv',
     as_attachment = True,
