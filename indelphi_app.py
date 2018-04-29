@@ -6,6 +6,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dt
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
 import inDelphi
@@ -107,6 +108,15 @@ app.layout = html.Div([
 
   html.Div('-----' * 5),
 
+  dt.DataTable(
+    id = 'table-genotypes',
+    rows = [{}], # init rows
+    row_selectable = True,
+    filterable = True,
+    sortable = True,
+    selected_row_indices = [],
+  )
+
 ], 
   style = dict(
     width = '800px',
@@ -120,18 +130,18 @@ app.layout = html.Div([
 # Callbacks
 ##
 @app.callback(
-  dash.dependencies.Output('seq_display', 'children'),
-  [dash.dependencies.Input('textbox1', 'value'),
-   dash.dependencies.Input('textbox2', 'value'),
+  Output('seq_display', 'children'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
   ])
 def cb_displaytext_seq(text1, text2):
   seq = text1 + text2
   return seq
 
 @app.callback(
-  dash.dependencies.Output('fs_table', 'children'),
-  [dash.dependencies.Input('textbox1', 'value'),
-   dash.dependencies.Input('textbox2', 'value'),
+  Output('fs_table', 'children'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
   ])
 def cb_table_fs(text1, text2):
   seq = text1 + text2
@@ -151,9 +161,9 @@ def cb_table_fs(text1, text2):
   )
 
 @app.callback(
-  dash.dependencies.Output('plot-fs', 'figure'),
-  [dash.dependencies.Input('textbox1', 'value'),
-   dash.dependencies.Input('textbox2', 'value'),
+  Output('plot-fs', 'figure'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
   ])
 def cb_plot_fs(text1, text2):
   seq = text1 + text2
@@ -213,9 +223,9 @@ def cb_plot_fs(text1, text2):
 
 
 @app.callback(
-  dash.dependencies.Output('plot-genstats-precision', 'figure'),
-  [dash.dependencies.Input('textbox1', 'value'),
-   dash.dependencies.Input('textbox2', 'value'),
+  Output('plot-genstats-precision', 'figure'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
   ])
 def cb_plot_genstats_precision(text1, text2):
   seq = text1 + text2
@@ -230,9 +240,9 @@ def cb_plot_genstats_precision(text1, text2):
   )
 
 @app.callback(
-  dash.dependencies.Output('plot-indel-len', 'figure'),
-  [dash.dependencies.Input('textbox1', 'value'),
-   dash.dependencies.Input('textbox2', 'value'),
+  Output('plot-indel-len', 'figure'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
   ])
 def cb_plot_indel_len(text1, text2):
   seq = text1 + text2
@@ -259,6 +269,17 @@ def cb_plot_indel_len(text1, text2):
     ],
     # layout = 
   )
+
+@app.callback(
+  Output('table-genotypes', 'rows'), 
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value'),
+  ])
+def update_datatable(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  return pred_df.to_dict('records')
 
 ###################################################################
 ###################################################################
