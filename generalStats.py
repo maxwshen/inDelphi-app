@@ -52,10 +52,9 @@ def layout(xlabel, xval):
     yaxis = dict(
       autorange = True,
       showgrid = False,
-      showline = True,
-      ticks = ticks,
-      ticklen = ticklen,
-      tickwidth = tickwidth,
+      showline = False,
+      ticks = '',
+      showticklabels = False,
     ),
     font = dict(
       family = 'Arial',
@@ -73,6 +72,9 @@ def layout(xlabel, xval):
         ),
       ),
     ],
+    margin = dict(
+      t = 10,
+    ),
   )
 
 ##

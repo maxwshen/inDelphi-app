@@ -32,7 +32,8 @@ else:
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
 
-
+##
+headerHeight = 130
 
 ###################################################################
 ###################################################################
@@ -41,103 +42,172 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 ##
 app.layout = html.Div([
 
-  # Non-scrolling header
+  ##
+  # Header
+  ##
   html.Div(
     [
-      html.H1('inDelphi'),
-      html.Div('Description',
+      html.H4(
+        'inDelphi',
         style = dict(
           textAlign = 'center',
-        )
+        ),
       ),
 
+      # Text input
       # Input text box 1
       html.Div([
-        html.Label('DNA sequence 1'),
-        dcc.Input(id = 'textbox1', 
-                  value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
-                  type = 'text'),
-        ], 
+        # Left box
+        html.Div(
+          [
+            dcc.Input(
+              id = 'textbox1', 
+              size = 35,
+              type = 'text',
+              value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
+              autofocus = True,
+              style = dict(
+                textAlign = 'right',
+                fontFamily = 'monospace',
+                fontSize = 16,
+              ),
+            )
+          ],
+          style = dict(
+            marginLeft = '55px',
+          ),
+          className = 'six columns',
+        ),
+
+        # Right box
+        html.Div(
+          [
+            dcc.Input(
+              id = 'textbox2', 
+              size = 35,
+              type = 'text',
+              value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
+              style = dict(
+                textAlign = 'left',
+                fontFamily = 'monospace',
+                fontSize = 16,
+              ),
+            ),
+          ],
+          style = dict(
+            marginLeft = '-40px',
+          ),
+          className = 'six columns',
+        ),
+      ], 
+      className = 'row'),
+
+      # html.Div(
+      #   'DSB',
+      #   style = dict(
+      #     textAlign = 'center',
+      #   )
+      # ),
+
+      html.Div(
+        id = 'seq_display',
+        style = dict(
+          textAlign = 'center',
+          fontFamily = 'monospace',
+          fontSize = 16,
+        ),
+      ),
+    ],
+    style = dict(
+      position = 'fixed',
+      backgroundColor = 'white',
+      borderBottom = '5px solid #DDDDDD',
+      zIndex = 1e6,
+      width = '800px',
+      margin = '0 auto',
+      height = headerHeight,
+      marginTop = '-%spx' % (headerHeight),
+    ),
+  ),
+
+  ##
+  # Body / plots
+  ##
+  html.Div(
+    [
+      dcc.Graph(
+        id = 'plot-fs',
+        style = dict(
+          height = 300, 
+          width = 250,
+        ),
+        config = dict(
+          modeBarButtonsToRemove = modebarbuttons_2d,
+          displaylogo = False,
+        ),
+      ),
+
+      dcc.Graph(
+        id = 'plot-genstats-precision',
+        style = dict(
+          height = 300, 
+          width = 500,
+        ),
+        config = dict(
+          modeBarButtonsToRemove = modebarbuttons_2d,
+          displaylogo = False,
+        ),
+      ),
+
+      dcc.Graph(
+        id = 'plot-indel-len',
+        style = dict(
+          height = 300, 
+          width = 600,
+        ),
+        config = dict(
+          modeBarButtonsToRemove = modebarbuttons_2d,
+          displaylogo = False,
+        ),
+      ),
+
+      dcc.Graph(
+        id = 'plot-table-genotypes',
+        style = dict(
+        ),
+        config = dict(
+          modeBarButtonsToRemove = modebarbuttons_2d,
+          displaylogo = False,
+        ),
+      ),
+
+      dt.DataTable(
+        id = 'table-genotypes',
+        rows = [{}], # init rows
+        row_selectable = True,
+        filterable = True,
+        sortable = True,
+        selected_row_indices = [],
+      ),
+
+      html.A(
+        'Download CSV', 
+        id = 'csv-download-link'
+      ),
+
+      html.Div(
+        'Copyright MIT 2018.\nAll Rights Reserved.',
         style = dict(
           textAlign = 'center',
         )
       ),
-
-      # Input text box 2
-      html.Label('DNA sequence 2'),
-      dcc.Input(id = 'textbox2', 
-                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
-                type = 'text'),
-
-      html.Div(id = 'seq_display'),
     ],
+    # body style
     style = dict(
-      # position = 'fixed',
+      marginTop = '%spx' % (headerHeight),
     ),
   ),
-
-  dcc.Graph(
-    id = 'plot-fs',
-    style = dict(
-      height = 400, 
-      width = 350,
-    ),
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  ),
-
-  dcc.Graph(
-    id = 'plot-genstats-precision',
-    style = dict(
-      height = 400, 
-      width = 500,
-    ),
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  ),
-
-  dcc.Graph(
-    id = 'plot-indel-len',
-    style = dict(
-      height = 400, 
-      width = 600,
-    ),
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  ),
-
-  html.Div('-----' * 5),
-
-  dcc.Graph(
-    id = 'plot-table-genotypes',
-    style = dict(
-    ),
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  ),
-
-  dt.DataTable(
-    id = 'table-genotypes',
-    rows = [{}], # init rows
-    row_selectable = True,
-    filterable = True,
-    sortable = True,
-    selected_row_indices = [],
-  ),
-
-  html.A(
-    'Download CSV', 
-    id = 'csv-download-link'
-  ),
-
+  ##
 ], 
   style = dict(
     width = '800px',
@@ -157,6 +227,10 @@ app.layout = html.Div([
    Input('textbox2', 'value'),
   ])
 def cb_displaytext_seq(text1, text2):
+  if len(text1) > len(text2):
+    text2 += '_' * (len(text1) - len(text2))
+  if len(text2) > len(text1):
+    text1 += '_' * (len(text2) - len(text1))
   seq = text1 + ' | ' + text2
   return seq
 
@@ -230,6 +304,9 @@ def cb_plot_indel_len(text1, text2):
       font = dict(
         family = 'Arial',
       ),
+      margin = dict(
+        t = 10,
+      ),
     ),
   )
 
@@ -250,6 +327,7 @@ def cb_plot_fs(text1, text2):
       go.Bar(
         x = X,
         y = Y,
+        text = ['%.0f%%' % (s) for s in Y],
         textfont = dict(
           family = 'Arial',
         ),
@@ -279,7 +357,6 @@ def cb_plot_fs(text1, text2):
         titlefont = dict(
           family = 'Arial',
         ),
-        showgrid = False,
         zeroline = False,
         showline = True,
         ticks = 'outside',
@@ -290,6 +367,9 @@ def cb_plot_fs(text1, text2):
       ),
       font = dict(
         family = 'Arial',
+      ),
+      margin = dict(
+        t = 10,
       ),
     ),
   )
@@ -332,8 +412,21 @@ def cb_update_genotype_plot(rows, selected_row_indices):
             width = 0,
           ),
         ),
-      ), 
+      ),
     ],
+    layout = go.Layout(
+      xaxis = dict(
+      ),
+      yaxis = dict(
+        title = 'Frequency (%)',
+      ),
+      font = dict(
+        family = 'Arial',
+      ),
+      margin = dict(
+        t = 10,
+      ),
+    ),
   )
 
 @app.callback(
@@ -389,7 +482,7 @@ def download_csv():
 ###################################################################
 ###################################################################
 # CSS
-app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
+app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
 if __name__ == '__main__':
   app.run_server()
