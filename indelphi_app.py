@@ -41,188 +41,196 @@ headerHeight = 130
 # App layout
 ##
 app.layout = html.Div([
+  html.Div([
 
-  ##
-  # Header
-  ##
-  html.Div(
-    [
-      html.H4(
-        'inDelphi',
-        style = dict(
-          textAlign = 'center',
-        ),
-      ),
-
-      # Row
-      html.Div([
-        # Left box
-        html.Div(
-          [
-            dcc.Input(
-              id = 'textbox1', 
-              size = 35,
-              type = 'text',
-              value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
-              autofocus = True,
-              style = dict(
-                textAlign = 'right',
-                fontFamily = 'monospace',
-                fontSize = 16,
-              ),
-            )
-          ],
+    ##
+    # Header
+    ##
+    html.Div(
+      [
+        html.H4(
+          'inDelphi',
           style = dict(
-            marginLeft = '55px',
+            textAlign = 'center',
           ),
-          className = 'six columns',
         ),
 
-        # Right box
+        # Row
+        html.Div([
+          # Left box
+          html.Div(
+            [
+              dcc.Input(
+                id = 'textbox1', 
+                size = 35,
+                type = 'text',
+                value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
+                autofocus = True,
+                style = dict(
+                  textAlign = 'right',
+                  fontFamily = 'monospace',
+                  fontSize = 16,
+                ),
+              )
+            ],
+            style = dict(
+              marginLeft = '55px',
+            ),
+            className = 'six columns',
+          ),
+
+          # Right box
+          html.Div(
+            [
+              dcc.Input(
+                id = 'textbox2', 
+                size = 35,
+                type = 'text',
+                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
+                style = dict(
+                  textAlign = 'left',
+                  fontFamily = 'monospace',
+                  fontSize = 16,
+                ),
+              ),
+            ],
+            style = dict(
+              marginLeft = '-40px',
+            ),
+            className = 'six columns',
+          ),
+        ], 
+        className = 'row'),
+
+        html.Div(
+          'DSB',
+          style = dict(
+            textAlign = 'center',
+          )
+        ),
+      ],
+      style = dict(
+        position = 'fixed',
+        backgroundColor = 'white',
+        borderBottom = '5px solid #DDDDDD',
+        zIndex = 1e6,
+        width = '800px',
+        margin = '0 auto',
+        height = headerHeight,
+        marginTop = '-%spx' % (headerHeight),
+      ),
+    ),
+
+    ##
+    # Body / plots
+    ##
+    html.Div(
+      [
+        # First row
         html.Div(
           [
-            dcc.Input(
-              id = 'textbox2', 
-              size = 35,
-              type = 'text',
-              value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
-              style = dict(
-                textAlign = 'left',
-                fontFamily = 'monospace',
-                fontSize = 16,
-              ),
+            # Frameshift
+            html.Div(
+              [
+                dcc.Graph(
+                  id = 'plot-fs',
+                  style = dict(
+                    height = 300, 
+                    width = 250,
+                  ),
+                  config = dict(
+                    modeBarButtonsToRemove = modebarbuttons_2d,
+                    displaylogo = False,
+                  ),
+                ),
+              ],
+              className = 'three columns',
+            ),
+
+            # Indel length
+            html.Div(
+              [
+                dcc.Graph(
+                  id = 'plot-indel-len',
+                  style = dict(
+                    height = 300, 
+                    width = 600,
+                  ),
+                  config = dict(
+                    modeBarButtonsToRemove = modebarbuttons_2d,
+                    displaylogo = False,
+                  ),
+                ),
+              ],
+              className = 'nine columns',
             ),
           ],
-          style = dict(
-            marginLeft = '-40px',
-          ),
-          className = 'six columns',
+          className = 'row',
         ),
-      ], 
-      className = 'row'),
 
-      html.Div(
-        'DSB',
-        style = dict(
-          textAlign = 'center',
-        )
+        dcc.Graph(
+          id = 'plot-genstats-precision',
+          style = dict(
+            height = 300, 
+            width = 500,
+          ),
+          config = dict(
+            modeBarButtonsToRemove = modebarbuttons_2d,
+            displaylogo = False,
+          ),
+        ),
+
+
+
+        dcc.Graph(
+          id = 'plot-table-genotypes',
+          style = dict(
+          ),
+          config = dict(
+            modeBarButtonsToRemove = modebarbuttons_2d,
+            displaylogo = False,
+          ),
+        ),
+
+        dt.DataTable(
+          id = 'table-genotypes',
+          rows = [{}], # init rows
+          row_selectable = True,
+          filterable = True,
+          sortable = True,
+          selected_row_indices = [],
+        ),
+
+        html.A(
+          'Download CSV', 
+          id = 'csv-download-link'
+        ),
+
+        html.Div(
+          'Copyright MIT 2018.\nAll Rights Reserved.',
+          style = dict(
+            textAlign = 'center',
+          )
+        ),
+      ],
+      # body style
+      style = dict(
+        marginTop = '%spx' % (headerHeight),
       ),
-    ],
+    ),
+    ##
+  ], 
     style = dict(
-      position = 'fixed',
-      backgroundColor = 'white',
-      borderBottom = '5px solid #DDDDDD',
-      zIndex = 1e6,
       width = '800px',
       margin = '0 auto',
-      height = headerHeight,
-      marginTop = '-%spx' % (headerHeight),
-    ),
+    )
   ),
-
-  ##
-  # Body / plots
-  ##
-  html.Div(
-    [
-      # First row
-      html.Div(
-        [
-          # Frameshift
-          html.Div(
-            [
-              dcc.Graph(
-                id = 'plot-fs',
-                style = dict(
-                  height = 300, 
-                  width = 250,
-                ),
-                config = dict(
-                  modeBarButtonsToRemove = modebarbuttons_2d,
-                  displaylogo = False,
-                ),
-              ),
-            ],
-            className = 'three columns',
-          ),
-
-          # Indel length
-          html.Div(
-            [
-              dcc.Graph(
-                id = 'plot-indel-len',
-                style = dict(
-                  height = 300, 
-                  width = 600,
-                ),
-                config = dict(
-                  modeBarButtonsToRemove = modebarbuttons_2d,
-                  displaylogo = False,
-                ),
-              ),
-            ],
-            className = 'nine columns',
-          ),
-        ],
-        className = 'row',
-      ),
-
-      dcc.Graph(
-        id = 'plot-genstats-precision',
-        style = dict(
-          height = 300, 
-          width = 500,
-        ),
-        config = dict(
-          modeBarButtonsToRemove = modebarbuttons_2d,
-          displaylogo = False,
-        ),
-      ),
-
-
-
-      dcc.Graph(
-        id = 'plot-table-genotypes',
-        style = dict(
-        ),
-        config = dict(
-          modeBarButtonsToRemove = modebarbuttons_2d,
-          displaylogo = False,
-        ),
-      ),
-
-      dt.DataTable(
-        id = 'table-genotypes',
-        rows = [{}], # init rows
-        row_selectable = True,
-        filterable = True,
-        sortable = True,
-        selected_row_indices = [],
-      ),
-
-      html.A(
-        'Download CSV', 
-        id = 'csv-download-link'
-      ),
-
-      html.Div(
-        'Copyright MIT 2018.\nAll Rights Reserved.',
-        style = dict(
-          textAlign = 'center',
-        )
-      ),
-    ],
-    # body style
-    style = dict(
-      marginTop = '%spx' % (headerHeight),
-    ),
-  ),
-  ##
-], 
-  style = dict(
-    width = '800px',
-    margin = '0 auto',
-  )
+],
+style = dict(
+  width = '900px',
+  margin = '0 auto',
+  boxShadow = '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
+)
 )
 
 #######################################################################
