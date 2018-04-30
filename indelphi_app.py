@@ -54,8 +54,7 @@ app.layout = html.Div([
         ),
       ),
 
-      # Text input
-      # Input text box 1
+      # Row
       html.Div([
         # Left box
         html.Div(
@@ -102,20 +101,11 @@ app.layout = html.Div([
       ], 
       className = 'row'),
 
-      # html.Div(
-      #   'DSB',
-      #   style = dict(
-      #     textAlign = 'center',
-      #   )
-      # ),
-
       html.Div(
-        id = 'seq_display',
+        'DSB',
         style = dict(
           textAlign = 'center',
-          fontFamily = 'monospace',
-          fontSize = 16,
-        ),
+        )
       ),
     ],
     style = dict(
@@ -135,16 +125,46 @@ app.layout = html.Div([
   ##
   html.Div(
     [
-      dcc.Graph(
-        id = 'plot-fs',
-        style = dict(
-          height = 300, 
-          width = 250,
-        ),
-        config = dict(
-          modeBarButtonsToRemove = modebarbuttons_2d,
-          displaylogo = False,
-        ),
+      # First row
+      html.Div(
+        [
+          # Frameshift
+          html.Div(
+            [
+              dcc.Graph(
+                id = 'plot-fs',
+                style = dict(
+                  height = 300, 
+                  width = 250,
+                ),
+                config = dict(
+                  modeBarButtonsToRemove = modebarbuttons_2d,
+                  displaylogo = False,
+                ),
+              ),
+            ],
+            className = 'three columns',
+          ),
+
+          # Indel length
+          html.Div(
+            [
+              dcc.Graph(
+                id = 'plot-indel-len',
+                style = dict(
+                  height = 300, 
+                  width = 600,
+                ),
+                config = dict(
+                  modeBarButtonsToRemove = modebarbuttons_2d,
+                  displaylogo = False,
+                ),
+              ),
+            ],
+            className = 'nine columns',
+          ),
+        ],
+        className = 'row',
       ),
 
       dcc.Graph(
@@ -159,17 +179,7 @@ app.layout = html.Div([
         ),
       ),
 
-      dcc.Graph(
-        id = 'plot-indel-len',
-        style = dict(
-          height = 300, 
-          width = 600,
-        ),
-        config = dict(
-          modeBarButtonsToRemove = modebarbuttons_2d,
-          displaylogo = False,
-        ),
-      ),
+
 
       dcc.Graph(
         id = 'plot-table-genotypes',
@@ -221,18 +231,7 @@ app.layout = html.Div([
 ##
 # Header Callbacks
 ##
-@app.callback(
-  Output('seq_display', 'children'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
-  ])
-def cb_displaytext_seq(text1, text2):
-  if len(text1) > len(text2):
-    text2 += '_' * (len(text1) - len(text2))
-  if len(text2) > len(text1):
-    text1 += '_' * (len(text2) - len(text1))
-  seq = text1 + ' | ' + text2
-  return seq
+
 
 ##
 # General stats callbacks
