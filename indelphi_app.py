@@ -225,7 +225,7 @@ app.layout = html.Div([
       margin = '0 auto',
     )
   ),
-],
+], # Shadow
 style = dict(
   width = '900px',
   margin = '0 auto',
@@ -283,7 +283,6 @@ def cb_plot_indel_len(text1, text2):
         y = Y,
         opacity = 0.6,
         width = 0.9, 
-        hoverinfo = 'y',
         marker = dict(
           color = 'rgb(200, 20, 20)',
           line = dict(
