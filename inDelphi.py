@@ -196,6 +196,7 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   dlpred = np.array(dlpred) / sum(dlpred)
   norm_entropy = entropy(dlpred) / np.log(len(dlpred))
   precision = 1 - norm_entropy
+  log_phi_score = np.log(total_phi_score)
 
   fiveohmapper = {'A': [1, 0, 0, 0], 
                   'C': [0, 1, 0, 0], 
@@ -207,7 +208,7 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
                    'T': [0, 0, 0, 1]}
   fivebase = seq[cutsite - 1]
   threebase = seq[cutsite]
-  onebp_features = fiveohmapper[fivebase] + threeohmapper[threebase] + [precision] + [total_phi_score]
+  onebp_features = fiveohmapper[fivebase] + threeohmapper[threebase] + [precision] + [log_phi_score]
   for idx in range(len(onebp_features)):
     val = onebp_features[idx]
     onebp_features[idx] = (val - normalizer[idx][0]) / normalizer[idx][1]
@@ -377,12 +378,14 @@ def add_genotype_column(pred_df, stats):
 ##
 # Init
 ##
-def init_model(run_iter = 'abf', param_iter = 'aag'):
+def init_model(run_iter = 'abf', 
+               param_iter = 'aag', 
+               ins_version = 'aau'):
   global init_flag
   if init_flag != False:
     return
 
-  print('Initializing model %s/%s...' % (run_iter, param_iter))
+  print('Initializing model %s/%s, %s...' % (run_iter, param_iter, ins_version))
 
   global nn_params
   global nn2_params
@@ -395,11 +398,11 @@ def init_model(run_iter = 'abf', param_iter = 'aag'):
   global normalizer
   global rate_model
   global bp_model
-  with open('bp_model_%s.pkl' % ('v3'), 'rb') as f:
+  with open('%s_%s_%s_bp_model.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
     bp_model = pickle.load(f, encoding = 'latin1')
-  with open('rate_model_%s.pkl' % ('v3'), 'rb') as f:
+  with open('%s_%s_%s_rate_model.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
     rate_model = pickle.load(f, encoding = 'latin1')
-  with open('normalizer_%s.pkl' % ('v3'), 'rb') as f:
+  with open('%s_%s_%s_normalizer.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
     normalizer = pickle.load(f, encoding = 'latin1')
 
   init_flag = True
