@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import entropy
 import time
+from io import StringIO
 
 import dash
 import dash_core_components as dcc
@@ -36,6 +37,7 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 ##
 headerHeight = 130
 
+
 ###################################################################
 ###################################################################
 ##
@@ -50,20 +52,20 @@ app.layout = html.Div([
     html.Div(
       [
         html.Div(
+          id = 'hidden-pred-df',
+          children = 'init'
+        ),
+        html.Div(
+          id = 'hidden-pred-stats',
+          children = 'init'
+        ),
+        html.Div(
           id = 'hidden-cache-left',
           children = 'init'
         ),
         html.Div(
           id = 'hidden-cache-right',
           children = 'init'
-        ),
-        html.Div(
-          id = 'hidden-left-num-clicks-previous',
-          children = '0',
-        ),
-        html.Div(
-          id = 'hidden-right-num-clicks-previous',
-          children = '0',
         ),
       ],
       style = dict(
@@ -343,17 +345,41 @@ def cb_update_textbox2_arrow(cache_left, cache_right, text):
     return text[1:]
 
 ##
+# Prediction callback
+##
+@app.callback(
+  Output('hidden-pred-df', 'children'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value')])
+def cb_update_pred_df(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  return pred_df.to_csv()
+
+@app.callback(
+  Output('hidden-pred-stats', 'children'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value')])
+def cb_update_pred_stats(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  pred_df, stats = inDelphi.predict(seq, cutsite)
+  return pd.DataFrame(stats, index = [0]).to_csv()
+
+
+##
 # General stats callbacks
 ##
 @app.callback(
   Output('plot-genstats-precision', 'figure'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_precision(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+
   xval = inDelphi.get_precision(pred_df)
   return dict(
     data = [
@@ -366,13 +392,11 @@ def cb_plot_genstats_precision(text1, text2):
 # Indel length and frameshift callbacks
 @app.callback(
   Output('plot-indel-len', 'figure'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
+  [Input('hidden-pred-df', 'children'),
   ])
-def cb_plot_indel_len(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+def cb_plot_indel_len(pred_df_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+
   lendf = inDelphi.get_indel_length_fqs(pred_df)
 
   X = [int(s) for s in lendf['Indel length']]
@@ -419,13 +443,11 @@ def cb_plot_indel_len(text1, text2):
 
 @app.callback(
   Output('plot-fs', 'figure'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
+  [Input('hidden-pred-df', 'children'),
   ])
-def cb_plot_fs(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+def cb_plot_fs(pred_df_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+
   fs_df = inDelphi.get_frameshift_fqs(pred_df)
   X = ['+0', '+1', '+2']
   Y = [float(fs_df[fs_df['Frame'] == s]['Predicted frequency']) for s in X]
@@ -488,13 +510,13 @@ def cb_plot_fs(text1, text2):
 ## 
 @app.callback(
   Output('table-genotypes', 'rows'), 
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
   ])
-def cb_update_genotype_table(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+def cb_update_genotype_table(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+
   inDelphi.add_genotype_column(pred_df, stats)
   inDelphi.add_name_column(pred_df, stats)
 
@@ -571,14 +593,13 @@ def cb_update_datatable_selected(clickData, selected_row_indices):
 ##
 @app.callback(
   Output('csv-download-link', 'href'), 
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
   ])
-def update_link(text1, text2):
-  seq = text1 + text2
-  cutsite = len(text1)
+def update_link(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
-  pred_df, stats = inDelphi.predict(seq, cutsite)
   inDelphi.add_genotype_column(pred_df, stats)
   inDelphi.add_name_column(pred_df, stats)
 

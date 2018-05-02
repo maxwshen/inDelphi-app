@@ -240,7 +240,7 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score):
   ins_fq = sum(pred_df[pred_df['Category'] == 'ins']['Predicted frequency'])
   stats = {'Phi': total_phi_score,
            'Phi percentile': None,
-           'Precision:': overall_precision,
+           'Precision': overall_precision,
            'Precision percentile': None,
            '1-bp ins frequency': ins_fq,
            '1-bp ins frequency percentile': None,
@@ -356,8 +356,8 @@ def get_precision(pred_df):
 ##
 def add_genotype_column(pred_df, stats):
   gts = []
-  seq = stats['Reference sequence']
-  cutsite = stats['Cutsite']
+  seq = stats['Reference sequence'].iloc[0]
+  cutsite = stats['Cutsite'].iloc[0]
 
   for idx, row in pred_df.iterrows():
     gt_pos = row['Genotype position']
@@ -365,6 +365,7 @@ def add_genotype_column(pred_df, stats):
       gt = np.nan
     elif row['Category'] == 'del':
       dl = row['Length']
+      gt_pos = int(gt_pos)
       gt = seq[:cutsite - dl + gt_pos] + seq[cutsite + gt_pos:]
     else:
       ins_base = row['Inserted Bases']
@@ -375,8 +376,8 @@ def add_genotype_column(pred_df, stats):
 
 def add_name_column(pred_df, stats):
   names = []
-  seq = stats['Reference sequence']
-  cutsite = stats['Cutsite']
+  seq = stats['Reference sequence'].iloc[0]
+  cutsite = stats['Cutsite'].iloc[0]
 
   for idx, row in pred_df.iterrows():
     gt_pos = row['Genotype position']
@@ -384,6 +385,7 @@ def add_name_column(pred_df, stats):
       name = 'del%s' % (row['Length'])
     elif row['Category'] == 'del':
       dl = row['Length']
+      gt_pos = int(gt_pos)
       name = 'del%s' % (seq[cutsite - dl + gt_pos : cutsite + gt_pos])
     else:
       ins_base = row['Inserted Bases']
