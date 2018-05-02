@@ -373,6 +373,25 @@ def add_genotype_column(pred_df, stats):
   pred_df['Genotype'] = gts
   return
 
+def add_name_column(pred_df, stats):
+  names = []
+  seq = stats['Reference sequence']
+  cutsite = stats['Cutsite']
+
+  for idx, row in pred_df.iterrows():
+    gt_pos = row['Genotype position']
+    if gt_pos == 'e':
+      name = 'del%s' % (row['Length'])
+    elif row['Category'] == 'del':
+      dl = row['Length']
+      name = 'del%s' % (seq[cutsite - dl + gt_pos : cutsite + gt_pos])
+    else:
+      ins_base = row['Inserted Bases']
+      name = 'ins%s' % (ins_base)
+    names.append(name)
+  pred_df['Name'] = names
+  return
+
 
 
 ##

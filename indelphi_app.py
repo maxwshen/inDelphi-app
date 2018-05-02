@@ -202,7 +202,7 @@ app.layout = html.Div([
         ),
 
         html.A(
-          'Download CSV', 
+          'Download CSV of all indel predictions', 
           id = 'csv-download-link'
         ),
 
@@ -395,6 +395,20 @@ def cb_update_genotype_table(text1, text2):
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
   inDelphi.add_genotype_column(pred_df, stats)
+  inDelphi.add_name_column(pred_df, stats)
+
+  # Edit for display
+  pred_df['Frequency (%)'] = ['%.1f' % (s) for s in pred_df['Predicted frequency']]
+  pred_df = pred_df.drop(
+    [
+      'Inserted Bases', 
+      'Genotype position',
+      'Predicted frequency',
+      'Category',
+    ], 
+    axis = 1
+  )
+  pred_df = pred_df[['Name', 'Length', 'Frequency (%)', 'Genotype']]
   return pred_df.to_dict('records')
 
 @app.callback(
@@ -410,8 +424,8 @@ def cb_update_genotype_plot(rows, selected_row_indices):
   return dict(
     data = [
       go.Bar(
-        x = df['Genotype'],
-        y = df['Predicted frequency'],
+        x = df['Name'],
+        y = df['Frequency (%)'],
         marker = dict(
           color = colors,
           line = dict(
@@ -465,6 +479,7 @@ def update_link(text1, text2):
 
   pred_df, stats = inDelphi.predict(seq, cutsite)
   inDelphi.add_genotype_column(pred_df, stats)
+  inDelphi.add_name_column(pred_df, stats)
 
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownload?value={}'.format(time)
