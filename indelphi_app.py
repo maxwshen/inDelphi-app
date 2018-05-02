@@ -90,21 +90,24 @@ app.layout = html.Div([
             [
               dcc.Input(
                 id = 'textbox1', 
-                size = 35,
+                size = 28,
                 value = 'TAGTTTCTAGCACAGCGCTGGTGTGG',
                 type = 'text',
                 autofocus = True,
                 style = dict(
                   textAlign = 'right',
+                  direction = 'rtl',
                   fontFamily = 'monospace',
                   fontSize = 16,
+                  float = 'right',
                 ),
               )
             ],
             style = dict(
-              marginLeft = '55px',
+              width = '50%',
+              display = 'inline-block',
+              verticalAlign = 'middle',
             ),
-            className = 'six columns',
           ),
 
           # Right box
@@ -112,23 +115,31 @@ app.layout = html.Div([
             [
               dcc.Input(
                 id = 'textbox2', 
-                size = 35,
+                size = 28,
                 value = 'CGTGTGGCTGAAGGCATAGTAATTCTGA',
                 type = 'text',
                 style = dict(
                   textAlign = 'left',
                   fontFamily = 'monospace',
                   fontSize = 16,
+                  float = 'center',
                 ),
               ),
             ],
             style = dict(
-              marginLeft = '-40px',
+              width = '50%',
+              display = 'inline-block',
+              verticalAlign = 'middle',
             ),
-            className = 'six columns',
           ),
         ], 
-        className = 'row'),
+          style = dict(
+            verticalAlign = 'center',
+            whiteSpace = 'nowrap',
+            overflowX = 'auto',
+          ),
+        # className = 'row'),
+        ),
 
         html.Div([
             html.A('◄',
@@ -136,7 +147,7 @@ app.layout = html.Div([
               style = dict(
                 textDecoration = 'none',
                 fontFamily = 'monospace',
-                fontSize = 24,
+                fontSize = 20,
               ),
             ),
             '\tDSB\t',
@@ -145,23 +156,23 @@ app.layout = html.Div([
               style = dict(
                 textDecoration = 'none',
                 fontFamily = 'monospace',
-                fontSize = 24,
+                fontSize = 20,
               ),
             ),
           ],
           style = dict(
             textAlign = 'center',
-            verticalAlign = 'center',
           )
         ),
       ],
       style = dict(
         position = 'fixed',
         backgroundColor = 'white',
-        borderBottom = '5px solid #DDDDDD',
+        borderBottom = '3px solid #777777',
         zIndex = 1e6,
-        width = '800px',
-        margin = '0 auto',
+        width = '910px',
+        left = '50%',
+        transform = 'translate(-50%, 0)',
         height = headerHeight,
         marginTop = '-%spx' % (headerHeight),
       ),
