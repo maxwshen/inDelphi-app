@@ -324,6 +324,8 @@ def cb_update_textbox1_arrow(cache_left, cache_right, text):
   left_time = float(cache_left.split('_')[1])
   right_char = cache_right.split('_')[0]
   right_time = float(cache_right.split('_')[1])
+  if abs(left_time - right_time) < 0.01:
+    return text
   if left_time > right_time:
     return text[:-1]
   else:
@@ -339,6 +341,8 @@ def cb_update_textbox2_arrow(cache_left, cache_right, text):
   left_time = float(cache_left.split('_')[1])
   right_char = cache_right.split('_')[0]
   right_time = float(cache_right.split('_')[1])
+  if abs(left_time - right_time) < 0.01:
+    return text
   if left_time > right_time:
     return left_char + text
   else:
