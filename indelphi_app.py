@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from scipy.stats import entropy
+import time
 
 import dash
 import dash_core_components as dcc
@@ -44,6 +45,33 @@ app.layout = html.Div([
   html.Div([
 
     ##
+    # Hidden divs for light data storage
+    ##
+    html.Div(
+      [
+        html.Div(
+          id = 'hidden-cache-left',
+          children = 'init'
+        ),
+        html.Div(
+          id = 'hidden-cache-right',
+          children = 'init'
+        ),
+        html.Div(
+          id = 'hidden-left-num-clicks-previous',
+          children = '0',
+        ),
+        html.Div(
+          id = 'hidden-right-num-clicks-previous',
+          children = '0',
+        ),
+      ],
+      style = dict(
+        display = 'none',
+      ),
+    ),
+
+    ##
     # Header
     ##
     html.Div(
@@ -63,8 +91,8 @@ app.layout = html.Div([
               dcc.Input(
                 id = 'textbox1', 
                 size = 35,
+                value = 'TAGTTTCTAGCACAGCGCTGGTGTGG',
                 type = 'text',
-                value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC', 
                 autofocus = True,
                 style = dict(
                   textAlign = 'right',
@@ -85,8 +113,8 @@ app.layout = html.Div([
               dcc.Input(
                 id = 'textbox2', 
                 size = 35,
+                value = 'CGTGTGGCTGAAGGCATAGTAATTCTGA',
                 type = 'text',
-                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA', 
                 style = dict(
                   textAlign = 'left',
                   fontFamily = 'monospace',
@@ -102,10 +130,28 @@ app.layout = html.Div([
         ], 
         className = 'row'),
 
-        html.Div(
-          'DSB',
+        html.Div([
+            html.A('◄',
+              id = 'button-input-left',
+              style = dict(
+                textDecoration = 'none',
+                fontFamily = 'monospace',
+                fontSize = 24,
+              ),
+            ),
+            '\tDSB\t',
+            html.A('►',
+              id = 'button-input-right',
+              style = dict(
+                textDecoration = 'none',
+                fontFamily = 'monospace',
+                fontSize = 24,
+              ),
+            ),
+          ],
           style = dict(
             textAlign = 'center',
+            verticalAlign = 'center',
           )
         ),
       ],
@@ -240,6 +286,50 @@ style = dict(
 # Header Callbacks
 ##
 
+## Arrow buttons
+@app.callback(
+  Output('hidden-cache-left', 'children'),
+  [Input('button-input-left', 'n_clicks')],
+  [State('textbox1', 'value')])
+def cb_update_cache_left(n_clicks, box1_val):
+  return '%s_%s' % (box1_val[-1], time.time())
+
+@app.callback(
+  Output('hidden-cache-right', 'children'),
+  [Input('button-input-right', 'n_clicks')],
+  [State('textbox2', 'value')])
+def cb_update_cache_right(n_clicks, box2_val):
+  return '%s_%s' % (box2_val[0], time.time())
+
+@app.callback(
+  Output('textbox1', 'value'),
+  [Input('hidden-cache-left', 'children'),
+   Input('hidden-cache-right', 'children')],
+  [State('textbox1', 'value')])
+def cb_update_textbox1_arrow(cache_left, cache_right, text):
+  left_char = cache_left.split('_')[0]
+  left_time = float(cache_left.split('_')[1])
+  right_char = cache_right.split('_')[0]
+  right_time = float(cache_right.split('_')[1])
+  if left_time > right_time:
+    return text[:-1]
+  else:
+    return text + right_char
+
+@app.callback(
+  Output('textbox2', 'value'),
+  [Input('hidden-cache-left', 'children'),
+   Input('hidden-cache-right', 'children')],
+  [State('textbox2', 'value')])
+def cb_update_textbox2_arrow(cache_left, cache_right, text):
+  left_char = cache_left.split('_')[0]
+  left_time = float(cache_left.split('_')[1])
+  right_char = cache_right.split('_')[0]
+  right_time = float(cache_right.split('_')[1])
+  if left_time > right_time:
+    return left_char + text
+  else:
+    return text[1:]
 
 ##
 # General stats callbacks
