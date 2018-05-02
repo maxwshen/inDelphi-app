@@ -16,7 +16,7 @@ import flask
 
 import inDelphi
 import generalStats
-
+import lib
 
 # Dash server setup
 app = dash.Dash('')
@@ -66,6 +66,10 @@ app.layout = html.Div([
         html.Div(
           id = 'hidden-cache-right',
           children = 'init'
+        ),
+        dcc.Location(
+          id = 'url',
+          refresh = False,
         ),
       ],
       style = dict(
@@ -260,10 +264,19 @@ app.layout = html.Div([
           selected_row_indices = [],
         ),
 
-        html.A(
-          'Download CSV of all indel predictions', 
-          id = 'csv-download-link'
-        ),
+        html.Div([
+          html.A(
+            'Download CSV of inDelphi predictions', 
+            id = 'csv-download-link'
+          ),
+        ]),
+
+        html.Div([
+          html.A(
+            'Sharable link to these results', 
+            id = 'page-link'
+          ),
+        ]),
 
         html.Div(
           'Copyright MIT 2018.\nAll Rights Reserved.',
@@ -317,15 +330,20 @@ def cb_update_cache_right(n_clicks, box2_val):
 @app.callback(
   Output('textbox1', 'value'),
   [Input('hidden-cache-left', 'children'),
-   Input('hidden-cache-right', 'children')],
+   Input('hidden-cache-right', 'children'),
+   Input('url', 'pathname')],
   [State('textbox1', 'value')])
-def cb_update_textbox1_arrow(cache_left, cache_right, text):
+def cb_update_textbox1_arrow(cache_left, cache_right, url, text):
   left_char = cache_left.split('_')[0]
   left_time = float(cache_left.split('_')[1])
   right_char = cache_right.split('_')[0]
   right_time = float(cache_right.split('_')[1])
   if abs(left_time - right_time) < 0.01:
-    return text
+    valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
+    if not valid_flag or cutsite is None:
+      return text
+    else:
+      return seq[:cutsite]
   if left_time > right_time:
     return text[:-1]
   else:
@@ -334,15 +352,20 @@ def cb_update_textbox1_arrow(cache_left, cache_right, text):
 @app.callback(
   Output('textbox2', 'value'),
   [Input('hidden-cache-left', 'children'),
-   Input('hidden-cache-right', 'children')],
+   Input('hidden-cache-right', 'children'),
+   Input('url', 'pathname')],
   [State('textbox2', 'value')])
-def cb_update_textbox2_arrow(cache_left, cache_right, text):
+def cb_update_textbox2_arrow(cache_left, cache_right, url, text):
   left_char = cache_left.split('_')[0]
   left_time = float(cache_left.split('_')[1])
   right_char = cache_right.split('_')[0]
   right_time = float(cache_right.split('_')[1])
   if abs(left_time - right_time) < 0.01:
-    return text
+    valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
+    if not valid_flag or cutsite is None:
+      return text
+    else:
+      return seq[cutsite:]
   if left_time > right_time:
     return left_char + text
   else:
@@ -600,7 +623,7 @@ def cb_update_datatable_selected(clickData, selected_row_indices):
   [Input('hidden-pred-df', 'children'),
    Input('hidden-pred-stats', 'children'),
   ])
-def update_link(pred_df_string, pred_stats_string):
+def cb_update_link(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
@@ -625,6 +648,19 @@ def download_csv():
     attachment_filename = 'inDelphi_output.csv',
     as_attachment = True,
   )
+
+##
+# Page link callback
+##
+@app.callback(
+  Output('page-link', 'href'),
+  [Input('textbox1', 'value',),
+   Input('textbox2', 'value',),
+  ])
+def cb_update_pagelink(text1, text2):
+  seq = text1 + text2
+  cutsite = len(text1)
+  return 'https://dev.crisprindelphi.design/%s' % (lib.encode_dna_to_url_path(seq, cutsite))
 
 ###################################################################
 ###################################################################
