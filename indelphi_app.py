@@ -128,7 +128,7 @@ app.layout = html.Div([
                   textAlign = 'left',
                   fontFamily = 'monospace',
                   fontSize = 16,
-                  float = 'center',
+                  float = 'left',
                 ),
               ),
             ],

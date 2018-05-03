@@ -50,6 +50,7 @@ def parse_valid_url_path(url_path):
   escape_chars = [s for s in list('ACGT.') if s in url_path]
   idx = min([url_path.index(s) for s in escape_chars])
   coded = url_path[:idx]
+  tail = url_path[idx:]
 
   if len(coded) % 3 != 0:
     return False, None, None  
@@ -60,7 +61,6 @@ def parse_valid_url_path(url_path):
     seq += code_to_dna[w]
 
 
-  tail = url_path[idx:]
   if '.' not in tail:
     idx = len(tail)
   else:
