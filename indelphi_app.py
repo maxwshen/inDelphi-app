@@ -273,7 +273,7 @@ app.layout = html.Div([
 
         html.Div([
           html.A(
-            'Sharable link to these results', 
+            'Shareable link to your results', 
             id = 'page-link'
           ),
         ]),

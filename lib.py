@@ -68,7 +68,7 @@ def parse_valid_url_path(url_path):
   for ch in set(tail[:idx]):
     if ch not in list('ACGT'):
       return False, None, None
-  seq += url_path[:idx]
+  seq += tail[:idx]
 
   if '.' not in tail:
     return True, seq, None
