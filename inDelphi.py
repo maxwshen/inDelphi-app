@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
+import os
 from collections import defaultdict
 import pickle, copy
 from scipy.stats import entropy
@@ -234,18 +235,55 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   pred_df['Predicted frequency'] /= sum(pred_df['Predicted frequency'])
   return pred_df
 
+
 def __build_stats(seq, cutsite, pred_df, total_phi_score):
+  # Precision stats
   overall_precision = 1 - entropy(pred_df['Predicted frequency']) / np.log(len(pred_df))
   highest_fq = max(pred_df['Predicted frequency'])
+  highest_del_fq = max(pred_df[pred_df['Category'] == 'del']['Predicted frequency'])
+  highest_ins_fq = max(pred_df[pred_df['Category'] == 'ins']['Predicted frequency'])
+  
+
+  # Outcomes
   ins_fq = sum(pred_df[pred_df['Category'] == 'ins']['Predicted frequency'])
+  crit = (pred_df['Category'] == 'del') & (pred_df['Genotype position'] != 'e')
+  mhdel_fq = sum(pred_df[crit]['Predicted frequency'])
+
+  crit = (pred_df['Category'] == 'del') & (pred_df['Genotype position'] == 'e')
+  nomhdel_fq = sum(pred_df[crit]['Predicted frequency'])
+
+  # Expected indel length
+  ddf = pred_df[pred_df['Category'] == 'del']
+  expected_indel_len = sum(ddf['Predicted frequency'] * ddf['Length'] / 100)
+  idf = pred_df[pred_df['Category'] == 'ins']
+  expected_indel_len += sum(idf['Predicted frequency'] * idf['Length'] / 100)
+
+  # Frameshifts
+  fsd = {'+0': 0, '+1': 0, '+2': 0}
+
+  crit = (pred_df['Category'] == 'ins')
+  ins1_fq = sum(pred_df[crit]['Predicted frequency'])
+  fsd['+1'] += ins1_fq
+
+  for del_len in set(pred_df['Length']):
+    crit = (pred_df['Category'] == 'del') & (pred_df['Length'] == del_len)
+    fq = sum(pred_df[crit]['Predicted frequency'])
+    fs = (-1 * del_len) % 3
+    fsd['+%s' % (fs)] += fq
+
   stats = {'Phi': total_phi_score,
-           'Phi percentile': None,
            'Precision': overall_precision,
-           'Precision percentile': None,
            '1-bp ins frequency': ins_fq,
-           '1-bp ins frequency percentile': None,
+           'MH del frequency': mhdel_fq,
+           'MHless del frequency': nomhdel_fq,
+           'Frameshift frequency': fsd['+1'] + fsd['+2'],
+           'Frame +0 frequency': fsd['+0'], 
+           'Frame +1 frequency': fsd['+1'], 
+           'Frame +2 frequency': fsd['+2'], 
            'Highest outcome frequency': highest_fq,
-           'Highest outcome frequency percentile': None,
+           'Highest del frequency': highest_del_fq,
+           'Highest ins frequency': highest_ins_fq,
+           'Expected indel length': expected_indel_len,
            'Reference sequence': seq,
            'Cutsite': cutsite,
            'gRNA': None,
@@ -408,22 +446,28 @@ def init_model(run_iter = 'abf',
 
   print('Initializing model %s/%s, %s...' % (run_iter, param_iter, ins_version))
 
+  model_dir = os.path.dirname(os.path.realpath(__file__))
+  model_dir += '/model'
+  # model_dir = '%s' % (model_dir.replace(' ', '\\ ').replace('(', '\\(').replace(')', '\\)'))
+  del_prefix = '%s/%s_%s' % (model_dir, run_iter, param_iter)
+  ins_prefix = '%s/%s_%s_%s' % (model_dir, run_iter, param_iter, ins_version)
+
   global nn_params
   global nn2_params
-  with open('%s_%s_nn.pkl' % (run_iter, param_iter), 'rb') as f:
+  with open('%s_nn.pkl' % (del_prefix), 'rb') as f:
     # load in python3.6 a pickle that was dumped from python2.7
     nn_params = pickle.load(f, encoding = 'latin1')
-  with open('%s_%s_nn2.pkl' % (run_iter, param_iter), 'rb') as f:
+  with open('%s_nn2.pkl' % (del_prefix), 'rb') as f:
     nn2_params = pickle.load(f, encoding = 'latin1')
 
   global normalizer
   global rate_model
   global bp_model
-  with open('%s_%s_%s_bp_model.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
+  with open('%s_bp_model.pkl' % (ins_prefix), 'rb') as f:
     bp_model = pickle.load(f, encoding = 'latin1')
-  with open('%s_%s_%s_rate_model.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
+  with open('%s_rate_model.pkl' % (ins_prefix), 'rb') as f:
     rate_model = pickle.load(f, encoding = 'latin1')
-  with open('%s_%s_%s_normalizer.pkl' % (run_iter, param_iter, ins_version), 'rb') as f:
+  with open('%s_normalizer.pkl' % (ins_prefix), 'rb') as f:
     normalizer = pickle.load(f, encoding = 'latin1')
 
   init_flag = True
