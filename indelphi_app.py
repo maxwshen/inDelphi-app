@@ -24,7 +24,6 @@ server = app.server
 
 # init
 inDelphi.init_model()
-generalStats.init_all_traces()
 if not os.path.isdir('user-csvs/'):
   os.mkdir('user-csvs/')
 else:
@@ -176,7 +175,7 @@ app.layout = html.Div([
         backgroundColor = 'white',
         borderBottom = '3px solid #777777',
         zIndex = 1e6,
-        width = '910px',
+        width = '1010px',
         left = '50%',
         transform = 'translate(-50%, 0)',
         height = headerHeight,
@@ -231,16 +230,45 @@ app.layout = html.Div([
           className = 'row',
         ),
 
-        dcc.Graph(
-          id = 'plot-genstats-precision',
-          style = dict(
-            height = 300, 
-            width = 500,
-          ),
-          config = dict(
-            modeBarButtonsToRemove = modebarbuttons_2d,
-            displaylogo = False,
-          ),
+        ##
+        # Second row: Genome statistics
+        ##
+        html.Div(
+          [
+            html.Div(
+              [
+                dcc.Graph(
+                  id = 'plot-genstats-precision',
+                  style = dict(
+                    height = 200, 
+                    width = 300,
+                  ),
+                  config = dict(
+                    modeBarButtonsToRemove = modebarbuttons_2d,
+                    displaylogo = False,
+                  ),
+                ),
+              ],
+              className = 'six columns',
+            ),
+            html.Div(
+              [
+                dcc.Graph(
+                  id = 'plot-genstats-logphi',
+                  style = dict(
+                    height = 200, 
+                    width = 300,
+                  ),
+                  config = dict(
+                    modeBarButtonsToRemove = modebarbuttons_2d,
+                    displaylogo = False,
+                  ),
+                ),
+              ],
+              className = 'six columns',
+            ),
+          ],
+          className = 'row',
         ),
 
 
@@ -293,13 +321,13 @@ app.layout = html.Div([
     ##
   ], 
     style = dict(
-      width = '800px',
+      width = '970px',
       margin = '0 auto',
     )
   ),
 ], # Shadow
 style = dict(
-  width = '900px',
+  width = '1000px',
   margin = '0 auto',
   boxShadow = '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
 )
@@ -406,13 +434,29 @@ def cb_update_pred_stats(text1, text2):
 def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = stats['Precision'].iloc[0]
 
-  xval = inDelphi.get_precision(pred_df)
   return dict(
     data = [
-      generalStats.trace_precision,
+      generalStats.gs_precision.trace(xval),
     ],
-    layout = generalStats.layout('Precision score', xval),
+    layout = generalStats.gs_precision.layout(xval),
+  )
+
+@app.callback(
+  Output('plot-genstats-logphi', 'figure'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_plot_genstats_logphi(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = np.log(stats['Phi'].iloc[0])
+  return dict(
+    data = [
+      generalStats.gs_logphi.trace(xval),
+    ],
+    layout = generalStats.gs_logphi.layout(xval),
   )
 
 ##
