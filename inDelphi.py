@@ -57,6 +57,8 @@ def __featurize(seq, cutsite, DELLEN_LIMIT = 60):
   for del_len in range(1, DELLEN_LIMIT):
     left = seq[cutsite - del_len : cutsite]
     right = seq[cutsite : cutsite + del_len]
+    if len(left) != len(right):
+      break
 
     mhs = __find_microhomologies(left, right)
     for mh in mhs:

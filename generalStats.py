@@ -36,22 +36,18 @@ class GenomeStatistic:
     for idx in range(len(self.X)):
       if self.X[idx] > xval:
         break
-    if idx == len(self.X) - 1:
-      cum = 99.9
-    if idx == 0:
-      cum = 0.1
     cum = 100 * sum(self.Y[:idx-1])
 
     if cum <= 5:
-      var_text, var_color = 'very low', 'red'
+      var_text, var_color = 'very low', 'rgb(221, 46, 31)'
     elif cum >= 95:
-      var_text, var_color = 'very high', 'blue'
+      var_text, var_color = 'very high', 'rgb(0, 140, 221)'
     elif cum <= 25:
-      var_text, var_color = 'low', 'orange'
+      var_text, var_color = 'low', 'rgb(236, 100, 12)'
     elif cum >= 75:
-      var_text, var_color = 'high', 'green'
+      var_text, var_color = 'high', 'rgb(96, 170, 20)'
     else:
-      var_text, var_color = 'typical', 'gray'
+      var_text, var_color = 'typical', 'rgb(115, 118, 121)'
     return '%.1f' % (cum), var_text, var_color
 
   ## Barplot

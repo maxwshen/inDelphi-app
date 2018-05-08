@@ -652,7 +652,7 @@ def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
       style = dict(color = var_color),
     ),
     html.Br(),
-    html.Span('Frameshift frequency: %.1f' % (xval),
+    html.Span('Frameshift frequency: %.1f%%' % (xval),
       className = 'generalstats_subtext_style'),
     html.Br(),
     html.Span('Percentile: %s' % (cum),
@@ -845,6 +845,7 @@ def cb_update_genotype_plot(rows, selected_row_indices):
       ),
       margin = dict(
         t = 10,
+        r = 20,
       ),
     ),
   )
