@@ -32,6 +32,29 @@ class GenomeStatistic:
       self.xlabel = xlabel
     return
 
+  def cumulative(self, xval):
+    for idx in range(len(self.X)):
+      if self.X[idx] > xval:
+        break
+    if idx == len(self.X) - 1:
+      cum = 99.9
+    if idx == 0:
+      cum = 0.1
+    cum = 100 * sum(self.Y[:idx-1])
+
+    if cum <= 5:
+      var_text, var_color = 'very low', 'red'
+    elif cum >= 95:
+      var_text, var_color = 'very high', 'blue'
+    elif cum <= 25:
+      var_text, var_color = 'low', 'orange'
+    elif cum >= 75:
+      var_text, var_color = 'high', 'green'
+    else:
+      var_text, var_color = 'typical', 'gray'
+    return '%.1f' % (cum), var_text, var_color
+
+  ## Barplot
   def trace(self, xval, color_light = 'rgb(158, 202, 225)', color_dark = 'rgb(108, 152, 175)'):
     colors = []
     for x in self.X:

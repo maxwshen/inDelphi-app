@@ -125,6 +125,16 @@
     transform: translateY(-30%);
   }
 
+  .dna_textbox {
+    width: 50%;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .generalstats_text_style {
+    font-size: 120%;
+  }
+
 }
 
 

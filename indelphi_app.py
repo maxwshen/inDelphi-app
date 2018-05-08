@@ -108,11 +108,7 @@ app.layout = html.Div([
                 ),
               )
             ],
-            style = dict(
-              width = '50%',
-              display = 'inline-block',
-              verticalAlign = 'middle',
-            ),
+            className = 'dna_textbox',
           ),
 
           # Right box
@@ -131,11 +127,7 @@ app.layout = html.Div([
                 ),
               ),
             ],
-            style = dict(
-              width = '50%',
-              display = 'inline-block',
-              verticalAlign = 'middle',
-            ),
+            className = 'dna_textbox',
           ),
         ], 
           style = dict(
@@ -253,7 +245,7 @@ app.layout = html.Div([
             html.Div(
               [
                 html.Div(
-                  'test',
+                  id = 'text-genstats-precision',
                   className = 'generalstats_text_inner',
                 ),
               ],
@@ -288,7 +280,7 @@ app.layout = html.Div([
             html.Div(
               [
                 html.Div(
-                  'test',
+                  id = 'text-genstats-logphi',
                   className = 'generalstats_text_inner',
                 ),
               ],
@@ -495,6 +487,61 @@ def cb_plot_genstats_logphi(pred_df_string, pred_stats_string):
     ],
     layout = generalStats.gs_logphi.layout(xval),
   )
+
+## General stats text
+@app.callback(
+  Output('text-genstats-precision', 'children'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = stats['Precision'].iloc[0]
+  cum, var_text, var_color = generalStats.gs_precision.cumulative(xval)
+  return [
+    html.Span('This target site has ',
+      className = 'generalstats_text_style'),
+    html.Span(var_text,
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Span(' precision.',
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Br(),
+    html.Span('Precision score: %.2f' % (xval)),
+    html.Br(),
+    html.Span('Percentile: %s' % (cum)),
+  ]
+
+@app.callback(
+  Output('text-genstats-logphi', 'children'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = np.log(stats['Phi'].iloc[0])
+  cum, var_text, var_color = generalStats.gs_logphi.cumulative(xval)
+  return [
+    html.Span('This target site has ',
+      className = 'generalstats_text_style'),
+    html.Span(var_text,
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Span(' microhomology strength.',
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Br(),
+    html.Span('Log phi: %.2f' % (xval)),
+    html.Br(),
+    html.Span('Percentile: %s' % (cum)),
+  ]
 
 ##
 # Indel length and frameshift callbacks
