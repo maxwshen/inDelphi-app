@@ -70,6 +70,7 @@ class GenomeStatistic:
           family = 'Arial',
         ),
         ticks = ticks,
+        nticks = 10,
         ticklen = ticklen,
         tickwidth = tickwidth,
       ),
@@ -98,6 +99,9 @@ class GenomeStatistic:
       ],
       margin = dict(
         t = 10,
+        # Right-aligned margin
+        r = 10,
+        l = 150,
       ),
     )
 

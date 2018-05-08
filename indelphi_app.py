@@ -143,7 +143,6 @@ app.layout = html.Div([
             whiteSpace = 'nowrap',
             overflowX = 'auto',
           ),
-        # className = 'row'),
         ),
 
         html.Div([
@@ -241,7 +240,7 @@ app.layout = html.Div([
                   id = 'plot-genstats-precision',
                   style = dict(
                     height = 200, 
-                    width = 300,
+                    width = 970/2,
                   ),
                   config = dict(
                     modeBarButtonsToRemove = modebarbuttons_2d,
@@ -253,11 +252,30 @@ app.layout = html.Div([
             ),
             html.Div(
               [
+                html.Div(
+                  'test',
+                  className = 'generalstats_text_inner',
+                ),
+              ],
+              style = dict(
+                height = 200,
+              ),
+              className = 'six columns',
+            ),
+          ],
+          className = 'row',
+        ),
+
+        ## Best template for stats module
+        html.Div(
+          [
+            html.Div(
+              [
                 dcc.Graph(
                   id = 'plot-genstats-logphi',
                   style = dict(
                     height = 200, 
-                    width = 300,
+                    width = 970/2,
                   ),
                   config = dict(
                     modeBarButtonsToRemove = modebarbuttons_2d,
@@ -267,9 +285,23 @@ app.layout = html.Div([
               ],
               className = 'six columns',
             ),
+            html.Div(
+              [
+                html.Div(
+                  'test',
+                  className = 'generalstats_text_inner',
+                ),
+              ],
+              style = dict(
+                height = 200,
+              ),
+              className = 'six columns',
+            ),
           ],
           className = 'row',
         ),
+
+
 
 
 
@@ -330,6 +362,11 @@ style = dict(
   width = '1000px',
   margin = '0 auto',
   boxShadow = '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
+  generalstatstext = dict(
+    position = 'relative',
+    top = '30%',
+    transform = 'translateY(-30%)',
+  ),
 )
 )
 
@@ -706,10 +743,27 @@ def cb_update_pagelink(text1, text2):
   cutsite = len(text1)
   return 'https://dev.crisprindelphi.design/%s' % (lib.encode_dna_to_url_path(seq, cutsite))
 
+##
+# Local CSS
+##
+css_directory = os.getcwd()
+stylesheets = ['stylesheet.css']
+@app.server.route('/static/<stylesheet>')
+def serve_stylesheet(stylesheet):
+  if stylesheet not in stylesheets:
+    raise Exception(
+      '"{}" is excluded from the allowed static files'.format(
+        stylesheet
+      )
+    )
+  return flask.send_from_directory(css_directory, stylesheet)
+
+
 ###################################################################
 ###################################################################
 # CSS
-app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
+for stylesheet in stylesheets:
+  app.css.append_css({'external_url': '/static/{}'.format(stylesheet)})
 
 if __name__ == '__main__':
   app.run_server()
