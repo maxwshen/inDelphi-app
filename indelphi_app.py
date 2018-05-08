@@ -180,6 +180,51 @@ app.layout = html.Div([
     html.Div(
       [
         ###################################################
+        # Module: Summary, alignment preview
+        ###################################################
+        html.Div([
+          # header
+          html.Div([
+            html.Div([
+              html.Strong('Summary of predictions')
+              ],
+              className = 'module_header_text'),
+            ],
+            className = 'module_header'
+          ),
+
+          html.Div(
+            [
+              # Frameshift
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'summary-plot-piechart',
+                    style = dict(
+                      height = 300, 
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
+                  ),
+                ],
+                className = 'three columns',
+              ),
+
+              # Indel length
+              html.Div(
+                id = 'summary-alignment-text',
+                className = 'nine columns',
+              ),
+            ],
+            className = 'row',
+          ),
+        ], className = 'module_style',
+        ),
+
+
+        ###################################################
         # Module: Indel Lengths
         ###################################################
         html.Div([
@@ -527,6 +572,36 @@ def cb_update_pred_stats(text1, text2):
   pred_df, stats = inDelphi.predict(seq, cutsite)
   return pd.DataFrame(stats, index = [0]).to_csv()
 
+##
+# Summary of predictions callbacks
+##
+@app.callback(
+  Output('summary-alignment-text', 'children'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  
+  inDelphi.add_genotype_column(pred_df, stats)
+
+  top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  gts = top10['Genotype']
+  fqs = top10['Predicted frequency']
+  lens = top10['Length']
+  cats = top10['Category']
+
+  elements = []
+
+  for gt, fq, length, cat in zip(gts, fqs, lens, cats):
+    elements.append(
+      html.P(
+        '\t'.join([str(s) for s in [gt, fq, length, cat]])
+      )
+    )
+
+  return elements
 
 ##
 # General stats callbacks
