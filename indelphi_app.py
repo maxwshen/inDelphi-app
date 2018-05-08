@@ -221,9 +221,10 @@ app.layout = html.Div([
           className = 'row',
         ),
 
-        ##
-        # Second row: Genome statistics
-        ##
+        ###################################################
+        # Module: Genome statistics
+        ###################################################
+        ## Precision
         html.Div(
           [
             html.Div(
@@ -258,7 +259,7 @@ app.layout = html.Div([
           className = 'row',
         ),
 
-        ## Best template for stats module
+        ## Phi
         html.Div(
           [
             html.Div(
@@ -293,6 +294,40 @@ app.layout = html.Div([
           className = 'row',
         ),
 
+        ## Frameshift frequency
+        html.Div(
+          [
+            html.Div(
+              [
+                dcc.Graph(
+                  id = 'plot-genstats-frameshift',
+                  style = dict(
+                    height = 200, 
+                    width = 970/2,
+                  ),
+                  config = dict(
+                    modeBarButtonsToRemove = modebarbuttons_2d,
+                    displaylogo = False,
+                  ),
+                ),
+              ],
+              className = 'six columns',
+            ),
+            html.Div(
+              [
+                html.Div(
+                  id = 'text-genstats-frameshift',
+                  className = 'generalstats_text_inner',
+                ),
+              ],
+              style = dict(
+                height = 200,
+              ),
+              className = 'six columns',
+            ),
+          ],
+          className = 'row',
+        ),
 
 
 
@@ -464,7 +499,6 @@ def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
-
   return dict(
     data = [
       generalStats.gs_precision.trace(xval),
@@ -488,13 +522,30 @@ def cb_plot_genstats_logphi(pred_df_string, pred_stats_string):
     layout = generalStats.gs_logphi.layout(xval),
   )
 
+@app.callback(
+  Output('plot-genstats-frameshift', 'figure'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_plot_genstats_frameshift(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = stats['Frameshift frequency'].iloc[0]
+  return dict(
+    data = [
+      generalStats.gs_frameshift.trace(xval),
+    ],
+    layout = generalStats.gs_frameshift.layout(xval),
+  )
+
+
 ## General stats text
 @app.callback(
   Output('text-genstats-precision', 'children'),
   [Input('hidden-pred-df', 'children'),
    Input('hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+def cb_text_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
@@ -521,7 +572,7 @@ def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
   [Input('hidden-pred-df', 'children'),
    Input('hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+def cb_text_genstats_logphi(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
@@ -539,6 +590,33 @@ def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
     ),
     html.Br(),
     html.Span('Log phi: %.2f' % (xval)),
+    html.Br(),
+    html.Span('Percentile: %s' % (cum)),
+  ]
+
+@app.callback(
+  Output('text-genstats-frameshift', 'children'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  xval = stats['Frameshift frequency'].iloc[0]
+  cum, var_text, var_color = generalStats.gs_frameshift.cumulative(xval)
+  return [
+    html.Span('This target site has ',
+      className = 'generalstats_text_style'),
+    html.Span(var_text,
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Span(' frameshift frequency.',
+      style = dict(color = var_color),
+      className = 'generalstats_text_style',
+    ),
+    html.Br(),
+    html.Span('Frameshift frequency: %.1f' % (xval)),
     html.Br(),
     html.Span('Percentile: %s' % (cum)),
   ]
