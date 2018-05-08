@@ -170,7 +170,7 @@ app.layout = html.Div([
         left = '50%',
         transform = 'translate(-50%, 0)',
         height = headerHeight,
-        marginTop = '-%spx' % (headerHeight),
+        marginTop = '-%spx' % (headerHeight + 20),
       ),
     ),
 
@@ -179,202 +179,249 @@ app.layout = html.Div([
     ##
     html.Div(
       [
-        # First row
-        html.Div(
-          [
-            # Frameshift
-            html.Div(
-              [
-                dcc.Graph(
-                  id = 'plot-fs',
-                  style = dict(
-                    height = 300, 
-                    width = 250,
-                  ),
-                  config = dict(
-                    modeBarButtonsToRemove = modebarbuttons_2d,
-                    displaylogo = False,
-                  ),
-                ),
+        ###################################################
+        # Module: Indel Lengths
+        ###################################################
+        html.Div([
+          # header
+          html.Div([
+            html.Div([
+              html.Strong('Indel length predictions')
               ],
-              className = 'three columns',
-            ),
+              className = 'module_header_text'),
+            ],
+            className = 'module_header'
+          ),
 
-            # Indel length
-            html.Div(
-              [
-                dcc.Graph(
-                  id = 'plot-indel-len',
-                  style = dict(
-                    height = 300, 
-                    width = 600,
+          html.Div(
+            [
+              # Frameshift
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'plot-fs',
+                    style = dict(
+                      height = 300, 
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
                   ),
-                  config = dict(
-                    modeBarButtonsToRemove = modebarbuttons_2d,
-                    displaylogo = False,
+                ],
+                className = 'three columns',
+              ),
+
+              # Indel length
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'plot-indel-len',
+                    style = dict(
+                      height = 300, 
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
                   ),
-                ),
-              ],
-              className = 'nine columns',
-            ),
-          ],
-          className = 'row',
+                ],
+                className = 'nine columns',
+              ),
+            ],
+            className = 'row',
+          ),
+        ], className = 'module_style',
         ),
 
         ###################################################
         # Module: Genome statistics
         ###################################################
         ## Precision
-        html.Div(
-          [
-            html.Div(
-              [
-                dcc.Graph(
-                  id = 'plot-genstats-precision',
-                  style = dict(
-                    height = 200, 
-                    width = 970/2,
-                  ),
-                  config = dict(
-                    modeBarButtonsToRemove = modebarbuttons_2d,
-                    displaylogo = False,
-                  ),
-                ),
-              ],
-              className = 'six columns',
-            ),
-            html.Div(
-              [
-                html.Div(
-                  id = 'text-genstats-precision',
-                  className = 'generalstats_text_inner',
-                ),
-              ],
-              style = dict(
-                height = 200,
-              ),
-              className = 'six columns',
-            ),
-          ],
-          className = 'row',
-        ),
-
-        ## Phi
-        html.Div(
-          [
-            html.Div(
-              [
-                dcc.Graph(
-                  id = 'plot-genstats-logphi',
-                  style = dict(
-                    height = 200, 
-                    width = 970/2,
-                  ),
-                  config = dict(
-                    modeBarButtonsToRemove = modebarbuttons_2d,
-                    displaylogo = False,
-                  ),
-                ),
-              ],
-              className = 'six columns',
-            ),
-            html.Div(
-              [
-                html.Div(
-                  id = 'text-genstats-logphi',
-                  className = 'generalstats_text_inner',
-                ),
-              ],
-              style = dict(
-                height = 200,
-              ),
-              className = 'six columns',
-            ),
-          ],
-          className = 'row',
-        ),
-
-        ## Frameshift frequency
-        html.Div(
-          [
-            html.Div(
-              [
-                dcc.Graph(
-                  id = 'plot-genstats-frameshift',
-                  style = dict(
-                    height = 200, 
-                    width = 970/2,
-                  ),
-                  config = dict(
-                    modeBarButtonsToRemove = modebarbuttons_2d,
-                    displaylogo = False,
-                  ),
-                ),
-              ],
-              className = 'six columns',
-            ),
-            html.Div(
-              [
-                html.Div(
-                  id = 'text-genstats-frameshift',
-                  className = 'generalstats_text_inner',
-                ),
-              ],
-              style = dict(
-                height = 200,
-              ),
-              className = 'six columns',
-            ),
-          ],
-          className = 'row',
-        ),
-
-
-
-
-        dcc.Graph(
-          id = 'plot-table-genotypes',
-          style = dict(
-          ),
-          config = dict(
-            modeBarButtonsToRemove = modebarbuttons_2d,
-            displaylogo = False,
-          ),
-        ),
-
-        dt.DataTable(
-          id = 'table-genotypes',
-          rows = [{}], # init rows
-          row_selectable = True,
-          filterable = True,
-          sortable = True,
-          selected_row_indices = [],
-        ),
-
         html.Div([
-          html.A(
-            'Download CSV of inDelphi predictions', 
-            id = 'csv-download-link'
+          # header
+          html.Div([
+            html.Div([
+              html.Strong('Comparison to predictions at {:,} SpCas9 target sites in human exons and introns'.format(int(sum(generalStats.gs_logphi.unnormY))))
+              ],
+              className = 'module_header_text'),
+            ],
+            className = 'module_header'
           ),
-        ]),
 
-        html.Div([
-          html.A(
-            'Shareable link to your results', 
-            id = 'page-link'
+          html.Div(
+            [
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'plot-genstats-precision',
+                    style = dict(
+                      height = 200, 
+                      width = 970/2,
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
+                  ),
+                ],
+                className = 'six columns',
+              ),
+              html.Div(
+                [
+                  html.Div(
+                    id = 'text-genstats-precision',
+                    className = 'generalstats_text_inner',
+                  ),
+                ],
+                style = dict(
+                  height = 200,
+                ),
+                className = 'six columns',
+              ),
+            ],
+            className = 'row',
           ),
-        ]),
 
-        html.Div(
-          'Copyright MIT 2018.\nAll Rights Reserved.',
-          style = dict(
-            textAlign = 'center',
-          )
+          ## Phi
+          html.Div(
+            [
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'plot-genstats-logphi',
+                    style = dict(
+                      height = 200, 
+                      width = 970/2,
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
+                  ),
+                ],
+                className = 'six columns',
+              ),
+              html.Div(
+                [
+                  html.Div(
+                    id = 'text-genstats-logphi',
+                    className = 'generalstats_text_inner',
+                  ),
+                ],
+                style = dict(
+                  height = 200,
+                ),
+                className = 'six columns',
+              ),
+            ],
+            className = 'row',
+          ),
+
+          ## Frameshift frequency
+          html.Div(
+            [
+              html.Div(
+                [
+                  dcc.Graph(
+                    id = 'plot-genstats-frameshift',
+                    style = dict(
+                      height = 200, 
+                      width = 970/2,
+                    ),
+                    config = dict(
+                      modeBarButtonsToRemove = modebarbuttons_2d,
+                      displaylogo = False,
+                    ),
+                  ),
+                ],
+                className = 'six columns',
+              ),
+              html.Div(
+                [
+                  html.Div(
+                    id = 'text-genstats-frameshift',
+                    className = 'generalstats_text_inner',
+                  ),
+                ],
+                style = dict(
+                  height = 200,
+                ),
+                className = 'six columns',
+              ),
+            ],
+            className = 'row',
+          ),
+        ], className = 'module_style',
         ),
+
+        ###################################################
+        # Module: Detailed genotypes
+        ###################################################
+        html.Div([
+          # header
+          html.Div([
+            html.Div([
+              html.Strong('All predictions of 1-bp insertion and 1- to 60-bp deletion events')
+              ],
+              className = 'module_header_text'),
+            ],
+            className = 'module_header'
+          ),
+
+          dcc.Graph(
+            id = 'plot-table-genotypes',
+            style = dict(
+            ),
+            config = dict(
+              modeBarButtonsToRemove = modebarbuttons_2d,
+              displaylogo = False,
+            ),
+          ),
+
+          dt.DataTable(
+            id = 'table-genotypes',
+            rows = [{}], # init rows
+            row_selectable = True,
+            filterable = True,
+            sortable = True,
+            selected_row_indices = [],
+          ),
+
+          html.Div([
+            html.Div(
+              html.A(
+                'Download CSV of inDelphi predictions', 
+                id = 'csv-download-link'
+              ),
+            ),
+            html.Div(
+              html.A(
+                'Shareable link to your results', 
+                id = 'page-link'
+              ),
+            ),
+            ],
+            style = dict(
+              marginLeft = '20',
+            ),
+          ),
+
+          html.Div(
+            'Copyright MIT 2018.\nAll Rights Reserved.',
+            style = dict(
+              textAlign = 'center',
+              marginTop = '30',
+              marginBottom = '30',
+            )
+          ),
+        ], className = 'module_style',
+        ),
+
       ],
       # body style
       style = dict(
-        marginTop = '%spx' % (headerHeight),
+        marginTop = '%spx' % (headerHeight + 20),
       ),
     ),
     ##
@@ -384,16 +431,10 @@ app.layout = html.Div([
       margin = '0 auto',
     )
   ),
-], # Shadow
+],  # body div
 style = dict(
   width = '1000px',
   margin = '0 auto',
-  boxShadow = '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
-  generalstatstext = dict(
-    position = 'relative',
-    top = '30%',
-    transform = 'translateY(-30%)',
-  ),
 )
 )
 
@@ -551,20 +592,19 @@ def cb_text_genstats_precision(pred_df_string, pred_stats_string):
   xval = stats['Precision'].iloc[0]
   cum, var_text, var_color = generalStats.gs_precision.cumulative(xval)
   return [
-    html.Span('This target site has ',
-      className = 'generalstats_text_style'),
-    html.Span(var_text,
+    html.Strong('This target site has '),
+    html.Strong(var_text,
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
-    html.Span(' precision.',
+    html.Strong(' precision.',
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
     html.Br(),
-    html.Span('Precision score: %.2f' % (xval)),
+    html.Span('Precision score: %.2f' % (xval),
+      className = 'generalstats_subtext_style'),
     html.Br(),
-    html.Span('Percentile: %s' % (cum)),
+    html.Span('Percentile: %s' % (cum),
+      className = 'generalstats_subtext_style'),
   ]
 
 @app.callback(
@@ -578,20 +618,19 @@ def cb_text_genstats_logphi(pred_df_string, pred_stats_string):
   xval = np.log(stats['Phi'].iloc[0])
   cum, var_text, var_color = generalStats.gs_logphi.cumulative(xval)
   return [
-    html.Span('This target site has ',
-      className = 'generalstats_text_style'),
-    html.Span(var_text,
+    html.Strong('This target site has '),
+    html.Strong(var_text,
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
-    html.Span(' microhomology strength.',
+    html.Strong(' microhomology strength.',
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
     html.Br(),
-    html.Span('Log phi: %.2f' % (xval)),
+    html.Span('Log phi: %.2f' % (xval),
+      className = 'generalstats_subtext_style'),
     html.Br(),
-    html.Span('Percentile: %s' % (cum)),
+    html.Span('Percentile: %s' % (cum),
+      className = 'generalstats_subtext_style'),
   ]
 
 @app.callback(
@@ -605,20 +644,19 @@ def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
   xval = stats['Frameshift frequency'].iloc[0]
   cum, var_text, var_color = generalStats.gs_frameshift.cumulative(xval)
   return [
-    html.Span('This target site has ',
-      className = 'generalstats_text_style'),
-    html.Span(var_text,
+    html.Strong('This target site has '),
+    html.Strong(var_text,
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
-    html.Span(' frameshift frequency.',
+    html.Strong(' frameshift frequency.',
       style = dict(color = var_color),
-      className = 'generalstats_text_style',
     ),
     html.Br(),
-    html.Span('Frameshift frequency: %.1f' % (xval)),
+    html.Span('Frameshift frequency: %.1f' % (xval),
+      className = 'generalstats_subtext_style'),
     html.Br(),
-    html.Span('Percentile: %s' % (cum)),
+    html.Span('Percentile: %s' % (cum),
+      className = 'generalstats_subtext_style'),
   ]
 
 ##
@@ -669,7 +707,10 @@ def cb_plot_indel_len(pred_df_string):
         family = 'Arial',
       ),
       margin = dict(
-        t = 10,
+        t = 30,
+        l = 70,
+        r = 20,
+        b = 70,
       ),
     ),
   )
@@ -731,7 +772,10 @@ def cb_plot_fs(pred_df_string):
         family = 'Arial',
       ),
       margin = dict(
-        t = 10,
+        t = 30,
+        l = 70,
+        r = 20,
+        b = 70,
       ),
     ),
   )

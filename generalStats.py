@@ -121,10 +121,11 @@ class GenomeStatistic:
         ),
       ],
       margin = dict(
-        t = 10,
+        t = 20,
         # Right-aligned margin
         r = 10,
         l = 150,
+        b = 70,
       ),
     )
 

@@ -131,10 +131,32 @@
     vertical-align: middle;
   }
 
-  .generalstats_text_style {
-    font-size: 120%;
+  .generalstats_subtext_style {
+    color: rgb(150, 150, 150);
   }
 
+  /* Module styles */
+  .module_header {
+    background-color: rgba(0, 0, 0, 0.05);
+    height: 40px;
+    width: 970px;
+    vertical-align: middle;
+  }
+
+  .module_header_text {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 20px;
+  }
+
+  .module_style {
+    width: 970px;
+    margin: 0 auto;
+    /*box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.2), 0 8px 12px 0 rgba(0, 0, 0, 0.19);*/
+    box-shadow: 1px 3px 6px 0 rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+  }
 }
 
 
