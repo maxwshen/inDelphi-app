@@ -592,12 +592,33 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
   lens = top10['Length']
   cats = top10['Category']
 
-  elements = []
+  def get_gapped_alignments(top, stats):
+    cutsite = stats['Cutsite'].iloc[0]
+    gapped_aligns = []
+    for idx, row in top.iterrows():
+      gt = row['Genotype']
+      gt_pos = row['Genotype position']
+      length = row['Length']
+      cat = row['Category']
+      if cat == 'ins':
+        gapped_aligns.append(gt)
+        continue
+      if gt_pos == 'e':
+        gapped_aligns.append('multiple deletion genotypes')
+        continue
 
-  for gt, fq, length, cat in zip(gts, fqs, lens, cats):
+      gt_pos = int(gt_pos)
+      gap_gt = gt[:cutsite - length + gt_pos] + '-'*length + gt[cutsite - length + gt_pos:]
+      gapped_aligns.append(gap_gt)
+    return gapped_aligns
+
+  gap_gts = get_gapped_alignments(top10, stats)
+  
+  elements = []
+  for gt, fq, length, cat in zip(gap_gts, fqs, lens, cats):
     elements.append(
       html.P(
-        '\t'.join([str(s) for s in [gt, fq, length, cat]])
+        '%s %.1f %s %s' % (gt, fq, length, cat)
       )
     )
 
