@@ -615,10 +615,22 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
   gap_gts = get_gapped_alignments(top10, stats)
   
   elements = []
+  elements.append(
+    html.P(
+      '%s reference' % (stats['Reference sequence'].iloc[0]),
+      style = dict(
+        fontFamily = 'monospace',
+      ),
+    )
+  )
+
   for gt, fq, length, cat in zip(gap_gts, fqs, lens, cats):
     elements.append(
       html.P(
-        '%s %.1f %s %s' % (gt, fq, length, cat)
+        '%s %.1f %s %s' % (gt, fq, length, cat),
+        style = dict(
+          fontFamily = 'monospace',
+        ),
       )
     )
 
