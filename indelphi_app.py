@@ -685,9 +685,9 @@ def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
         showticklabels = False,
       ),
       margin = dict(
-        l = 0,
-        r = 20,
-        t = 59,
+        l = 5,
+        r = 10,
+        t = 58,
         b = 42,
       ),
     ),
