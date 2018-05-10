@@ -186,7 +186,7 @@ app.layout = html.Div([
           # header
           html.Div([
             html.Div([
-              html.Strong('Summary of predictions')
+              html.Strong('Summary of predictions: Top 10 frequent events')
               ],
               className = 'module_header_text'),
             ],
@@ -195,27 +195,30 @@ app.layout = html.Div([
 
           html.Div(
             [
-              # Frameshift
-              html.Div(
-                [
-                  dcc.Graph(
-                    id = 'summary-plot-piechart',
-                    style = dict(
-                      height = 300, 
-                    ),
-                    config = dict(
-                      modeBarButtonsToRemove = modebarbuttons_2d,
-                      displaylogo = False,
-                    ),
-                  ),
-                ],
-                className = 'three columns',
+              # Text table
+              dcc.Graph(
+                id = 'summary-alignment-table',
+                config = dict(
+                  modeBarButtonsToRemove = modebarbuttons_2d,
+                  displaylogo = False,
+                ),
+                style = dict(
+                  height = 300,
+                ),
+                className = 'eight columns',
               ),
 
-              # Indel length
-              html.Div(
-                id = 'summary-alignment-text',
-                className = 'nine columns',
+              # bar chart
+              dcc.Graph(
+                id = 'summary-alignment-barchart',
+                config = dict(
+                  modeBarButtonsToRemove = modebarbuttons_2d,
+                  displaylogo = False,
+                ),
+                style = dict(
+                  height = 300,
+                ),
+                className = 'four columns',
               ),
             ],
             className = 'row',
@@ -576,7 +579,7 @@ def cb_update_pred_stats(text1, text2):
 # Summary of predictions callbacks
 ##
 @app.callback(
-  Output('summary-alignment-text', 'children'),
+  Output('summary-alignment-table', 'figure'),
   [Input('hidden-pred-df', 'children'),
    Input('hidden-pred-stats', 'children'),
   ])
@@ -591,6 +594,7 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
   fqs = top10['Predicted frequency']
   lens = top10['Length']
   cats = top10['Category']
+  fq_strings = ['-'] + ['%.1f' % (s) for s in fqs]
 
   def get_gapped_alignments(top, stats):
     cutsite = stats['Cutsite'].iloc[0]
@@ -614,27 +618,80 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
 
   gap_gts = get_gapped_alignments(top10, stats)
   
-  elements = []
-  elements.append(
-    html.P(
-      '%s reference' % (stats['Reference sequence'].iloc[0]),
-      style = dict(
-        fontFamily = 'monospace',
+  alignments, categories = [], []
+  alignments.append(stats['Reference sequence'].iloc[0])
+  categories.append('Reference')
+
+  for gt, length, cat in zip(gap_gts, lens, cats):
+    alignments.append(gt)
+    if cat == 'ins':
+      categories.append('%s-bp insertion' % (length))
+    elif cat == 'del':
+      categories.append('%s-bp deletion' % (length))
+
+  return dict(
+    data = [go.Table(
+      type = 'table',
+      columnwidth = [300, 100, 80],
+      header = dict(
+        values = ['Alignment', 'Category', '%'],
+        align = ['center', 'right', 'right'], 
+        line = dict(color = 'white'),
+        fill = dict(color = 'white'),
       ),
-    )
+      cells = dict(
+        values = [alignments, categories, fq_strings],
+        align = ['center', 'right', 'right'], 
+        line = dict(color = 'white'),
+        fill = dict(color = 'white'),
+        font = dict(family = 'monospace'),
+      )
+    )],
+    layout = go.Layout(
+      font = dict(
+        family = 'monospace',
+      ),
+      margin = dict(
+        l = 10,
+        r = 0,
+        t = 5,
+        b = 5,
+      ),
+    ),
   )
 
-  for gt, fq, length, cat in zip(gap_gts, fqs, lens, cats):
-    elements.append(
-      html.P(
-        '%s %.1f %s %s' % (gt, fq, length, cat),
-        style = dict(
-          fontFamily = 'monospace',
-        ),
-      )
-    )
+@app.callback(
+  Output('summary-alignment-barchart', 'figure'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children'),
+  ])
+def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  
+  inDelphi.add_genotype_column(pred_df, stats)
 
-  return elements
+  top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  fqs = top10['Predicted frequency'][::-1]
+
+  return dict(
+    data = [go.Bar(
+      x = fqs,
+      y = np.arange(len(fqs)),
+      orientation = 'h',
+    )],
+    layout = go.Layout(
+      yaxis = dict(
+        showticklabels = False,
+      ),
+      margin = dict(
+        l = 0,
+        r = 20,
+        t = 59,
+        b = 42,
+      ),
+    ),
+  )
 
 ##
 # General stats callbacks
