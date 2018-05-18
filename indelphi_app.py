@@ -81,6 +81,9 @@ app.layout = html.Div([
     ##
     html.Div(
       [
+        ###################################################
+        # Upper header
+        ###################################################
         html.H4(
           'inDelphi',
           style = dict(
@@ -88,7 +91,9 @@ app.layout = html.Div([
           ),
         ),
 
-        # Row
+        ###################################################
+        # Sequence boxes
+        ###################################################
         html.Div([
           # Left box
           html.Div(
@@ -137,29 +142,113 @@ app.layout = html.Div([
           ),
         ),
 
-        html.Div([
-            html.A('◄',
-              id = 'button-input-left',
+        ###################################################
+        # Row of PAM arrows 
+        ###################################################
+        html.Div(
+          [
+            html.Div(
+              [
+                # (Left) placeholder
+                html.Div('',
+                  style = dict(
+                    display = 'table-cell',
+                    width = '25%',
+                  ),
+                ),
+
+                ###################################################
+                # (Center) DSB arrows: Simple
+                ###################################################
+                html.Div([
+                    html.A('◄',
+                      id = 'button-dsb-left',
+                      style = dict(
+                        textDecoration = 'none',
+                        fontFamily = 'monospace',
+                        color = 'rgb(0, 174, 179)',
+                        fontSize = 20,
+                      ),
+                    ),
+                    '\tDSB\t',
+                    html.A('►',
+                      id = 'button-dsb-right',
+                      style = dict(
+                        textDecoration = 'none',
+                        fontFamily = 'monospace',
+                        color = 'rgb(0, 174, 179)',
+                        fontSize = 20,
+                      ),
+                    ),
+                  ],
+                  style = dict(
+                    textAlign = 'center',
+                    display = 'table-cell',
+                    width = '50%',
+                  )
+                ),
+
+                ###################################################
+                # (Right) PAM arrows
+                ###################################################
+                html.Div([
+                    html.A('◄',
+                      id = 'button-pam-left',
+                      style = dict(
+                        textDecoration = 'none',
+                        fontFamily = 'monospace',
+                        fontSize = 20,
+                        color = 'rgb(237, 71, 149)',
+                        verticalAlign = 'middle',
+                      ),
+                    ),
+                    dcc.Input(
+                      id = 'textbox_pam', 
+                      size = 5,
+                      value = 'NGG',
+                      type = 'text',
+                      autofocus = True,
+                      style = dict(
+                        fontFamily = 'monospace',
+                        fontSize = 14,
+                        textAlign = 'center',
+                        height = '18px',
+                        width = '70px',
+                        marginLeft = '5px',
+                        marginRight = '5px',
+                      ),
+                    ),
+                    html.A('►',
+                      id = 'button-pam-right',
+                      style = dict(
+                        textDecoration = 'none',
+                        fontFamily = 'monospace',
+                        fontSize = 20,
+                        color = 'rgb(237, 71, 149)',
+                        verticalAlign = 'middle',
+                      ),
+                    ),
+                  ],
+                  style = dict(
+                    display = 'table-cell',
+                    textAlign = 'right',
+                    width = '25%',
+                  )
+                ),
+              ],
               style = dict(
-                textDecoration = 'none',
-                fontFamily = 'monospace',
-                fontSize = 20,
+                display = 'table-row',
               ),
             ),
-            '\tDSB\t',
-            html.A('►',
-              id = 'button-input-right',
-              style = dict(
-                textDecoration = 'none',
-                fontFamily = 'monospace',
-                fontSize = 20,
-              ),
-            ),
-          ],
+          ], 
           style = dict(
-            textAlign = 'center',
-          )
+            display = 'table',
+            width = '100%',
+          ),
         ),
+
+
+
       ],
       style = dict(
         position = 'fixed',
@@ -496,14 +585,14 @@ style = dict(
 ## Arrow buttons
 @app.callback(
   Output('hidden-cache-left', 'children'),
-  [Input('button-input-left', 'n_clicks')],
+  [Input('button-dsb-left', 'n_clicks')],
   [State('textbox1', 'value')])
 def cb_update_cache_left(n_clicks, box1_val):
   return '%s_%s' % (box1_val[-1], time.time())
 
 @app.callback(
   Output('hidden-cache-right', 'children'),
-  [Input('button-input-right', 'n_clicks')],
+  [Input('button-dsb-right', 'n_clicks')],
   [State('textbox2', 'value')])
 def cb_update_cache_right(n_clicks, box2_val):
   return '%s_%s' % (box2_val[0], time.time())
