@@ -59,13 +59,22 @@ app.layout = html.Div([
           children = 'init'
         ),
         html.Div(
-          id = 'hidden-cache-left',
+          id = 'hidden-cache-dsb-left',
           children = 'init'
         ),
         html.Div(
-          id = 'hidden-cache-right',
+          id = 'hidden-cache-dsb-right',
           children = 'init'
         ),
+        html.Div(
+          id = 'hidden-cache-pam-left',
+          children = 'init'
+        ),
+        html.Div(
+          id = 'hidden-cache-pam-right',
+          children = 'init'
+        ),
+
         dcc.Location(
           id = 'url',
           refresh = False,
@@ -583,63 +592,112 @@ style = dict(
 ##
 
 ## Arrow buttons
+# These must be 1->1 mapping, otherwise we can't tell which n_clicks triggered the callback
 @app.callback(
-  Output('hidden-cache-left', 'children'),
-  [Input('button-dsb-left', 'n_clicks')],
-  [State('textbox1', 'value')])
-def cb_update_cache_left(n_clicks, box1_val):
-  return '%s_%s' % (box1_val[-1], time.time())
+  Output('hidden-cache-dsb-left', 'children'),
+  [Input('button-dsb-left', 'n_clicks')])
+def cb_update_cache_dsb_left(n_clicks):
+  return '%s' % (time.time())
 
 @app.callback(
-  Output('hidden-cache-right', 'children'),
-  [Input('button-dsb-right', 'n_clicks')],
-  [State('textbox2', 'value')])
-def cb_update_cache_right(n_clicks, box2_val):
-  return '%s_%s' % (box2_val[0], time.time())
+  Output('hidden-cache-dsb-right', 'children'),
+  [Input('button-dsb-right', 'n_clicks')])
+def cb_update_cache_dsb_right(n_clicks):
+  return '%s' % (time.time())
+
+@app.callback(
+  Output('hidden-cache-pam-left', 'children'),
+  [Input('button-pam-left', 'n_clicks')])
+def cb_update_cache_pam_left(n_clicks):
+  return '%s' % (time.time())
+
+@app.callback(
+  Output('hidden-cache-pam-right', 'children'),
+  [Input('button-pam-right', 'n_clicks')])
+def cb_update_cache_pam_right(n_clicks):
+  return '%s' % (time.time())
+
 
 @app.callback(
   Output('textbox1', 'value'),
-  [Input('hidden-cache-left', 'children'),
-   Input('hidden-cache-right', 'children'),
+  [Input('hidden-cache-dsb-left', 'children'),
+   Input('hidden-cache-dsb-right', 'children'),
+   Input('hidden-cache-pam-left', 'children'),
+   Input('hidden-cache-pam-right', 'children'),
    Input('url', 'pathname')],
-  [State('textbox1', 'value')])
-def cb_update_textbox1_arrow(cache_left, cache_right, url, text):
-  left_char = cache_left.split('_')[0]
-  left_time = float(cache_left.split('_')[1])
-  right_char = cache_right.split('_')[0]
-  right_time = float(cache_right.split('_')[1])
-  if abs(left_time - right_time) < 0.01:
+  [State('textbox1', 'value'),
+   State('textbox2', 'value'),
+   State('textbox_pam', 'value')])
+def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, url, text1, text2, text_pam):
+  left_dsb_time = float(cache_dsb_left)
+  right_dsb_time = float(cache_dsb_right)
+  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
+  left_pam_time = float(cache_pam_left)
+  right_pam_time = float(cache_pam_right)
+  pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
+  if pageload_dsb and pageload_pam:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
-      return text
+      return text1
     else:
       return seq[:cutsite]
-  if left_time > right_time:
-    return text[:-1]
-  else:
-    return text + right_char
+
+  if max(left_dsb_time, right_dsb_time) > max(left_pam_time, right_pam_time):
+    # Clicked DSB
+    if left_dsb_time > right_dsb_time:
+      return text1[:-1]
+    elif right_dsb_time > left_dsb_time:
+      return text1 + text2[0]
+  elif max(left_pam_time, right_pam_time) > max(left_dsb_time, right_dsb_time):
+    # Clicked PAM
+    if left_pam_time > right_pam_time:
+      ## TO IMPLEMENT
+      # Seek left PAM using text_pam
+      return text1[:-1]
+    elif right_pam_time > left_pam_time:
+      ## TO IMPLEMENT
+      # Seek right PAM using text_pam
+      return text1 + text2[0]
 
 @app.callback(
   Output('textbox2', 'value'),
-  [Input('hidden-cache-left', 'children'),
-   Input('hidden-cache-right', 'children'),
+  [Input('hidden-cache-dsb-left', 'children'),
+   Input('hidden-cache-dsb-right', 'children'),
+   Input('hidden-cache-pam-left', 'children'),
+   Input('hidden-cache-pam-right', 'children'),
    Input('url', 'pathname')],
-  [State('textbox2', 'value')])
-def cb_update_textbox2_arrow(cache_left, cache_right, url, text):
-  left_char = cache_left.split('_')[0]
-  left_time = float(cache_left.split('_')[1])
-  right_char = cache_right.split('_')[0]
-  right_time = float(cache_right.split('_')[1])
-  if abs(left_time - right_time) < 0.01:
+  [State('textbox1', 'value'),
+   State('textbox2', 'value'),
+   State('textbox_pam', 'value')])
+def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, url, text1, text2, text_pam):
+  left_dsb_time = float(cache_dsb_left)
+  right_dsb_time = float(cache_dsb_right)
+  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
+  left_pam_time = float(cache_pam_left)
+  right_pam_time = float(cache_pam_right)
+  pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
+  if pageload_dsb and pageload_pam:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
-      return text
+      return text2
     else:
       return seq[cutsite:]
-  if left_time > right_time:
-    return left_char + text
-  else:
-    return text[1:]
+
+  if max(left_dsb_time, right_dsb_time) > max(left_pam_time, right_pam_time):
+    # Clicked DSB
+    if left_dsb_time > right_dsb_time:
+      return text1[-1] + text2
+    elif right_dsb_time > left_dsb_time:
+      return text2[1:]
+  elif max(left_pam_time, right_pam_time) > max(left_dsb_time, right_dsb_time):
+    # Clicked PAM
+    if left_dsb_time > right_dsb_time:
+      ## TO IMPLEMENT
+      return text1[-1] + text2
+    elif right_dsb_time > left_dsb_time:
+      ## TO IMPLEMENT
+      return text2[1:]
+
 
 ##
 # Prediction callback
