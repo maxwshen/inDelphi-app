@@ -596,6 +596,25 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
   cats = top10['Category']
   fq_strings = ['-'] + ['%.1f' % (s) for s in fqs]
 
+  def trim_alignment(gt, cutsite, name):
+    radius = 26
+    if name == 'ins':
+      trim_cand = gt[cutsite - radius : cutsite + radius + 1]
+      if len(trim_cand) == 2*radius + 1:
+        return trim_cand
+      else:
+        return gt
+    else:
+      trim_cand = gt[cutsite - radius : cutsite + radius + 1]
+      if len(trim_cand) == 2*radius + 1:
+        return trim_cand
+      else:
+        return gt
+    return
+
+  def add_bar(seq, cutsite):
+    return seq[:cutsite] + '|' + seq[cutsite:]
+
   def get_gapped_alignments(top, stats):
     cutsite = stats['Cutsite'].iloc[0]
     gapped_aligns = []
@@ -605,7 +624,7 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
       length = row['Length']
       cat = row['Category']
       if cat == 'ins':
-        gapped_aligns.append(gt)
+        gapped_aligns.append(trim_alignment(gt, cutsite, 'ins'))
         continue
       if gt_pos == 'e':
         gapped_aligns.append('multiple deletion genotypes')
@@ -613,13 +632,17 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
 
       gt_pos = int(gt_pos)
       gap_gt = gt[:cutsite - length + gt_pos] + '-'*length + gt[cutsite - length + gt_pos:]
-      gapped_aligns.append(gap_gt)
+      gap_gt = add_bar(gap_gt, cutsite)
+      gapped_aligns.append(trim_alignment(gap_gt, cutsite, 'del'))
     return gapped_aligns
 
   gap_gts = get_gapped_alignments(top10, stats)
   
   alignments, categories = [], []
-  alignments.append(stats['Reference sequence'].iloc[0])
+  cutsite = stats['Cutsite'].iloc[0]
+  reference_seq = stats['Reference sequence'].iloc[0]
+  reference_seq = add_bar(reference_seq, cutsite)
+  alignments.append(trim_alignment(reference_seq, cutsite, 'ref'))
   categories.append('Reference')
 
   for gt, length, cat in zip(gap_gts, lens, cats):
@@ -674,11 +697,29 @@ def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
   top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
   fqs = top10['Predicted frequency'][::-1]
 
+  cats = top10['Category'][::-1]
+  gts = top10['Genotype position'][::-1]
+  colors = []
+  for cat, gt in zip(cats, gts):
+    if gt == 'e':
+      colors.append('rgb(236, 100, 12)')
+    else:
+      if cat == 'del':
+        colors.append('rgb(221, 46, 31)')
+      else:
+        colors.append('rgb(0, 160, 220)')
+
   return dict(
     data = [go.Bar(
       x = fqs,
       y = np.arange(len(fqs)),
       orientation = 'h',
+      marker = dict(
+        color = colors,
+        line = dict(
+          width = 0,
+        ),
+      ),
     )],
     layout = go.Layout(
       yaxis = dict(
