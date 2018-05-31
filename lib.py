@@ -1,3 +1,7 @@
+###############################################
+# Functions and variables for URL shortening
+###############################################
+
 chars = None
 dna_to_code = dict()
 code_to_dna = dict()
@@ -88,6 +92,59 @@ def encode_dna_to_url_path(seq, cutsite):
       code += dna_to_code[chomp]
   return '%s.%s' % (code, cutsite)
 
-
 __init_chars()
 __init_mappers()
+
+###############################################
+# Compbio operations
+###############################################
+
+def revcomp(seq):
+  rc_mapper = {'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A'}
+  rc_seq = []
+  for c in seq:
+    if c in rc_mapper:
+      rc_seq.append(rc_mapper[c])
+    else:
+      rc_seq.append(c)
+  return ''.join(rc_seq[::-1])
+
+def pam_shift(text1, text2, text_pam, direction):
+  seq = text1 + text2
+  cutsite = len(text1)
+
+  if direction == 'right':
+    cutsites = range(cutsite + 1, len(seq))
+  elif direction == 'left':
+    cutsites = range(cutsite - 1, 0, -1)
+
+  for ct in cutsites:
+    candidate_pam = seq[ct + 3 : ct + 6]
+    if match(text_pam, candidate_pam):
+      return seq[:ct], seq[ct:]
+  return None
+
+mapper = {
+  'A': list('A'),
+  'C': list('C'),
+  'G': list('G'),
+  'T': list('T'),
+  'Y': list('CT'),
+  'R': list('AG'),
+  'W': list('AT'),
+  'S': list('GC'),
+  'K': list('TG'),
+  'M': list('AC'),
+  'D': list('AGT'),
+  'V': list('ACG'),
+  'H': list('ACT'),
+  'B': list('CGT'),
+  'N': list('ACGT'),
+}
+def match(template, dna):
+  if len(dna) != len(template):
+    return False
+  for char, t in zip(dna, template):
+    if char not in mapper[t]:
+      return False
+  return True

@@ -74,6 +74,10 @@ app.layout = html.Div([
           id = 'hidden-cache-pam-right',
           children = 'init'
         ),
+        html.Div(
+          id = 'hidden-cache-revcomp',
+          children = 'init'
+        ),
 
         dcc.Location(
           id = 'url',
@@ -140,6 +144,17 @@ app.layout = html.Div([
                   float = 'left',
                 ),
               ),
+              html.A('🔃 strand',
+                id = 'button-revcomp',
+                style = dict(
+                  fontSize = 16,
+                  textDecoration = 'none',
+                  verticalAlign = 'middle',
+                  float = 'right',
+                  position = 'relative',
+                  transform = 'translateY(27%)',
+                ),
+              ),
             ],
             className = 'dna_textbox',
           ),
@@ -201,49 +216,48 @@ app.layout = html.Div([
                 # (Right) PAM arrows
                 ###################################################
                 html.Div([
-                    html.A('◄',
-                      id = 'button-pam-left',
-                      style = dict(
-                        textDecoration = 'none',
-                        fontFamily = 'monospace',
-                        fontSize = 20,
-                        color = 'rgb(237, 71, 149)',
-                        verticalAlign = 'middle',
-                      ),
+                  html.A('◄',
+                    id = 'button-pam-left',
+                    style = dict(
+                      textDecoration = 'none',
+                      fontFamily = 'monospace',
+                      fontSize = 20,
+                      color = 'rgb(237, 71, 149)',
+                      verticalAlign = 'middle',
                     ),
-                    dcc.Input(
-                      id = 'textbox_pam', 
-                      size = 5,
-                      value = 'NGG',
-                      type = 'text',
-                      autofocus = True,
-                      style = dict(
-                        fontFamily = 'monospace',
-                        fontSize = 14,
-                        textAlign = 'center',
-                        height = '18px',
-                        width = '70px',
-                        marginLeft = '5px',
-                        marginRight = '5px',
-                      ),
+                  ),
+                  dcc.Input(
+                    id = 'textbox_pam', 
+                    size = 5,
+                    value = 'NGG',
+                    type = 'text',
+                    autofocus = True,
+                    style = dict(
+                      fontFamily = 'monospace',
+                      fontSize = 14,
+                      textAlign = 'center',
+                      height = '18px',
+                      width = '70px',
+                      marginLeft = '5px',
+                      marginRight = '5px',
                     ),
-                    html.A('►',
-                      id = 'button-pam-right',
-                      style = dict(
-                        textDecoration = 'none',
-                        fontFamily = 'monospace',
-                        fontSize = 20,
-                        color = 'rgb(237, 71, 149)',
-                        verticalAlign = 'middle',
-                      ),
+                  ),
+                  html.A('►',
+                    id = 'button-pam-right',
+                    style = dict(
+                      textDecoration = 'none',
+                      fontFamily = 'monospace',
+                      fontSize = 20,
+                      color = 'rgb(237, 71, 149)',
+                      verticalAlign = 'middle',
                     ),
-                  ],
-                  style = dict(
-                    display = 'table-cell',
-                    textAlign = 'right',
-                    width = '25%',
-                  )
-                ),
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '25%',
+                )),
               ],
               style = dict(
                 display = 'table-row',
@@ -284,8 +298,10 @@ app.layout = html.Div([
           # header
           html.Div([
             html.Div([
-              html.Strong('Summary of predictions: Top 10 frequent events')
-              ],
+              html.Strong(
+                '',
+                id = 'text-summary-module-header'
+              )],
               className = 'module_header_text'),
             ],
             className = 'module_header'
@@ -587,9 +603,6 @@ style = dict(
 #######################################################################
 #########################      CALLBACKS      #########################
 #######################################################################
-##
-# Header Callbacks
-##
 
 ## Arrow buttons
 # These must be 1->1 mapping, otherwise we can't tell which n_clicks triggered the callback
@@ -617,6 +630,11 @@ def cb_update_cache_pam_left(n_clicks):
 def cb_update_cache_pam_right(n_clicks):
   return '%s' % (time.time())
 
+@app.callback(
+  Output('hidden-cache-revcomp', 'children'),
+  [Input('button-revcomp', 'n_clicks')])
+def cb_update_cache_revcomp(n_clicks):
+  return '%s' % (time.time())
 
 @app.callback(
   Output('textbox1', 'value'),
@@ -624,40 +642,48 @@ def cb_update_cache_pam_right(n_clicks):
    Input('hidden-cache-dsb-right', 'children'),
    Input('hidden-cache-pam-left', 'children'),
    Input('hidden-cache-pam-right', 'children'),
+   Input('hidden-cache-revcomp', 'children'),
    Input('url', 'pathname')],
   [State('textbox1', 'value'),
    State('textbox2', 'value'),
    State('textbox_pam', 'value')])
-def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, url, text1, text2, text_pam):
+def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
   pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
   left_pam_time = float(cache_pam_left)
   right_pam_time = float(cache_pam_right)
+  rc_time = float(cache_rc)
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
-  if pageload_dsb and pageload_pam:
+  pageload_rc = bool(abs(rc_time - left_pam_time) < 0.01)
+  if pageload_dsb and pageload_pam and pageload_rc:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
       return text1
     else:
       return seq[:cutsite]
 
-  if max(left_dsb_time, right_dsb_time) > max(left_pam_time, right_pam_time):
+  latest_dsb_click = max(left_dsb_time, right_dsb_time)
+  latest_pam_click = max(left_pam_time, right_pam_time)
+  latest_rc_click = rc_time
+
+  if latest_dsb_click > max(latest_pam_click, latest_rc_click):
     # Clicked DSB
     if left_dsb_time > right_dsb_time:
       return text1[:-1]
     elif right_dsb_time > left_dsb_time:
       return text1 + text2[0]
-  elif max(left_pam_time, right_pam_time) > max(left_dsb_time, right_dsb_time):
+  elif latest_pam_click > max(latest_dsb_click, latest_rc_click):
     # Clicked PAM
     if left_pam_time > right_pam_time:
-      ## TO IMPLEMENT
-      # Seek left PAM using text_pam
-      return text1[:-1]
+      newtext1, newtext2 = lib.pam_shift(text1, text2, text_pam, 'left')
+      return newtext1
     elif right_pam_time > left_pam_time:
-      ## TO IMPLEMENT
-      # Seek right PAM using text_pam
-      return text1 + text2[0]
+      newtext1, newtext2 = lib.pam_shift(text1, text2, text_pam, 'right')
+      return newtext1
+  elif latest_rc_click > max(latest_dsb_click, latest_pam_click):
+    # Clicked RC button
+    return lib.revcomp(text2)
 
 @app.callback(
   Output('textbox2', 'value'),
@@ -665,39 +691,59 @@ def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
    Input('hidden-cache-dsb-right', 'children'),
    Input('hidden-cache-pam-left', 'children'),
    Input('hidden-cache-pam-right', 'children'),
+   Input('hidden-cache-revcomp', 'children'),
    Input('url', 'pathname')],
   [State('textbox1', 'value'),
    State('textbox2', 'value'),
    State('textbox_pam', 'value')])
-def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, url, text1, text2, text_pam):
+def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
   pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
   left_pam_time = float(cache_pam_left)
   right_pam_time = float(cache_pam_right)
+  rc_time = float(cache_rc)
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
-  if pageload_dsb and pageload_pam:
+  pageload_rc = bool(abs(rc_time - left_pam_time) < 0.01)
+  if pageload_dsb and pageload_pam and pageload_rc:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
       return text2
     else:
       return seq[cutsite:]
 
-  if max(left_dsb_time, right_dsb_time) > max(left_pam_time, right_pam_time):
+  latest_dsb_click = max(left_dsb_time, right_dsb_time)
+  latest_pam_click = max(left_pam_time, right_pam_time)
+  latest_rc_click = rc_time
+
+  if latest_dsb_click > max(latest_pam_click, latest_rc_click):
     # Clicked DSB
     if left_dsb_time > right_dsb_time:
       return text1[-1] + text2
     elif right_dsb_time > left_dsb_time:
       return text2[1:]
-  elif max(left_pam_time, right_pam_time) > max(left_dsb_time, right_dsb_time):
+  elif latest_pam_click > max(latest_dsb_click, latest_rc_click):
     # Clicked PAM
-    if left_dsb_time > right_dsb_time:
-      ## TO IMPLEMENT
-      return text1[-1] + text2
-    elif right_dsb_time > left_dsb_time:
-      ## TO IMPLEMENT
-      return text2[1:]
+    if left_pam_time > right_pam_time:
+      newtext1, newtext2 = lib.pam_shift(text1, text2, text_pam, 'left')
+      return newtext2
+    elif right_pam_time > left_pam_time:
+      newtext1, newtext2 = lib.pam_shift(text1, text2, text_pam, 'right')
+      return newtext2
+  elif latest_rc_click > max(latest_dsb_click, latest_pam_click):
+    # Clicked RC button
+    return lib.revcomp(text1)
 
+##
+# Module header callbacks
+##
+@app.callback(
+  Output('text-summary-module-header', 'children'),
+  [Input('textbox1', 'value'),
+   Input('textbox2', 'value')])
+def cb_update_summary_module_header(text1, text2):
+  presumed_grna = text1[-18:] + text2[:3]
+  return 'Summary of predictions at target site with gRNA: %s' % (presumed_grna)
 
 ##
 # Prediction callback
