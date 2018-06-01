@@ -125,6 +125,32 @@ class GenomeStatistic:
       ),
     )
 
+
+# Tooltips
+def get_tooltip_precision(var_text):
+  if 'low' in var_text:
+    return 'Low precision is highly stochastic. DNA repair outcomes are heterogeneous with no single repair genotype dominating.'
+  elif 'high' in var_text:
+    return 'High precision is like gambling with strongly loaded dice. DNA repair outcomes are homogeneous and enriched for just a handful of unique genotypes.'
+  elif 'typical' in var_text:
+    return 'Precision reflects the homogeneity or heterogeneity of predicted repair outcomes. High precision repair predominantly yields one or a handful of genotypes.'
+
+def get_tooltip_phi(var_text):
+  if 'low' in var_text:
+    return 'Target sites with low microhomology strength reflect that most local microhomologies are short, GC-poor, and far from the cutsite. Repair outcomes will tend to be microhomology-less deletions and insertions.'
+  elif 'high' in var_text:
+    return 'Target sites with high microhomology strength have some local microhomologies that are long, GC-rich, or close to the cutsite. Repair outcomes will tend to be microhomology-based deletions.'
+  elif 'typical' in var_text:
+    return 'This microhomology strength score for the target site integrates all local microhomologies into a single number. Microhomology strength depends on distance to the cutsite, microhomology length and GC content.'
+
+def get_tooltip_frameshift(var_text):
+  if 'low' in var_text:
+    return 'A low frameshift frequency will tend to keep a protein-coding gene in frame. The typical genomic frameshift frequency is above 66% because 1-bp insertions and 1-2 bp deletions are particularly common repair outcomes.'
+  elif 'high' in var_text:
+    return 'A high frameshift frequency will tend to knock a protein-coding gene out of frame. The typical genomic frameshift frequency is above 66% because 1-bp insertions and 1-2 bp deletions are particularly common repair outcomes.'
+  elif 'typical' in var_text:
+    return 'Frameshift frequency is informative for designing gRNAs for gene knockouts. The typical genomic frameshift frequency is above 66% because 1-bp insertions and 1-2 bp deletions are particularly common repair outcomes.'
+
 ##
 # Init
 ##

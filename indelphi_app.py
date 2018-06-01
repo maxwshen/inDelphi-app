@@ -29,11 +29,10 @@ if not os.path.isdir('user-csvs/'):
 else:
   subprocess.check_output('rm -rf user-csvs/*', shell = True)
 
-
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
 
-##
+## Parameters
 headerHeight = 130
 
 
@@ -553,18 +552,23 @@ app.layout = html.Div([
           html.Div([
             html.Div(
               html.A(
-                'Download CSV of inDelphi predictions', 
+                '📑 Download target site summary and statistics',
+                id = 'summary-download-link'
+              ),
+            ),
+            html.Div(
+              html.A(
+                '📜 Download table of inDelphi genotype predictions', 
                 id = 'csv-download-link'
               ),
             ),
             html.Div(
               html.A(
-                'Shareable link to your results', 
+                '🔗 Shareable link to your results', 
                 id = 'page-link'
               ),
             ),
-            ],
-            style = dict(
+          ], style = dict(
               marginLeft = '20',
             ),
           ),
@@ -650,12 +654,14 @@ def cb_update_cache_revcomp(n_clicks):
 def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
-  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
   left_pam_time = float(cache_pam_left)
   right_pam_time = float(cache_pam_right)
   rc_time = float(cache_rc)
-  pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
-  pageload_rc = bool(abs(rc_time - left_pam_time) < 0.01)
+
+  pageload_time_threshold = 0.03
+  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < pageload_time_threshold)
+  pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
+  pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
@@ -699,12 +705,14 @@ def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
 def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
-  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < 0.01)
   left_pam_time = float(cache_pam_left)
   right_pam_time = float(cache_pam_right)
   rc_time = float(cache_rc)
-  pageload_pam = bool(abs(left_pam_time - right_pam_time) < 0.01)
-  pageload_rc = bool(abs(rc_time - left_pam_time) < 0.01)
+  
+  pageload_time_threshold = 0.03
+  pageload_dsb = bool(abs(left_dsb_time - right_dsb_time) < pageload_time_threshold)
+  pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
+  pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
     valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
     if not valid_flag or cutsite is None:
@@ -990,13 +998,27 @@ def cb_text_genstats_precision(pred_df_string, pred_stats_string):
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
   cum, var_text, var_color = generalStats.gs_precision.cumulative(xval)
+  tooltip_msg = generalStats.get_tooltip_precision(var_text)
   return [
     html.Strong('This target site has '),
     html.Strong(var_text,
       style = dict(color = var_color),
     ),
-    html.Strong(' precision.',
+    html.Strong(' precision. ',
       style = dict(color = var_color),
+    ),
+    html.Div(
+      [
+        html.Img(
+          src = '/staticfiles/tooltip_logo',
+          className = 'tooltiplogo',
+        ),
+        html.Span(
+          tooltip_msg,
+          className = 'tooltiptext'
+        ),
+      ], 
+      className = 'tooltip',
     ),
     html.Br(),
     html.Span('Precision score: %.2f' % (xval),
@@ -1016,13 +1038,27 @@ def cb_text_genstats_logphi(pred_df_string, pred_stats_string):
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
   cum, var_text, var_color = generalStats.gs_logphi.cumulative(xval)
+  tooltip_msg = generalStats.get_tooltip_phi(var_text)
   return [
     html.Strong('This target site has '),
     html.Strong(var_text,
       style = dict(color = var_color),
     ),
-    html.Strong(' microhomology strength.',
+    html.Strong(' microhomology strength. ',
       style = dict(color = var_color),
+    ),
+    html.Div(
+      [
+        html.Img(
+          src = '/staticfiles/tooltip_logo',
+          className = 'tooltiplogo',
+        ),
+        html.Span(
+          tooltip_msg,
+          className = 'tooltiptext'
+        ),
+      ], 
+      className = 'tooltip',
     ),
     html.Br(),
     html.Span('Log phi: %.2f' % (xval),
@@ -1042,13 +1078,27 @@ def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
   cum, var_text, var_color = generalStats.gs_frameshift.cumulative(xval)
+  tooltip_msg = generalStats.get_tooltip_frameshift(var_text)
   return [
     html.Strong('This target site has '),
     html.Strong(var_text,
       style = dict(color = var_color),
     ),
-    html.Strong(' frameshift frequency.',
+    html.Strong(' frameshift frequency. ',
       style = dict(color = var_color),
+    ),
+    html.Div(
+      [
+        html.Img(
+          src = '/staticfiles/tooltip_logo',
+          className = 'tooltiplogo',
+        ),
+        html.Span(
+          tooltip_msg,
+          className = 'tooltiptext'
+        ),
+      ], 
+      className = 'tooltip',
     ),
     html.Br(),
     html.Span('Frameshift frequency: %.1f%%' % (xval),
@@ -1283,9 +1333,27 @@ def cb_update_link(pred_df_string, pred_stats_string):
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownload?value={}'.format(time)
   pred_df.to_csv('user-csvs/%s.csv' % (time))
-
   return link_fn
 
+@app.callback(
+  Output('summary-download-link', 'href'),
+  [Input('hidden-pred-df', 'children'),
+   Input('hidden-pred-stats', 'children')],
+  [State('page-link', 'href')])
+def cb_update_summary_link(pred_df_string, pred_stats_string, pagelink):
+  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+
+  stats['URL'] = pagelink
+
+  time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
+  link_fn = '/dash/urlToDownloadSummary?value={}'.format(time)
+  stats.to_csv('user-csvs/%s_summary.csv' % (time))
+  return link_fn
+
+##
+# Flask serving
+##
 @app.server.route('/dash/urlToDownload') 
 def download_csv():
   value = flask.request.args.get('value')
@@ -1293,11 +1361,29 @@ def download_csv():
   # (instead of writing to the file system)
   local_csv_fn = value.split('/')[-1]
   return flask.send_file(
-    open('user-csvs/%s' % (local_csv_fn + '.csv'), 'rb'),
+    open('user-csvs/%s.csv' % (local_csv_fn), 'rb'),
     mimetype = 'text/csv',
     attachment_filename = 'inDelphi_output.csv',
     as_attachment = True,
   )
+
+@app.server.route('/dash/urlToDownloadSummary') 
+def download_summary_csv():
+  value = flask.request.args.get('value')
+  # create a dynamic csv or file here using `StringIO` 
+  # (instead of writing to the file system)
+  local_csv_fn = value.split('/')[-1]
+  return flask.send_file(
+    open('user-csvs/%s_summary.csv' % (local_csv_fn), 'rb'),
+    mimetype = 'text/csv',
+    attachment_filename = 'inDelphi_targetsite_summary.csv',
+    as_attachment = True,
+  )
+
+@app.server.route('/staticfiles/tooltip_logo')
+def serve_image():
+  # BE VERY CAREFUL NOT TO SERVE ARBITRARY FILES
+  return flask.send_from_directory(os.getcwd() + '/staticfiles/', 'noun_646495_cc.png')
 
 ##
 # Page link callback
@@ -1312,11 +1398,10 @@ def cb_update_pagelink(text1, text2):
   cutsite = len(text1)
   return 'https://dev.crisprindelphi.design/%s' % (lib.encode_dna_to_url_path(seq, cutsite))
 
-##
-# Local CSS
-##
+###################################################################
+###################################################################
+# CSS
 css_directory = os.getcwd()
-stylesheets = ['stylesheet.css']
 @app.server.route('/static/<stylesheet>')
 def serve_stylesheet(stylesheet):
   if stylesheet not in stylesheets:
@@ -1327,12 +1412,10 @@ def serve_stylesheet(stylesheet):
     )
   return flask.send_from_directory(css_directory, stylesheet)
 
-
-###################################################################
-###################################################################
-# CSS
+stylesheets = ['stylesheet.css']
 for stylesheet in stylesheets:
   app.css.append_css({'external_url': '/static/{}'.format(stylesheet)})
 
+###################################################################
 if __name__ == '__main__':
   app.run_server()

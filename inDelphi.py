@@ -288,9 +288,8 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score):
            'Expected indel length': expected_indel_len,
            'Reference sequence': seq,
            'Cutsite': cutsite,
-           'gRNA': None,
-           'gRNA orientation': None,
-           'Cas9 type': None,
+           'gRNA': seq[cutsite - 18 : cutsite + 3],
+           'gRNA orientation': '+',
           }
   return stats
 

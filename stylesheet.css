@@ -157,6 +157,57 @@
     box-shadow: 1px 3px 6px 0 rgba(0, 0, 0, 0.2);
     margin-bottom: 30px;
   }
+
+  /**/
+  /* Tool tips */
+  /**/
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip .tooltiptext {
+    opacity: 0;
+    transition: opacity 0.1s;
+    position: absolute;
+    z-index: 1;
+
+    width: 150px;
+    top: 100%;
+    left: 50%;
+    padding: 8px 8px;
+    border-radius: 6px;
+    margin-left: -83px;   /*50% of width (150px) plus horizontal padding (8px)*/
+
+    background-color: #555;
+    color: #eee;
+
+    font-size: small;
+    line-height: 1.2;
+  }
+
+  /* Show the tooltip text when you mouse over the tooltip container */
+  .tooltip:hover .tooltiptext {
+    opacity: 1;
+  }
+
+  /* Tooltip arrow with box  */
+  .tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    bottom: 99%;  /*At the top of the tooltip*/ 
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #555 transparent;
+  }
+
+  .tooltiplogo {
+    height: 18px;
+    vertical-align: text-bottom;
+  }
+
 }
 
 
