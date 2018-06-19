@@ -1,1 +1,1 @@
-web: gunicorn indelphi_app:server
+web: gunicorn index:server
