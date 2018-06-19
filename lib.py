@@ -6,35 +6,33 @@ chars = None
 dna_to_code = dict()
 code_to_dna = dict()
 
+KMER_LEN = 9
+
 def __init_chars():
   global chars
   chars = [chr(s) for s in range(48, 48 + 10)] + [chr(s) for s in range(65, 65 + 26)] + [chr(s) for s in range(97, 97 + 26)]
   chars += ['-', '_', '~', '.']
-  chars.remove('A')
-  chars.remove('C')
-  chars.remove('G')
-  chars.remove('T')
-  chars.remove('.')
+  chars.remove('_')
   return
 
 def __init_mappers():
   output = chars
-  # All 3-mers of 61-length safe html character alphabet
+  # All 3-mers of 65-length safe html character alphabet
   for idx in range(3-1):
     output = __append_alphabet(output, chars)
   triplets = output
 
-  # All 8-mers DNA
+  # All 9-mers DNA
   output = list('ACGT')
-  for idx in range(8-1):
+  for idx in range(KMER_LEN-1):
     output = __append_alphabet(output, list('ACGT'))
-  eightmers = output
+  kmers = output
 
   global dna_to_code
   global code_to_dna
-  for eightmer, triplet in zip(eightmers, triplets):
-    dna_to_code[eightmer] = triplet
-    code_to_dna[triplet] = eightmer
+  for kmer, triplet in zip(kmers, triplets):
+    dna_to_code[kmer] = triplet
+    code_to_dna[triplet] = kmer
   return
 
 def __append_alphabet(output, alphabet):
@@ -44,53 +42,63 @@ def __append_alphabet(output, alphabet):
       new_output.append(o + a)
   return new_output
 
-def parse_valid_url_path(url_path):
+def parse_valid_url_path_single(url_path):
   ## Expected format:
   # [code][ACGT*].[indexnumber of cutsite]
-  url_path = url_path.strip('/')
-  if len(url_path) == 0:
+  print(url_path)
+  if url_path[:len('/single_')] != '/single_':
     return False, None, None
 
-  escape_chars = [s for s in list('ACGT.') if s in url_path]
-  idx = min([url_path.index(s) for s in escape_chars])
-  coded = url_path[:idx]
-  tail = url_path[idx:]
+  url_path = url_path.replace('/single_', '')
+  print(url_path)
+  if len(url_path) == 0 or '_' not in url_path:
+    return False, None, None
 
+  threeparts = url_path.split('_')
+  print('a')
+  if len(threeparts) != 3:
+    return False, None, None
+
+  [coded, leftover, tail] = threeparts
+
+  # Process encoded DNA
+  print('a')
   if len(coded) % 3 != 0:
     return False, None, None  
 
+  print('a')
   seq = ''
   for jdx in range(0, len(coded), 3):
     w = coded[jdx : jdx + 3]
     seq += code_to_dna[w]
 
+  print('a')
+  # Process leftover eDNA
+  if leftover != '-':
+    seq += leftover
 
-  if '.' not in tail:
-    idx = len(tail)
-  else:
-    idx = tail.index('.')
-  for ch in set(tail[:idx]):
-    if ch not in list('ACGT'):
-      return False, None, None
-  seq += tail[:idx]
 
-  if '.' not in tail:
-    return True, seq, None
+  print('a')
+  # Process cutsite
   try:
-    cutsite_index = int(tail[idx+1:])
+    cutsite_index = int(tail)
   except:
     return False, None, None
   return True, seq, cutsite_index
 
-def encode_dna_to_url_path(seq, cutsite):
-  code = ''
-  for idx in range(0, len(seq), 8):
-    chomp = seq[idx : idx + 8]
-    if len(chomp) != 8:
-      code += seq[idx:]
+def encode_dna_to_url_path_single(seq, cutsite):
+  encodeddna = ''
+  for idx in range(0, len(seq), KMER_LEN):
+    chomp = seq[idx : idx + KMER_LEN]
+    if len(chomp) == KMER_LEN:
+      encodeddna += dna_to_code[chomp]
     else:
-      code += dna_to_code[chomp]
-  return '%s.%s' % (code, cutsite)
+      break
+  if len(seq[idx:]) != KMER_LEN:
+    leftoverdna = seq[idx:]
+  else:
+    leftoverdna = '-'
+  return '/single_%s_%s_%s' % (encodeddna, leftoverdna, cutsite)
 
 __init_chars()
 __init_mappers()

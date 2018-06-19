@@ -18,10 +18,7 @@ import inDelphi
 import generalStats
 import lib
 
-# Dash server setup
 from inDelphi_app import app
-# app = dash.Dash('')
-# server = app.server
 
 # init
 inDelphi.init_model()
@@ -664,7 +661,7 @@ def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
   pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
-    valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
+    valid_flag, seq, cutsite = lib.parse_valid_url_path_single(url)
     if not valid_flag or cutsite is None:
       return text1
     else:
@@ -715,7 +712,7 @@ def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
   pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
-    valid_flag, seq, cutsite = lib.parse_valid_url_path(url)
+    valid_flag, seq, cutsite = lib.parse_valid_url_path_single(url)
     if not valid_flag or cutsite is None:
       return text2
     else:
@@ -1397,9 +1394,5 @@ def serve_image():
 def cb_update_pagelink(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
-  return 'https://dev.crisprindelphi.design/%s' % (lib.encode_dna_to_url_path(seq, cutsite))
+  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite))
 
-
-###################################################################
-# if __name__ == '__main__':
-  # app.run_server()

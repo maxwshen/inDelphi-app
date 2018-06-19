@@ -30,17 +30,16 @@ app.layout = html.Div([
   [Input('master-url', 'pathname')]
 )
 def display_page(pathname):
-  return app_single.layout
-  # if pathname is None:
-  #   return app_single.layout
-  # elif pathname == '/':
-  #   return app_single.layout
-  # elif pathname[:len('/single')] == '/single':
-  #   return app_single.layout
+  # return app_single.layout
+  print(pathname)
+  if pathname is None or pathname == '/':
+    return app_single.layout
+  elif pathname[:len('/single')] == '/single':
+    return app_single.layout
   # elif pathname[:len('/batch')] == '/batch':
   #   return app_batch.layout
-  # else:
-  #   return app_single.layout
+  else:
+    return app_single.layout
   #   # return '404'
 
 ###################################################################
