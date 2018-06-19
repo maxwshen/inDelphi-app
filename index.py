@@ -6,7 +6,7 @@ import dash_table_experiments as dt
 from dash.dependencies import Input, Output, State
 import flask
 
-from inDelphi_app import app
+from indelphi_app import app
 # from apps import app_single, app_batch, app_about
 from apps import app_single
 

@@ -18,7 +18,7 @@ import inDelphi
 import generalStats
 import lib
 
-from inDelphi_app import app
+from indelphi_app import app
 
 # init
 inDelphi.init_model()
