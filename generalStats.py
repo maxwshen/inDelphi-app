@@ -92,6 +92,7 @@ class GenomeStatistic:
         nticks = 10,
         ticklen = ticklen,
         tickwidth = tickwidth,
+        fixedrange = True,
       ),
       yaxis = dict(
         autorange = True,
@@ -99,6 +100,7 @@ class GenomeStatistic:
         showline = False,
         ticks = '',
         showticklabels = False,
+        fixedrange = True,
       ),
       font = dict(
         family = 'Arial',

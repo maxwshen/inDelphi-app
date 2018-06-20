@@ -7,8 +7,7 @@ from dash.dependencies import Input, Output, State
 import flask
 
 from indelphi_app import app
-# from apps import app_single, app_batch, app_about
-from apps import app_single
+from apps import app_single, app_batch
 
 ###################################################################
 ###################################################################
@@ -36,8 +35,8 @@ def display_page(pathname):
     return app_single.layout
   elif pathname[:len('/single')] == '/single':
     return app_single.layout
-  # elif pathname[:len('/batch')] == '/batch':
-  #   return app_batch.layout
+  elif pathname[:len('/batch')] == '/batch':
+    return app_batch.layout
   else:
     return app_single.layout
   #   # return '404'

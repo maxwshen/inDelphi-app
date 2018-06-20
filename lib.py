@@ -44,41 +44,33 @@ def __append_alphabet(output, alphabet):
 
 def parse_valid_url_path_single(url_path):
   ## Expected format:
-  # [code][ACGT*].[indexnumber of cutsite]
-  print(url_path)
+  # [encodedDNA]_[leftoverDNA]_[cutsite]
   if url_path[:len('/single_')] != '/single_':
     return False, None, None
 
   url_path = url_path.replace('/single_', '')
-  print(url_path)
   if len(url_path) == 0 or '_' not in url_path:
     return False, None, None
 
   threeparts = url_path.split('_')
-  print('a')
   if len(threeparts) != 3:
     return False, None, None
 
   [coded, leftover, tail] = threeparts
 
   # Process encoded DNA
-  print('a')
   if len(coded) % 3 != 0:
     return False, None, None  
 
-  print('a')
   seq = ''
   for jdx in range(0, len(coded), 3):
     w = coded[jdx : jdx + 3]
     seq += code_to_dna[w]
 
-  print('a')
   # Process leftover eDNA
   if leftover != '-':
     seq += leftover
 
-
-  print('a')
   # Process cutsite
   try:
     cutsite_index = int(tail)

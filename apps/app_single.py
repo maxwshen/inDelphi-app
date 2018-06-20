@@ -48,36 +48,36 @@ layout = html.Div([
     html.Div(
       [
         html.Div(
-          id = 'hidden-pred-df',
+          id = 'S_hidden-pred-df',
           children = 'init'
         ),
         html.Div(
-          id = 'hidden-pred-stats',
+          id = 'S_hidden-pred-stats',
           children = 'init'
         ),
         html.Div(
-          id = 'hidden-cache-dsb-left',
+          id = 'S_hidden-cache-dsb-left',
           children = '%s' % (time.time())
         ),
         html.Div(
-          id = 'hidden-cache-dsb-right',
+          id = 'S_hidden-cache-dsb-right',
           children = '%s' % (time.time())
         ),
         html.Div(
-          id = 'hidden-cache-pam-left',
+          id = 'S_hidden-cache-pam-left',
           children = '%s' % (time.time())
         ),
         html.Div(
-          id = 'hidden-cache-pam-right',
+          id = 'S_hidden-cache-pam-right',
           children = '%s' % (time.time())
         ),
         html.Div(
-          id = 'hidden-cache-revcomp',
+          id = 'S_hidden-cache-revcomp',
           children = '%s' % (time.time())
         ),
 
         dcc.Location(
-          id = 'url',
+          id = 'S_url',
           refresh = False,
         ),
       ],
@@ -109,9 +109,9 @@ layout = html.Div([
           html.Div(
             [
               dcc.Input(
-                id = 'textbox1', 
+                id = 'S_textbox1', 
                 size = 28,
-                value = 'TAGTTTCTAGCACAGCGCTGGTGTGG',
+                value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
                 type = 'text',
                 autofocus = True,
                 style = dict(
@@ -130,9 +130,9 @@ layout = html.Div([
           html.Div(
             [
               dcc.Input(
-                id = 'textbox2', 
+                id = 'S_textbox2', 
                 size = 28,
-                value = 'CGTGTGGCTGAAGGCATAGTAATTCTGA',
+                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
                 type = 'text',
                 style = dict(
                   textAlign = 'left',
@@ -142,7 +142,7 @@ layout = html.Div([
                 ),
               ),
               html.A('🔃 strand',
-                id = 'button-revcomp',
+                id = 'S_button-revcomp',
                 style = dict(
                   fontSize = 16,
                   textDecoration = 'none',
@@ -183,7 +183,7 @@ layout = html.Div([
                 ###################################################
                 html.Div([
                     html.A('◄',
-                      id = 'button-dsb-left',
+                      id = 'S_button-dsb-left',
                       style = dict(
                         textDecoration = 'none',
                         fontFamily = 'monospace',
@@ -193,7 +193,7 @@ layout = html.Div([
                     ),
                     '\tDSB\t',
                     html.A('►',
-                      id = 'button-dsb-right',
+                      id = 'S_button-dsb-right',
                       style = dict(
                         textDecoration = 'none',
                         fontFamily = 'monospace',
@@ -214,7 +214,7 @@ layout = html.Div([
                 ###################################################
                 html.Div([
                   html.A('◄',
-                    id = 'button-pam-left',
+                    id = 'S_button-pam-left',
                     style = dict(
                       textDecoration = 'none',
                       fontFamily = 'monospace',
@@ -224,7 +224,7 @@ layout = html.Div([
                     ),
                   ),
                   dcc.Input(
-                    id = 'textbox_pam', 
+                    id = 'S_textbox_pam', 
                     size = 5,
                     value = 'NGG',
                     type = 'text',
@@ -240,7 +240,7 @@ layout = html.Div([
                     ),
                   ),
                   html.A('►',
-                    id = 'button-pam-right',
+                    id = 'S_button-pam-right',
                     style = dict(
                       textDecoration = 'none',
                       fontFamily = 'monospace',
@@ -297,7 +297,7 @@ layout = html.Div([
             html.Div([
               html.Strong(
                 '',
-                id = 'text-summary-module-header'
+                id = 'S_text-summary-module-header'
               )],
               className = 'module_header_text'),
             ],
@@ -308,7 +308,7 @@ layout = html.Div([
             [
               # Text table
               dcc.Graph(
-                id = 'summary-alignment-table',
+                id = 'S_summary-alignment-table',
                 config = dict(
                   modeBarButtonsToRemove = modebarbuttons_2d,
                   displaylogo = False,
@@ -321,7 +321,7 @@ layout = html.Div([
 
               # bar chart
               dcc.Graph(
-                id = 'summary-alignment-barchart',
+                id = 'S_summary-alignment-barchart',
                 config = dict(
                   modeBarButtonsToRemove = modebarbuttons_2d,
                   displaylogo = False,
@@ -358,7 +358,7 @@ layout = html.Div([
               html.Div(
                 [
                   dcc.Graph(
-                    id = 'plot-fs',
+                    id = 'S_plot-fs',
                     style = dict(
                       height = 300, 
                     ),
@@ -375,7 +375,7 @@ layout = html.Div([
               html.Div(
                 [
                   dcc.Graph(
-                    id = 'plot-indel-len',
+                    id = 'S_plot-indel-len',
                     style = dict(
                       height = 300, 
                     ),
@@ -413,7 +413,7 @@ layout = html.Div([
               html.Div(
                 [
                   dcc.Graph(
-                    id = 'plot-genstats-precision',
+                    id = 'S_plot-genstats-precision',
                     style = dict(
                       height = 200, 
                       width = 970/2,
@@ -429,7 +429,7 @@ layout = html.Div([
               html.Div(
                 [
                   html.Div(
-                    id = 'text-genstats-precision',
+                    id = 'S_text-genstats-precision',
                     className = 'generalstats_text_inner',
                   ),
                 ],
@@ -448,7 +448,7 @@ layout = html.Div([
               html.Div(
                 [
                   dcc.Graph(
-                    id = 'plot-genstats-logphi',
+                    id = 'S_plot-genstats-logphi',
                     style = dict(
                       height = 200, 
                       width = 970/2,
@@ -464,7 +464,7 @@ layout = html.Div([
               html.Div(
                 [
                   html.Div(
-                    id = 'text-genstats-logphi',
+                    id = 'S_text-genstats-logphi',
                     className = 'generalstats_text_inner',
                   ),
                 ],
@@ -483,7 +483,7 @@ layout = html.Div([
               html.Div(
                 [
                   dcc.Graph(
-                    id = 'plot-genstats-frameshift',
+                    id = 'S_plot-genstats-frameshift',
                     style = dict(
                       height = 200, 
                       width = 970/2,
@@ -499,7 +499,7 @@ layout = html.Div([
               html.Div(
                 [
                   html.Div(
-                    id = 'text-genstats-frameshift',
+                    id = 'S_text-genstats-frameshift',
                     className = 'generalstats_text_inner',
                   ),
                 ],
@@ -529,7 +529,7 @@ layout = html.Div([
           ),
 
           dcc.Graph(
-            id = 'plot-table-genotypes',
+            id = 'S_plot-table-genotypes',
             style = dict(
             ),
             config = dict(
@@ -539,7 +539,7 @@ layout = html.Div([
           ),
 
           dt.DataTable(
-            id = 'table-genotypes',
+            id = 'S_table-genotypes',
             rows = [{}], # init rows
             row_selectable = True,
             filterable = True,
@@ -551,19 +551,19 @@ layout = html.Div([
             html.Div(
               html.A(
                 '📑 Download target site summary and statistics',
-                id = 'summary-download-link'
+                id = 'S_summary-download-link'
               ),
             ),
             html.Div(
               html.A(
                 '📜 Download table of inDelphi genotype predictions', 
-                id = 'csv-download-link'
+                id = 'S_csv-download-link'
               ),
             ),
             html.Div(
               html.A(
                 '🔗 Shareable link to your results', 
-                id = 'page-link'
+                id = 'S_page-link'
               ),
             ),
           ], style = dict(
@@ -609,47 +609,47 @@ style = dict(
 ## Arrow buttons
 # These must be 1->1 mapping, otherwise we can't tell which n_clicks triggered the callback
 @app.callback(
-  Output('hidden-cache-dsb-left', 'children'),
-  [Input('button-dsb-left', 'n_clicks')])
-def cb_update_cache_dsb_left(n_clicks):
+  Output('S_hidden-cache-dsb-left', 'children'),
+  [Input('S_button-dsb-left', 'n_clicks')])
+def update_cache_dsb_left(n_clicks):
   return '%s' % (time.time())
 
 @app.callback(
-  Output('hidden-cache-dsb-right', 'children'),
-  [Input('button-dsb-right', 'n_clicks')])
-def cb_update_cache_dsb_right(n_clicks):
+  Output('S_hidden-cache-dsb-right', 'children'),
+  [Input('S_button-dsb-right', 'n_clicks')])
+def update_cache_dsb_right(n_clicks):
   return '%s' % (time.time())
 
 @app.callback(
-  Output('hidden-cache-pam-left', 'children'),
-  [Input('button-pam-left', 'n_clicks')])
-def cb_update_cache_pam_left(n_clicks):
+  Output('S_hidden-cache-pam-left', 'children'),
+  [Input('S_button-pam-left', 'n_clicks')])
+def update_cache_pam_left(n_clicks):
   return '%s' % (time.time())
 
 @app.callback(
-  Output('hidden-cache-pam-right', 'children'),
-  [Input('button-pam-right', 'n_clicks')])
-def cb_update_cache_pam_right(n_clicks):
+  Output('S_hidden-cache-pam-right', 'children'),
+  [Input('S_button-pam-right', 'n_clicks')])
+def update_cache_pam_right(n_clicks):
   return '%s' % (time.time())
 
 @app.callback(
-  Output('hidden-cache-revcomp', 'children'),
-  [Input('button-revcomp', 'n_clicks')])
-def cb_update_cache_revcomp(n_clicks):
+  Output('S_hidden-cache-revcomp', 'children'),
+  [Input('S_button-revcomp', 'n_clicks')])
+def update_cache_revcomp(n_clicks):
   return '%s' % (time.time())
 
 @app.callback(
-  Output('textbox1', 'value'),
-  [Input('hidden-cache-dsb-left', 'children'),
-   Input('hidden-cache-dsb-right', 'children'),
-   Input('hidden-cache-pam-left', 'children'),
-   Input('hidden-cache-pam-right', 'children'),
-   Input('hidden-cache-revcomp', 'children'),
-   Input('url', 'pathname')],
-  [State('textbox1', 'value'),
-   State('textbox2', 'value'),
-   State('textbox_pam', 'value')])
-def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
+  Output('S_textbox1', 'value'),
+  [Input('S_hidden-cache-dsb-left', 'children'),
+   Input('S_hidden-cache-dsb-right', 'children'),
+   Input('S_hidden-cache-pam-left', 'children'),
+   Input('S_hidden-cache-pam-right', 'children'),
+   Input('S_hidden-cache-revcomp', 'children'),
+   Input('S_url', 'pathname')],
+  [State('S_textbox1', 'value'),
+   State('S_textbox2', 'value'),
+   State('S_textbox_pam', 'value')])
+def update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
   left_pam_time = float(cache_pam_left)
@@ -690,17 +690,17 @@ def cb_update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
     return lib.revcomp(text2)
 
 @app.callback(
-  Output('textbox2', 'value'),
-  [Input('hidden-cache-dsb-left', 'children'),
-   Input('hidden-cache-dsb-right', 'children'),
-   Input('hidden-cache-pam-left', 'children'),
-   Input('hidden-cache-pam-right', 'children'),
-   Input('hidden-cache-revcomp', 'children'),
-   Input('url', 'pathname')],
-  [State('textbox1', 'value'),
-   State('textbox2', 'value'),
-   State('textbox_pam', 'value')])
-def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
+  Output('S_textbox2', 'value'),
+  [Input('S_hidden-cache-dsb-left', 'children'),
+   Input('S_hidden-cache-dsb-right', 'children'),
+   Input('S_hidden-cache-pam-left', 'children'),
+   Input('S_hidden-cache-pam-right', 'children'),
+   Input('S_hidden-cache-revcomp', 'children'),
+   Input('S_url', 'pathname')],
+  [State('S_textbox1', 'value'),
+   State('S_textbox2', 'value'),
+   State('S_textbox_pam', 'value')])
+def update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache_pam_right, cache_rc, url, text1, text2, text_pam):
   left_dsb_time = float(cache_dsb_left)
   right_dsb_time = float(cache_dsb_right)
   left_pam_time = float(cache_pam_left)
@@ -744,10 +744,10 @@ def cb_update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, ca
 # Module header callbacks
 ##
 @app.callback(
-  Output('text-summary-module-header', 'children'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value')])
-def cb_update_summary_module_header(text1, text2):
+  Output('S_text-summary-module-header', 'children'),
+  [Input('S_textbox1', 'value'),
+   Input('S_textbox2', 'value')])
+def update_summary_module_header(text1, text2):
   presumed_grna = text1[-18:] + text2[:3]
   return 'Summary of predictions at target site with gRNA: %s' % (presumed_grna)
 
@@ -755,20 +755,20 @@ def cb_update_summary_module_header(text1, text2):
 # Prediction callback
 ##
 @app.callback(
-  Output('hidden-pred-df', 'children'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value')])
-def cb_update_pred_df(text1, text2):
+  Output('S_hidden-pred-df', 'children'),
+  [Input('S_textbox1', 'value'),
+   Input('S_textbox2', 'value')])
+def update_pred_df(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
   return pred_df.to_csv()
 
 @app.callback(
-  Output('hidden-pred-stats', 'children'),
-  [Input('textbox1', 'value'),
-   Input('textbox2', 'value')])
-def cb_update_pred_stats(text1, text2):
+  Output('S_hidden-pred-stats', 'children'),
+  [Input('S_textbox1', 'value'),
+   Input('S_textbox2', 'value')])
+def update_pred_stats(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
@@ -778,11 +778,11 @@ def cb_update_pred_stats(text1, text2):
 # Summary of predictions callbacks
 ##
 @app.callback(
-  Output('summary-alignment-table', 'figure'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_summary-alignment-table', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
+def update_summary_alignment_text(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   
@@ -883,11 +883,11 @@ def cb_update_summary_alignment_text(pred_df_string, pred_stats_string):
   )
 
 @app.callback(
-  Output('summary-alignment-barchart', 'figure'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_summary-alignment-barchart', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
+def update_summary_alignment_barchart(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   
@@ -921,8 +921,12 @@ def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
       ),
     )],
     layout = go.Layout(
+      xaxis = dict(
+        fixedrange = True,
+      ),
       yaxis = dict(
         showticklabels = False,
+        fixedrange = True,
       ),
       margin = dict(
         l = 5,
@@ -937,11 +941,11 @@ def cb_update_summary_alignment_barchart(pred_df_string, pred_stats_string):
 # General stats callbacks
 ##
 @app.callback(
-  Output('plot-genstats-precision', 'figure'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_plot-genstats-precision', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
+def plot_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
@@ -953,11 +957,11 @@ def cb_plot_genstats_precision(pred_df_string, pred_stats_string):
   )
 
 @app.callback(
-  Output('plot-genstats-logphi', 'figure'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_plot-genstats-logphi', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_logphi(pred_df_string, pred_stats_string):
+def plot_genstats_logphi(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
@@ -969,11 +973,11 @@ def cb_plot_genstats_logphi(pred_df_string, pred_stats_string):
   )
 
 @app.callback(
-  Output('plot-genstats-frameshift', 'figure'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_plot-genstats-frameshift', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_plot_genstats_frameshift(pred_df_string, pred_stats_string):
+def plot_genstats_frameshift(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
@@ -987,11 +991,11 @@ def cb_plot_genstats_frameshift(pred_df_string, pred_stats_string):
 
 ## General stats text
 @app.callback(
-  Output('text-genstats-precision', 'children'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_text-genstats-precision', 'children'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_text_genstats_precision(pred_df_string, pred_stats_string):
+def text_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
@@ -1027,11 +1031,11 @@ def cb_text_genstats_precision(pred_df_string, pred_stats_string):
   ]
 
 @app.callback(
-  Output('text-genstats-logphi', 'children'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_text-genstats-logphi', 'children'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_text_genstats_logphi(pred_df_string, pred_stats_string):
+def text_genstats_logphi(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
@@ -1067,11 +1071,11 @@ def cb_text_genstats_logphi(pred_df_string, pred_stats_string):
   ]
 
 @app.callback(
-  Output('text-genstats-frameshift', 'children'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_text-genstats-frameshift', 'children'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
+def text_genstats_frameshift(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
@@ -1109,10 +1113,10 @@ def cb_text_genstats_frameshift(pred_df_string, pred_stats_string):
 ##
 # Indel length and frameshift callbacks
 @app.callback(
-  Output('plot-indel-len', 'figure'),
-  [Input('hidden-pred-df', 'children'),
+  Output('S_plot-indel-len', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
   ])
-def cb_plot_indel_len(pred_df_string):
+def plot_indel_len(pred_df_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
 
   lendf = inDelphi.get_indel_length_fqs(pred_df)
@@ -1144,11 +1148,13 @@ def cb_plot_indel_len(pred_df_string):
         tick0 = 0,
         dtick = 5,
         zeroline = False,
+        fixedrange = True,
       ),
       yaxis = dict(
         title = 'Frequency (%)',
         hoverformat = '.2f%%',
         zeroline = False,
+        fixedrange = True,
       ),
       font = dict(
         family = 'Arial',
@@ -1163,10 +1169,10 @@ def cb_plot_indel_len(pred_df_string):
   )
 
 @app.callback(
-  Output('plot-fs', 'figure'),
-  [Input('hidden-pred-df', 'children'),
+  Output('S_plot-fs', 'figure'),
+  [Input('S_hidden-pred-df', 'children'),
   ])
-def cb_plot_fs(pred_df_string):
+def plot_fs(pred_df_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
 
   fs_df = inDelphi.get_frameshift_fqs(pred_df)
@@ -1201,6 +1207,7 @@ def cb_plot_fs(pred_df_string):
         showline = False,
         tickvals = list(range(3)),
         ticktext = ['+0', '+1', '+2'],
+        fixedrange = True,
       ),
       yaxis = dict(
         title = 'Frameshift frequency (%)',
@@ -1214,6 +1221,7 @@ def cb_plot_fs(pred_df_string):
         ticklen = 3,
         tickwidth = 0.5,
         hoverformat = '.2f%%',
+        fixedrange = True,
       ),
       font = dict(
         family = 'Arial',
@@ -1227,17 +1235,15 @@ def cb_plot_fs(pred_df_string):
     ),
   )
 
-
-
 ##
 # Genotype table callbacks
 ## 
 @app.callback(
-  Output('table-genotypes', 'rows'), 
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_table-genotypes', 'rows'), 
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_update_genotype_table(pred_df_string, pred_stats_string):
+def update_genotype_table(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
@@ -1245,7 +1251,7 @@ def cb_update_genotype_table(pred_df_string, pred_stats_string):
   inDelphi.add_name_column(pred_df, stats)
 
   # Edit for display
-  pred_df['Frequency (%)'] = ['%.1f' % (s) for s in pred_df['Predicted frequency']]
+  pred_df['Frequency (%)'] = [float('%.1f' % (s)) for s in pred_df['Predicted frequency']]
   pred_df = pred_df.drop(
     [
       'Inserted Bases', 
@@ -1259,11 +1265,11 @@ def cb_update_genotype_table(pred_df_string, pred_stats_string):
   return pred_df.to_dict('records')
 
 @app.callback(
-  Output('plot-table-genotypes', 'figure'),
-  [Input('table-genotypes', 'rows'),
-   Input('table-genotypes', 'selected_row_indices')
+  Output('S_plot-table-genotypes', 'figure'),
+  [Input('S_table-genotypes', 'rows'),
+   Input('S_table-genotypes', 'selected_row_indices')
   ])
-def cb_update_genotype_plot(rows, selected_row_indices):
+def update_genotype_plot(rows, selected_row_indices):
   df = pd.DataFrame(rows)
   colors =  ['#0074D9'] * len(df)
   for idx in (selected_row_indices or []):
@@ -1283,9 +1289,11 @@ def cb_update_genotype_plot(rows, selected_row_indices):
     ],
     layout = go.Layout(
       xaxis = dict(
+        fixedrange = True,
       ),
       yaxis = dict(
         title = 'Frequency (%)',
+        fixedrange = True,
       ),
       font = dict(
         family = 'Arial',
@@ -1298,11 +1306,11 @@ def cb_update_genotype_plot(rows, selected_row_indices):
   )
 
 @app.callback(
-  Output('table-genotypes', 'selected_row_indices'),
-  [Input('plot-table-genotypes', 'clickData')],
-  [State('table-genotypes', 'selected_row_indices')]
+  Output('S_table-genotypes', 'selected_row_indices'),
+  [Input('S_plot-table-genotypes', 'clickData')],
+  [State('S_table-genotypes', 'selected_row_indices')]
   )
-def cb_update_datatable_selected(clickData, selected_row_indices):
+def update_datatable_selected(clickData, selected_row_indices):
   # Update selections in table based on clicking plot
   if clickData:
     for point in clickData['points']:
@@ -1317,11 +1325,11 @@ def cb_update_datatable_selected(clickData, selected_row_indices):
 # Download callbacks
 ##
 @app.callback(
-  Output('csv-download-link', 'href'), 
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children'),
+  Output('S_csv-download-link', 'href'), 
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
   ])
-def cb_update_link(pred_df_string, pred_stats_string):
+def update_link(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
@@ -1334,11 +1342,11 @@ def cb_update_link(pred_df_string, pred_stats_string):
   return link_fn
 
 @app.callback(
-  Output('summary-download-link', 'href'),
-  [Input('hidden-pred-df', 'children'),
-   Input('hidden-pred-stats', 'children')],
-  [State('page-link', 'href')])
-def cb_update_summary_link(pred_df_string, pred_stats_string, pagelink):
+  Output('S_summary-download-link', 'href'),
+  [Input('S_hidden-pred-df', 'children'),
+   Input('S_hidden-pred-stats', 'children')],
+  [State('S_page-link', 'href')])
+def update_summary_link(pred_df_string, pred_stats_string, pagelink):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
@@ -1387,11 +1395,11 @@ def serve_image():
 # Page link callback
 ##
 @app.callback(
-  Output('page-link', 'href'),
-  [Input('textbox1', 'value',),
-   Input('textbox2', 'value',),
+  Output('S_page-link', 'href'),
+  [Input('S_textbox1', 'value',),
+   Input('S_textbox2', 'value',),
   ])
-def cb_update_pagelink(text1, text2):
+def update_pagelink(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
   return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite))
