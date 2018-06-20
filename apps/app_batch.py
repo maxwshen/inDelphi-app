@@ -162,11 +162,11 @@ layout = html.Div([
     ##
     html.Div(
       [
-
         ###################################################
         # Module: Detailed genotypes
         ###################################################
   
+        # Datatable
         dt.DataTable(
           id = 'B_table-stats',
           rows = [{}], # init rows
@@ -177,6 +177,7 @@ layout = html.Div([
           selected_row_indices = [],
         ),
 
+        # Plots
         html.Div(
           [
             # Plots: Scatter
@@ -194,7 +195,6 @@ layout = html.Div([
           ],
           className = 'row',
         ),
-
 
       ],
       # body style
@@ -268,6 +268,7 @@ def update_pred_df_stats(nclicks, seq, pam):
   return all_stats.to_csv()
   # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
 
+
 ##
 # Stats table callbacks
 ## 
@@ -305,7 +306,7 @@ def update_stats_table(all_stats_string):
 
 @app.callback(
   Output('B_table-stats', 'selected_row_indices'),
-  [Input('B_plot-stats', 'clickData')],
+  [Input('B_plot-stats-child', 'clickData')],
   [State('B_table-stats', 'selected_row_indices')]
   )
 def update_statstable_selected(clickData, selected_row_indices):
@@ -343,9 +344,7 @@ def update_stats_plot(rows, selected_row_indices):
     rows = len(stats_cols), cols = 1)
 
   # Color selected markers
-  marker = {'color': ['#0074D9'] * len(df)}
-  for i in (selected_row_indices or []):
-    marker['color'][i] = '#FF851B'
+
 
   if len(selected_row_indices) > 0:
     selected_row_index = selected_row_indices[0]
@@ -356,6 +355,9 @@ def update_stats_plot(rows, selected_row_indices):
   # Generate each plot
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
+    marker = {'color': [lib.get_color(stats_col)] * len(df)}
+    for i in (selected_row_indices or []):
+      marker['color'][i] = '#000000'
     # Scatter
     fig.append_trace(
       go.Scatter(
@@ -417,8 +419,8 @@ def update_stats_plot(rows, selected_row_indices):
     'b': 200
   }
   child = dcc.Graph(
-    figure = fig,
     id = 'B_plot-stats-child',
+    figure = fig,
     config = dict(
       modeBarButtonsToRemove = modebarbuttons_2d,
       displaylogo = False,
@@ -455,11 +457,11 @@ def update_stats_plot(rows, selected_row_indices):
   # Generate each plot
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
-    # Hist
+    # Hist    
     fig.append_trace(
       go.Histogram(
         y = df[stats_col],
-        # 'marker': marker,
+        marker = dict(color = lib.get_color(stats_col)),
         name = '',
         xaxis = 'x_%s' % (subplot_num),
         yaxis = 'y_%s' % (subplot_num),
@@ -474,6 +476,8 @@ def update_stats_plot(rows, selected_row_indices):
     subplot_num = idx + 1
     fig['layout']['xaxis%s' % (subplot_num)].update(
       fixedrange = True,
+      zeroline = True,
+      zerolinewidth = 2,
     )
     fig['layout']['yaxis%s' % (subplot_num)].update(
       title = stats_col,

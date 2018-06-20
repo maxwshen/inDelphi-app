@@ -148,3 +148,33 @@ def match(template, dna):
     if char not in mapper[t]:
       return False
   return True
+
+###############################################
+# Colors
+###############################################
+
+def get_color(stats_col):
+#   - Expected indel length (Gray)
+  if stats_col == 'Expected indel length':
+    return '#86898C'
+  if stats_col == 'Frame +0 frequency':
+    return '#68C7EC'
+  if stats_col == 'Frame +1 frequency':
+    return '#68C7EC'
+  if stats_col == 'Frame +2 frequency':
+    return '#68C7EC'
+  if stats_col == 'Frameshift frequency':
+    return '#00A0DC'
+  if stats_col == 'Highest del frequency':
+    return '#ED4795'
+  if stats_col == 'Highest ins frequency':
+    return '#F47B16'
+  if stats_col == 'Highest outcome frequency':
+    return '#7CB82F'
+  if stats_col == 'Log phi':
+    return '#EC4339'
+  if stats_col == 'Precision':
+    return '#00AEB3'
+  return
+
+
