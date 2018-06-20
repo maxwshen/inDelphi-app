@@ -168,6 +168,7 @@
 
   .tooltip .tooltiptext {
     opacity: 0;
+    visibility: hidden;
     transition: opacity 0.1s;
     position: absolute;
     z-index: 1;
@@ -189,6 +190,7 @@
   /* Show the tooltip text when you mouse over the tooltip container */
   .tooltip:hover .tooltiptext {
     opacity: 1;
+    visibility: visible;
   }
 
   /* Tooltip arrow with box  */

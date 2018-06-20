@@ -107,22 +107,40 @@ layout = html.Div([
         ###################################################
         # PAM box
         ###################################################
-        html.Div([
-          dcc.Input(
-            id = 'B_textbox_pam', 
-            size = 5,
-            value = 'NGG',
-            type = 'text',
-            autofocus = True,
-            style = dict(
-              fontFamily = 'monospace',
-              fontSize = 14,
-              textAlign = 'center',
-              height = '18px',
-              width = '70px',
-              verticalAlign = 'top',
+        html.Div(
+          [
+            html.Strong(
+              'Cas9 PAM: '
             ),
-          )],
+            dcc.Input(
+              id = 'B_textbox_pam', 
+              size = 5,
+              value = 'NGG',
+              type = 'text',
+              autofocus = True,
+              style = dict(
+                fontFamily = 'monospace',
+                fontSize = 14,
+                height = '20px',
+                width = '70px',
+                verticalAlign = 'text-bottom',
+              ),
+            ),
+            html.Strong(' ' * 3),
+            html.Div(
+              [
+                html.Img(
+                  src = '/staticfiles/tooltip_logo',
+                  className = 'tooltiplogo',
+                ),
+                html.Span(
+                  'Supports IUPAC DNA encoding.\nCutsite assumed 3nt upstream of PAM match.\nEx: NNNRRT, NGG.',
+                  className = 'tooltiptext'
+                ),
+              ], 
+              className = 'tooltip',
+            ),
+          ],
           style = dict(
             textAlign = 'center',
           ),
@@ -196,6 +214,14 @@ layout = html.Div([
           className = 'row',
         ),
 
+        # Sharable link, move this later
+        html.Div(
+          html.A(
+            '🔗 Shareable link to page before computation', 
+            id = 'B_page-link'
+          ),
+        ),
+
       ],
       # body style
       style = dict(
@@ -219,6 +245,27 @@ style = dict(
 #######################################################################
 #########################      CALLBACKS      #########################
 #######################################################################
+
+##
+# URL and header callbacks
+##
+@app.callback(
+  Output('B_textarea', 'value'),
+  [Input('B_url', 'pathname')])
+def update_textarea_from_url(url):
+  valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    return textarea
+  return
+
+@app.callback(
+  Output('B_textbox_pam', 'value'),
+  [Input('B_url', 'pathname')])
+def update_textarea_from_url(url):
+  valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    return pam
+  return
 
 ##
 # Prediction callback
@@ -523,3 +570,15 @@ def update_stats_plot(rows, selected_row_indices):
     ),
   )
   return child
+
+
+##
+# Page link callback
+##
+@app.callback(
+  Output('B_page-link', 'href'),
+  [Input('B_textarea', 'value'),
+   Input('B_textbox_pam', 'value'),
+  ])
+def update_pagelink(textarea, pam):
+  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam))

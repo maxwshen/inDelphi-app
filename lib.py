@@ -42,6 +42,10 @@ def __append_alphabet(output, alphabet):
       new_output.append(o + a)
   return new_output
 
+###############################################
+# Single
+###############################################
+
 def parse_valid_url_path_single(url_path):
   ## Expected format:
   # [encodedDNA]_[leftoverDNA]_[cutsite]
@@ -91,6 +95,57 @@ def encode_dna_to_url_path_single(seq, cutsite):
   else:
     leftoverdna = '-'
   return '/single_%s_%s_%s' % (encodeddna, leftoverdna, cutsite)
+
+
+###############################################
+# Batch
+###############################################
+
+def parse_valid_url_path_batch(url_path):
+  ## Expected format:
+  # [encodedDNA]_[leftoverDNA]_[pam in plaintext]
+  if url_path[:len('/batch_')] != '/batch_':
+    return False, None, None
+
+  url_path = url_path.replace('/batch_', '')
+  if len(url_path) == 0 or '_' not in url_path:
+    return False, None, None
+
+  threeparts = url_path.split('_')
+  if len(threeparts) != 3:
+    return False, None, None
+
+  [coded, leftover, pam] = threeparts
+
+  # Process encoded DNA
+  if len(coded) % 3 != 0:
+    return False, None, None  
+
+  seq = ''
+  for jdx in range(0, len(coded), 3):
+    w = coded[jdx : jdx + 3]
+    seq += code_to_dna[w]
+
+  # Process leftover eDNA
+  if leftover != '-':
+    seq += leftover
+
+  return True, seq, pam
+
+def encode_dna_to_url_path_batch(seq, pam):
+  encodeddna = ''
+  for idx in range(0, len(seq), KMER_LEN):
+    chomp = seq[idx : idx + KMER_LEN]
+    if len(chomp) == KMER_LEN:
+      encodeddna += dna_to_code[chomp]
+    else:
+      break
+  if len(seq[idx:]) != KMER_LEN:
+    leftoverdna = seq[idx:]
+  else:
+    leftoverdna = '-'
+  return '/batch_%s_%s_%s' % (encodeddna, leftoverdna, pam)
+
 
 __init_chars()
 __init_mappers()
