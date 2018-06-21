@@ -355,6 +355,7 @@ def update_statstable_selected(clickData, selected_row_indices):
     for point in clickData['points']:
       # Only allow selecting one point in plot-stats
       selected_row_indices = [point['pointNumber']]
+  # Need to add: if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
   return selected_row_indices
 
 ##
@@ -419,47 +420,57 @@ def update_stats_plot(rows, selected_row_indices):
     zeroline = True,
     zerolinewidth = 2,
     autorange = 'reversed',
+    titlefont = dict(
+      size = 10,
+    ),
+    range = [0, len(df)],
   )
 
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
+    [xmin, xmax] = lib.get_batch_statcol_xrange(df[stats_col], stats_col)
     fig['layout']['xaxis%s' % (subplot_num)].update(
       title = stats_col,
       fixedrange = True,
       showgrid = True,
       zeroline = False,
       titlefont = dict(
-        size = 9,
+        size = 12,
       ),
+      range = [xmin, xmax],
     )
 
     if selected_row_index is not None:
       fig['layout']['shapes'].append(
-        dict(
-          type = 'line',
-          xref = 'x%s' % (subplot_num),
-          yref = 'y1',
+        lib.get_batch_select_line(
           x0 = selected_line[subplot_num][1],
           x1 = selected_line[subplot_num][1],
           y0 = 0,
           y1 = len(df),
-          opacity = 0.8,
-          line = dict(
-            color = 'rgb(33, 33, 33)',
-            width = 1,
-            dash = 'dot',
-          ),
+          xref = 'x%s' % (subplot_num),
+          yref = 'y1',
+        )
+      )
+      fig['layout']['shapes'].append(
+        lib.get_batch_select_line(
+          x0 = xmin,
+          x1 = xmax,
+          y0 = selected_line[subplot_num][0] + 1,
+          y1 = selected_line[subplot_num][0] + 1,
+          xref = 'x%s' % (subplot_num),
+          yref = 'y1',
         )
       )
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
-  fig['layout']['width'] = 120 * len(stats_cols)
-  fig['layout']['height'] = 300 + len(df) * 10
+  fig['layout']['hovermode'] = 'y'
+  fig['layout']['width'] = 150 * len(stats_cols)
+  fig['layout']['height'] = 150 + len(df) * 11
   fig['layout']['margin'] = {
-    'l': 15,
-    'r': 15,
-    't': 5,
+    'l': 25,
+    'r': 25,
+    't': 0,
     'b': 150,
   }
   child = dcc.Graph(
@@ -523,45 +534,39 @@ def update_hist_plot(rows, selected_row_indices):
     subplot_num = idx + 1
     fig['layout']['yaxis%s' % (subplot_num)].update(
       fixedrange = True,
-      # zeroline = True,
       showticklabels = False,
       showgrid = False,
     )
     fig['layout']['xaxis%s' % (subplot_num)].update(
-      # title = stats_col,
       fixedrange = True,
       showgrid = True,
       zeroline = False,
+      ticks = 'outside',
+      ticklen = 3,
+      range = lib.get_batch_statcol_xrange(df[stats_col], stats_col),
     )
 
     if selected_row_index is not None:
       fig['layout']['shapes'].append(
-        dict(
-          type = 'line',
-          xref = 'x%s' % (subplot_num),
-          yref = 'y1',
+        lib.get_batch_select_line(
           x0 = selected_line[subplot_num][1],
           x1 = selected_line[subplot_num][1],
           y0 = 0,
           y1 = len(df) / 2.5,
-          opacity = 0.8,
-          line = dict(
-            color = 'rgb(33, 33, 33)',
-            width = 1,
-            dash = 'dot',
-          ),
+          xref = 'x%s' % (subplot_num),
+          yref = 'y1',
         )
       )
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
-  fig['layout']['width'] = 120 * len(stats_cols)
+  fig['layout']['width'] = 150 * len(stats_cols)
   fig['layout']['height'] = 150
   fig['layout']['margin'] = {
-    'l': 15,
-    'r': 15,
+    'l': 25,
+    'r': 25,
     't': 60,
-    'b': 15,
+    'b': 25,
   }
   child = dcc.Graph(
     id = 'B2_hist-stats-child',

@@ -232,4 +232,33 @@ def get_color(stats_col):
     return '#00AEB3'
   return
 
+###############################################
+# Batch mode: xaxis ticks 
+###############################################
+def get_batch_statcol_xrange(stats, stat_nm):
+  if 'frequency' in stat_nm:
+    buff = 3
+  elif stat_nm == 'Expected indel length':
+    buff = 1
+  elif stat_nm == 'Log phi':
+    buff = 0.1
+  elif stat_nm == 'Precision':
+    buff = 0.05 
+  return [min(stats) - buff, max(stats) + buff]
 
+def get_batch_select_line(x0 = 0, x1 = 0, y0 = 0, y1 = 0, xref = '', yref = ''):
+  return dict(
+    type = 'line',
+    xref = xref,
+    yref = yref,
+    x0 = x0,
+    x1 = x1,
+    y0 = y0,
+    y1 = y1,
+    opacity = 0.8,
+    line = dict(
+      color = 'rgb(33, 33, 33)',
+      width = 1,
+      dash = 'dot',
+    )
+  )
