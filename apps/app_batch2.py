@@ -213,6 +213,24 @@ layout = html.Div([
           ),
         ),
 
+        # Checkboxes to select columns
+        dcc.Checklist(
+          id = 'B2_checklist-columns',
+          options = [
+            {'label': 'Precision', 'value': 'Precision'},
+            {'label': 'Frameshift frequency', 'value': 'Frameshift frequency'},
+            {'label': 'Frame +0 frequency', 'value': 'Frame +0 frequency'},
+            {'label': 'Frame +1 frequency', 'value': 'Frame +1 frequency'},
+            {'label': 'Frame +2 frequency', 'value': 'Frame +2 frequency'},
+            {'label': 'Log phi (microhomology strength)', 'value': 'Log phi'},
+            {'label': 'Highest outcome frequency', 'value': 'Highest outcome frequency'},
+            {'label': 'Highest del frequency', 'value': 'Highest del frequency'},
+            {'label': 'Highest ins frequency', 'value': 'Highest ins frequency'},
+            {'label': 'Expected indel length', 'value': 'Expected indel length'},
+          ],
+          values = ['Precision', 'Frameshift frequency', 'Log phi', 'Highest outcome frequency']
+        )
+
       ],
       # body style
       style = dict(
@@ -314,9 +332,10 @@ def update_pred_df_stats(nclicks, seq, pam):
 ## 
 @app.callback(
   Output('B2_table-stats', 'rows'), 
-  [Input('B2_hidden-pred-df-stats', 'children')
+  [Input('B2_hidden-pred-df-stats', 'children'),
+   Input('B2_checklist-columns', 'values'),
   ])
-def update_stats_table(all_stats_string):
+def update_stats_table(all_stats_string, chosen_columns):
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
 
   # Drop
@@ -334,13 +353,18 @@ def update_stats_table(all_stats_string):
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
   for stat_col in stats_cols:
+    # Filter down to selected columns
+    if stat_col not in chosen_columns:
+      stats.drop(stat_col, axis = 1, inplace = True)
+      continue
+    # Reformat
     if stat_col in ['Precision', 'Log phi']:
       stats[stat_col] = [float('%.2f' % (s)) for s in stats[stat_col]]    
     else:
       stats[stat_col] = [float('%.1f' % (s)) for s in stats[stat_col]]    
 
   # Reorder columns
-  stats = stats[nonstat_cols + sorted(stats_cols)]
+  stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
 
   return stats.to_dict('records')
 
@@ -374,11 +398,12 @@ def update_stats_plot(rows, selected_row_indices):
     return ''
 
   # Determine statistics to plot
-  stats_cols = list(df.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
-  for nonstat_col in nonstat_cols:
-    stats_cols.remove(nonstat_col)
-  stats_cols = sorted(stats_cols)
+  # stats_cols = list(df.columns)
+  # nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
+  # for nonstat_col in nonstat_cols:
+  #   stats_cols.remove(nonstat_col)
+  stats_cols = lib.order_chosen_columns(list(df.columns))
+  
 
   fig = plotly.tools.make_subplots(
     rows = 1, cols = len(stats_cols),
@@ -496,11 +521,11 @@ def update_hist_plot(rows, selected_row_indices):
     return ''
 
   # Determine statistics to plot
-  stats_cols = list(df.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
-  for nonstat_col in nonstat_cols:
-    stats_cols.remove(nonstat_col)
-  stats_cols = sorted(stats_cols)
+  # stats_cols = list(df.columns)
+  # nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
+  # for nonstat_col in nonstat_cols:
+  #   stats_cols.remove(nonstat_col)
+  stats_cols = lib.order_chosen_columns(list(df.columns))
 
   fig = plotly.tools.make_subplots(
     rows = 1, cols = len(stats_cols))

@@ -262,3 +262,22 @@ def get_batch_select_line(x0 = 0, x1 = 0, y0 = 0, y1 = 0, xref = '', yref = ''):
       dash = 'dot',
     )
   )
+
+def order_chosen_columns(cols):
+  preferred_order = [
+    'Precision',
+    'Frameshift frequency',
+    'Frame +0 frequency',
+    'Frame +1 frequency',
+    'Frame +2 frequency',
+    'Log phi',
+    'Highest outcome frequency',
+    'Highest del frequency',
+    'Highest ins frequency',
+    'Expected indel length',
+  ]
+  reordered = []
+  for pref in preferred_order:
+    if pref in cols:
+      reordered.append(pref)
+  return reordered
