@@ -88,6 +88,8 @@ layout = html.Div([
           dcc.Textarea(
             id = 'B_textarea', 
             value = 'CTAGGGATGTGGCTGCATGCTACGTTGACACACCTACACTGCTCGAAGTAAATATACGAAGCGCGCGGCCTGGCCGGAGCCGTTCCGCATCGTCACGTGTTCGTTTACTGTTAATTGGTGGCACATAAGCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTTCCAAACGCCCCGTATCGATGCTGAACGAATCGATGCACGCTCCCGTCTTTGAAAACGCATAAACATACAAGTGGACAGATGATGGGTACGGGCCTCTAATACATCCAACACTCTACGCCCTCTTCAAGAGCTAGAAGGGCACCCTGCAGTTGGAAAGGGAATTATTTCGTAAGGCGAGCCCATACCGTCATTCATGCGGAAGAGTTAACACGATTGGAAGTAGGAATAGTT',
+            minLength = 70,  
+            maxLength = 2000,  
             style = dict(
               fontFamily = 'monospace',
               fontSize = 16,
@@ -117,6 +119,8 @@ layout = html.Div([
               size = 5,
               value = 'NGG',
               type = 'text',
+              minlength = 2,
+              maxlength = 6,
               autofocus = True,
               style = dict(
                 fontFamily = 'monospace',
@@ -134,7 +138,7 @@ layout = html.Div([
                   className = 'tooltiplogo',
                 ),
                 html.Span(
-                  'Supports IUPAC DNA encoding.\nCutsite assumed 3nt upstream of PAM match.\nEx: NNNRRT, NGG.',
+                  'Cutsite assumed 3nt upstream of PAM match. PAM must be 2-6 bp long. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
                   className = 'tooltiptext'
                 ),
               ], 
@@ -251,21 +255,23 @@ style = dict(
 ##
 @app.callback(
   Output('B_textarea', 'value'),
-  [Input('B_url', 'pathname')])
-def update_textarea_from_url(url):
+  [Input('B_url', 'pathname')],
+  [State('B_textarea', 'value')])
+def update_textarea_from_url(url, default_value):
   valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
   if valid_flag:
     return textarea
-  return
+  return default_value
 
 @app.callback(
   Output('B_textbox_pam', 'value'),
-  [Input('B_url', 'pathname')])
-def update_textarea_from_url(url):
+  [Input('B_url', 'pathname')],
+  [State('B_textbox_pam', 'value')])
+def update_textarea_from_url(url, default_value):
   valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
   if valid_flag:
     return pam
-  return
+  return default_value
 
 ##
 # Prediction callback
@@ -429,6 +435,7 @@ def update_stats_plot(rows, selected_row_indices):
       tickvals = np.arange(len(df.index)) + 1,
       ticktext = [str(s) for s in df['ID']],
       zeroline = True,
+      zerolinewidth = 2,
     )
 
     fig['layout']['yaxis%s' % (subplot_num)].update(
@@ -452,6 +459,7 @@ def update_stats_plot(rows, selected_row_indices):
           line = dict(
             color = 'rgb(33, 33, 33)',
             width = 1,
+            dash = 'dot',
           ),
         )
       )
@@ -524,7 +532,6 @@ def update_stats_plot(rows, selected_row_indices):
     fig['layout']['xaxis%s' % (subplot_num)].update(
       fixedrange = True,
       zeroline = True,
-      zerolinewidth = 2,
     )
     fig['layout']['yaxis%s' % (subplot_num)].update(
       title = stats_col,
@@ -548,6 +555,7 @@ def update_stats_plot(rows, selected_row_indices):
           line = dict(
             color = 'rgb(33, 33, 33)',
             width = 1,
+            dash = 'dot',
           ),
         )
       )
