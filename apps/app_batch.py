@@ -32,7 +32,6 @@ else:
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
 
 ## Parameters
-headerHeight = 200
 
 ###################################################################
 ###################################################################
@@ -145,13 +144,21 @@ layout = html.Div([
                   className = 'tooltiplogo',
                 ),
                 html.Span(
-                  'Cutsite assumed 3nt upstream of PAM match. PAM must be 2-6 bp long. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
+                  'Cutsite assumed 3nt upstream of PAM match. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
                   className = 'tooltiptext'
                 ),
               ], 
               className = 'tooltip',
             ),
           ],
+          style = dict(
+            textAlign = 'center',
+          ),
+        ),
+
+        html.P(
+          id = 'B_estimated_runtime',
+          children = 'Provide a sequence and PAM.',
           style = dict(
             textAlign = 'center',
           ),
@@ -166,6 +173,7 @@ layout = html.Div([
             id = 'B_submit_button',
             style = dict(
             ),
+            # disabled = True,
           )],
           style = dict(
             textAlign = 'center',
@@ -174,15 +182,8 @@ layout = html.Div([
 
       ],
       style = dict(
-        position = 'fixed',
         backgroundColor = 'white',
-        borderBottom = '3px solid #777777',
-        zIndex = 1e6,
         width = '1010px',
-        left = '50%',
-        transform = 'translate(-50%, 0)',
-        height = headerHeight,
-        marginTop = '-%spx' % (headerHeight + 20),
       ),
     ),
 
@@ -255,7 +256,6 @@ layout = html.Div([
       ],
       # body style
       style = dict(
-        marginTop = '%spx' % (headerHeight + 20),
       ),
     ),
     ##
@@ -313,6 +313,8 @@ def update_pred_df_stats(nclicks, seq, pam):
 
   assert pam.count('N') != len(pam)
   assert 2 <= len(pam) <= 6
+  seq = seq.upper()
+  pam = pam.upper()
 
   # Search for gRNAs matching PAM
   seqs = [seq, lib.revcomp(seq)]
@@ -352,6 +354,56 @@ def update_pred_df_stats(nclicks, seq, pam):
   return all_stats.to_csv()
   # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
 
+@app.callback(
+  Output('B_estimated_runtime', 'children'),
+  [Input('B_textarea', 'value'),
+   Input('B_textbox_pam', 'value')])
+def update_estimated_runtime(seq, pam):
+  # Error catching
+  if len(seq) < 70:
+    return 'Provide a sequence longer than 70 bp.'
+  if len(seq) > 5000:
+    return 'Provide a sequence shorter than 5kb.'
+  if len(pam) < 2 or len(pam) > 6:
+    return 'Provide a PAM between 2 and 6 bp long.'
+  allowed_seq_chars = set(list('ACGTacgt'))
+  for char in set(seq):
+    if char not in allowed_seq_chars:
+      return 'Sanitize your sequence: %s disallowed' % (char)
+  allowed_pam_chars = set(list('ACGTYRWSKMDVHBNacgtyrwskmdvhbn'))
+  for char in set(pam):
+    if char not in allowed_pam_chars:
+      return 'Sanitize your PAM: %s disallowed' % (char)
+  if pam.count('N') == len(pam):
+    return 'PAM cannot only consist of N'
+
+
+  pam_freq = lib.estimate_pam_freq(pam) * 2 # rc also
+  num_est_pams = pam_freq * len(seq)
+  est_time_per_pam = 0.2 # seconds
+  est_runtime = est_time_per_pam * num_est_pams
+
+  if est_runtime < 2:
+    # ans = '1 second'
+    crispr_words = ['CRISPR', 'gene editing', 'DNA', 'gene drive', 'non-homologous end-joining', 'homology-directed repair', 'microhomology-mediated end-joining', 'inDelphi', 'DNA microhomology', 'programmable nuclease', 'TAL effector nuclease', 'zinc-finger nuclease', 'genome editing', 'protospacer', 'protospacer-adjacent motif', 'prokaryotic antiviral defense mechanism', 'Streptococcus pyogenes', 'Cas9', 'single guide RNA', 'tracrRNA', 'crRNA', 'R loop', 'genetic engineering', 'gene knockout', 'computational biology', 'synthetic biology', 'disease correction', 'double-strand break']
+    import random
+    ans = 'faster than you can say "%s"' % (random.choice(crispr_words))
+  elif est_runtime < 10:
+    ans = '%s seconds' % (int(est_runtime))
+  elif est_runtime < 60:
+    ans = '%s0 seconds' % (int(round(est_runtime / 10)))
+    if ans == '60 seconds':
+      ans = '1 minute'
+  elif est_runtime < 90:
+    ans = '1 minute'
+  elif est_runtime < 60*60:
+    ans = '%s minutes' % (int(round(est_runtime / 60)))
+  elif est_runtime < 1.5 * 60*60:
+    ans = '1 hour'
+  else:
+    ans = '%s hours' % (int(round(est_runtime / (60*60))))
+  return 'Estimated runtime: %s' % (ans)
+
 ##
 # Column selection and sorting callbacks
 ##
@@ -375,6 +427,8 @@ def update_sortcol_options(values):
    Input('B_sortdirection', 'value'),
   ])
 def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction):
+  if all_stats_string == 'init':
+    assert False, 'init'
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
 
   # Drop extra cols

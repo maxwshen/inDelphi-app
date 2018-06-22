@@ -85,6 +85,7 @@ def parse_valid_url_path_single(url_path):
   return True, seq, cutsite_index
 
 def encode_dna_to_url_path_single(seq, cutsite):
+  seq = seq.upper()
   encodeddna = ''
   for idx in range(0, len(seq), KMER_LEN):
     chomp = seq[idx : idx + KMER_LEN]
@@ -135,6 +136,7 @@ def parse_valid_url_path_batch(url_path):
   return True, seq, pam
 
 def encode_dna_to_url_path_batch(seq, pam):
+  seq, pam = seq.upper(), pam.upper()
   encodeddna = ''
   for idx in range(0, len(seq), KMER_LEN):
     chomp = seq[idx : idx + KMER_LEN]
@@ -205,6 +207,12 @@ def match(template, dna):
     if char not in mapper[t]:
       return False
   return True
+
+def estimate_pam_freq(pam):
+  factor = 1
+  for char in pam:
+    factor *= ( len(mapper[char]) / 4)
+  return factor
 
 ###############################################
 # Colors

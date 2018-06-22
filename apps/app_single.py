@@ -760,6 +760,7 @@ def update_summary_module_header(text1, text2):
    Input('S_textbox2', 'value')])
 def update_pred_df(text1, text2):
   seq = text1 + text2
+  seq = seq.upper()
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite)
   return pred_df.to_csv()
