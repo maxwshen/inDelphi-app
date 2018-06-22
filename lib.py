@@ -333,8 +333,6 @@ def get_x_domains(num_cols):
   return domains
 
 def get_fixedwidth_ID(ids):
-  print(ids)
-  print(max(ids))
   largest_len = len(str(max(ids)))
   fw_ids = []
   for item in ids:

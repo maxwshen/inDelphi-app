@@ -54,6 +54,18 @@ layout = html.Div([
           id = 'B_hidden-cache-submit-button',
           children = '%s' % (time.time())
         ),
+        html.Div(
+          id = 'B_hidden-sort-module-interaction',
+          children = '%s' % (time.time())
+        ),
+        html.Div(
+          id = 'B_hidden-clickData',
+          children = '%s init' % (time.time())
+        ),
+        html.Div(
+          id = 'B_hidden-selected-id',
+          children = ''
+        ),
 
         # Datatable
         dt.DataTable(
@@ -235,22 +247,54 @@ layout = html.Div([
           labelStyle = {'display': 'inline-block'}
         ),
 
-        # Hists
-        html.Div(
-          id = 'B_hist-stats'
-        ),
-
-        # Plots
-        html.Div(
-          id = 'B_plot-stats'
-        ),
-
         # Sharable link, move this later
         html.Div(
           html.A(
             '🔗 Shareable link to page before computation', 
             id = 'B_page-link'
           ),
+        ),
+
+        # Download link: summary statistics
+        html.Div(
+          html.A(
+            '📑 Download table of predictions',
+            id = 'B_download-link'
+          ),
+        ),
+
+        #################
+        # Plots
+        #################
+
+        # Hists
+        html.Div(
+          dcc.Graph(
+            id = 'B_hist-stats',
+            config = dict(
+              modeBarButtonsToRemove = modebarbuttons_2d,
+              displaylogo = False,
+            ),
+          ),
+          id = 'B_hist-stats-div',
+          style = dict(
+            display = 'none',
+          )
+        ),
+
+        # Plots
+        html.Div(
+          dcc.Graph(
+            id = 'B_plot-stats',
+            config = dict(
+              modeBarButtonsToRemove = modebarbuttons_2d,
+              displaylogo = False,
+            ),
+          ),
+          id = 'B_plot-stats-div',
+          style = dict(
+            display = 'none',
+          )
         ),
 
       ],
@@ -275,6 +319,28 @@ style = dict(
 #######################################################################
 #########################      CALLBACKS      #########################
 #######################################################################
+
+##
+# Hidden button callbacks
+##
+@app.callback(
+  Output('B_hidden-cache-submit-button', 'children'),
+  [Input('B_submit_button', 'n_clicks')])
+def update_submit_button_time(n_clicks):
+  return '%s' % (time.time())
+
+@app.callback(
+  Output('B_hidden-sort-module-interaction', 'children'),
+  [Input('B_sortdirection', 'value'),
+   Input('B_dropdown-sortcol', 'value')])
+def update_submit_button_time(v1, v2):
+  return '%s' % (time.time())
+
+@app.callback(
+  Output('B_hidden-clickData', 'children'),
+  [Input('B_plot-stats', 'clickData')])
+def update_hidden_clickdata(clickData):
+  return '%s %s' % (time.time(), clickData['points'][0]['pointNumber'])
 
 ##
 # URL and header callbacks
@@ -449,7 +515,6 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
       ascending_flag = True
     else:
       ascending_flag = False
-    print(stats.columns)
     stats = stats.sort_values(by = sort_col, ascending = ascending_flag)
 
   # Reformat floats
@@ -470,54 +535,104 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
 
   # Reorder columns
   stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
-
+  print('Updated statstable')
   return stats.to_dict('records')
 
 @app.callback(
   Output('B_table-stats', 'selected_row_indices'),
-  [Input('B_plot-stats-child', 'clickData')],
-  [State('B_table-stats', 'selected_row_indices')]
-  )
-def update_statstable_selected(clickData, selected_row_indices):
-  # Update selections in table based on clicking plot
-  if clickData:
-    clicked_idx = clickData['points'][0]['pointNumber']
-    if selected_row_indices != [clicked_idx]:
-      selected_row_indices = [clicked_idx]
+  [Input('B_hidden-clickData', 'children'),
+   Input('B_hidden-cache-submit-button', 'children'),
+   Input('B_hidden-sort-module-interaction', 'children'),
+   Input('B_table-stats', 'rows')],
+  [State('B_table-stats', 'selected_row_indices'),
+   State('B_hidden-selected-id', 'children')])
+def update_statstable_selected(clickData, submit_time, sort_time, rows, selected_row_indices, prev_id):
+  # Only allow selecting one point in plot-stats
+  submit_time = float(submit_time)
+  sort_time = float(sort_time)
+  click_time = float(clickData.split()[0])
+  click_idx = clickData.split()[1]
+  if click_idx == 'init':
+    return []
+  else:
+    click_idx = int(click_idx)
+
+  submit_intxn = bool(submit_time > max(sort_time, click_time))
+  click_intxn = bool(click_time > max(sort_time, submit_time))
+  sort_intxn = bool(sort_time > max(click_time, submit_time))
+
+  if sort_intxn:
+    # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
+    selected_row_indices = []
+    df = pd.DataFrame(rows)
+    new_idx = int(df[df['ID'] == prev_id].index[0])
+    print(new_idx)
+    selected_row_indices = [new_idx]
+  elif submit_intxn:
+    # if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
+    selected_row_indices = []
+  elif click_intxn:
+    # Must be triggered by clickData
+    # Update selections in table based on clicking plot
+    if selected_row_indices != [click_idx]:
+      selected_row_indices = [click_idx]
     else:
       # Point already selected, user clicked on same point twice:
       # so, deselect
       selected_row_indices = []
-      # Only allow selecting one point in plot-stats
-  # Need to add: if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
-  # Need to add: If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
   return selected_row_indices
 
+@app.callback(
+  Output('B_hidden-selected-id', 'children'),
+  [Input('B_table-stats', 'selected_row_indices')],
+  [State('B_table-stats', 'rows')])
+def update_hidden_selected_id(selected_idx, rows):
+  print('Updating hidden selected id')
+  if len(selected_idx) == 0:
+    return ''
+  idx = selected_idx[0]
+  df = pd.DataFrame(rows)
+  return list(df['ID'])[idx]
+
 ##
-# Plot stats callback
+# Plot stats callback: styles
 ##
 @app.callback(
-    Output('B_plot-stats', 'children'),
+  Output('B_plot-stats-div', 'style'),
+  [Input('B_plot-stats', 'figure')])
+def update_stats_plot_style(fig):
+  if fig is None:
+    return {'display': 'none'}
+  else:
+    return {}
+
+@app.callback(
+  Output('B_hist-stats-div', 'style'),
+  [Input('B_hist-stats', 'figure')])
+def update_hist_plot_style(fig):
+  if fig is None:
+    return {'display': 'none'}
+  else:
+    return {}
+
+
+########################################################
+# Plot stats callback
+########################################################
+@app.callback(
+    Output('B_plot-stats', 'figure'),
     [Input('B_table-stats', 'rows'),
      Input('B_table-stats', 'selected_row_indices')])
 def update_stats_plot(rows, selected_row_indices):
-  try:
-    df = pd.DataFrame(rows)
-  except:
-    # On page load, hide empty dash figure
-    # Can put estimated loading time here
-    return ''
-
+  df = pd.DataFrame(rows)
   # Determine statistics to plot
   stats_cols = lib.order_chosen_columns(list(df.columns))
-
 
   fig = plotly.tools.make_subplots(
     rows = 1, cols = len(stats_cols),
     shared_yaxes = True)
 
   # Color selected markers
-
   if len(selected_row_indices) > 0:
     selected_row_index = selected_row_indices[0]
   else:
@@ -627,27 +742,14 @@ def update_stats_plot(rows, selected_row_indices):
     't': 0,
     'b': 150,
   }
-  child = dcc.Graph(
-    id = 'B_plot-stats-child',
-    figure = fig,
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  )
-  return child
+  return fig
 
 @app.callback(
-    Output('B_hist-stats', 'children'),
+    Output('B_hist-stats', 'figure'),
     [Input('B_table-stats', 'rows'),
      Input('B_table-stats', 'selected_row_indices')])
 def update_hist_plot(rows, selected_row_indices):
-  try:
-    df = pd.DataFrame(rows)
-  except:
-    # On page load, hide empty dash figure
-    # Can put estimated loading time here
-    return ''
+  df = pd.DataFrame(rows)
 
   # if len(df) <= 5:
     # return ''
@@ -659,7 +761,6 @@ def update_hist_plot(rows, selected_row_indices):
     rows = 1, cols = len(stats_cols))
 
   # Color selected markers
-
   if len(selected_row_indices) > 0:
     selected_row_index = selected_row_indices[0]
   else:
@@ -728,16 +829,45 @@ def update_hist_plot(rows, selected_row_indices):
     # 'b': 25,
     'b': 40,
   }
-  child = dcc.Graph(
-    id = 'B_hist-stats-child',
-    figure = fig,
-    config = dict(
-      modeBarButtonsToRemove = modebarbuttons_2d,
-      displaylogo = False,
-    ),
-  )
-  return child
+  return fig
 
+
+##
+# Download callbacks
+##
+@app.callback(
+  Output('B_download-link', 'href'), 
+  [Input('B_table-stats', 'rows')])
+def update_link(rows):
+  print('Updating link')
+  df = pd.DataFrame(rows)
+  stats_cols = list(df.columns)
+  nonstat_cols = ['gRNA', 'gRNA orientation', 'PAM', 'URL', 'ID']
+  for nonstat_col in nonstat_cols:
+    stats_cols.remove(nonstat_col)
+  df = df[nonstat_cols + lib.order_chosen_columns(stats_cols)]
+
+  time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
+  link_fn = '/dash/urlToDownloadBatch?value={}'.format(time)
+  df.to_csv('user-csvs/%s.csv' % (time), index = False)
+  print('Updated link')
+  return link_fn
+
+##
+# Flask serving
+##
+@app.server.route('/dash/urlToDownloadBatch') 
+def download_csv_batch():
+  value = flask.request.args.get('value')
+  # create a dynamic csv or file here using `StringIO` 
+  # (instead of writing to the file system)
+  local_csv_fn = value.split('/')[-1]
+  return flask.send_file(
+    open('user-csvs/%s.csv' % (local_csv_fn), 'rb'),
+    mimetype = 'text/csv',
+    attachment_filename = 'inDelphiBatch_output.csv',
+    as_attachment = True,
+  )
 
 
 ##
