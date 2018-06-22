@@ -748,7 +748,7 @@ def update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache
   [Input('S_textbox1', 'value'),
    Input('S_textbox2', 'value')])
 def update_summary_module_header(text1, text2):
-  presumed_grna = text1[-18:] + text2[:3]
+  presumed_grna = text1[-17:] + text2[:3]
   return 'Summary of predictions at target site with gRNA: %s' % (presumed_grna)
 
 ##

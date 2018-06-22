@@ -317,6 +317,7 @@ def update_pred_df_stats(nclicks, seq, pam):
   # Search for gRNAs matching PAM
   seqs = [seq, lib.revcomp(seq)]
   cutsites = range(30, len(seq) - 30)
+  single_mode_links = []
   for local_seq, grna_orient in zip(seqs, ['+', '-']):
     for local_cutsite in cutsites:
       cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
@@ -331,7 +332,11 @@ def update_pred_df_stats(nclicks, seq, pam):
 
         pred_df, stats = inDelphi.predict(local_seq, local_cutsite)
         all_stats = all_stats.append(stats, ignore_index = True)
+        
+        sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
+        single_mode_links.append('https://dev.crisprindelphi.design%s' % (sm_link))
 
+  all_stats['URL'] = single_mode_links
 
   all_stats['Log phi'] = np.log(all_stats['Phi'])  
   # Drop
@@ -395,7 +400,7 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
 
   # Reformat floats
   stats_cols = list(stats.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM']
+  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'URL']
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
   for stat_col in stats_cols:
@@ -485,11 +490,23 @@ def update_stats_plot(rows, selected_row_indices):
     if selected_row_index is not None:
       selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][selected_row_index])
 
+  # Format y tick texts: ID, gRNA, PAM, orientation, URL.
+  yticktexts = []
+  fixedwidth_ids = lib.get_fixedwidth_ID(df['ID'])
+  for idx, row in df.iterrows():
+    row_text = '%s %s %s <a href="%s">URL</a> %s' % (row['gRNA'], row['PAM'], row['gRNA orientation'], row['URL'], fixedwidth_ids[idx])
+    yticktexts.append(row_text)
+
+
   # Subplot formatting
   fig['layout']['yaxis1'].update(
     fixedrange = True,
     tickvals = np.arange(1, len(df.index) + 1),
-    ticktext = [str(s) for s in df['ID']],
+    ticktext = yticktexts,
+    tickfont = dict(
+      size = 12,
+      family = 'monospace',
+    ),
     zeroline = True,
     zerolinewidth = 2,
     autorange = 'reversed',
@@ -548,10 +565,10 @@ def update_stats_plot(rows, selected_row_indices):
   fig['layout']['showlegend'] = False
   fig['layout']['hovermode'] = 'y'
   # fig['layout']['spikedistance'] = -1
-  fig['layout']['width'] = 50 + len(stats_cols) * 150
+  fig['layout']['width'] = 275 + len(stats_cols) * 150
   fig['layout']['height'] = 150 + len(df) * 11
   fig['layout']['margin'] = {
-    'l': 25,
+    'l': 250,
     'r': 25,
     't': 0,
     'b': 150,
@@ -648,10 +665,10 @@ def update_hist_plot(rows, selected_row_indices):
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
-  fig['layout']['width'] = 50 + len(stats_cols) * 150
+  fig['layout']['width'] = 275 + len(stats_cols) * 150
   fig['layout']['height'] = 140
   fig['layout']['margin'] = {
-    'l': 25,
+    'l': 250,
     'r': 25,
     't': 60,
     # 'b': 25,

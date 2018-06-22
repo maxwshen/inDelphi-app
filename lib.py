@@ -323,3 +323,14 @@ def get_x_domains(num_cols):
     rightside = leftside + size
     domains.append([leftside + margin_size, rightside - margin_size])
   return domains
+
+def get_fixedwidth_ID(ids):
+  print(ids)
+  print(max(ids))
+  largest_len = len(str(max(ids)))
+  fw_ids = []
+  for item in ids:
+    num_spaces = largest_len - len(str(item))
+    fw_id = '%s#%s' % (' ' * num_spaces, item)
+    fw_ids.append(fw_id)
+  return fw_ids
