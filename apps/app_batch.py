@@ -56,6 +56,13 @@ layout = html.Div([
           children = '%s' % (time.time())
         ),
 
+        # Datatable
+        dt.DataTable(
+          id = 'B_table-stats',
+          rows = [{}], # init rows
+          selected_row_indices = [],
+        ),
+
         dcc.Location(
           id = 'B_url',
           refresh = False,
@@ -75,7 +82,7 @@ layout = html.Div([
         # Upper header
         ###################################################
         html.H4(
-          'inDelphi batch mode',
+          'inDelphi batch mode dev',
           style = dict(
             textAlign = 'center',
           ),
@@ -87,7 +94,7 @@ layout = html.Div([
         html.Div([
           dcc.Textarea(
             id = 'B_textarea', 
-            value = 'CTAGGGATGTGGCTGCATGCTACGTTGACACACCTACACTGCTCGAAGTAAATATACGAAGCGCGCGGCCTGGCCGGAGCCGTTCCGCATCGTCACGTGTTCGTTTACTGTTAATTGGTGGCACATAAGCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTTCCAAACGCCCCGTATCGATGCTGAACGAATCGATGCACGCTCCCGTCTTTGAAAACGCATAAACATACAAGTGGACAGATGATGGGTACGGGCCTCTAATACATCCAACACTCTACGCCCTCTTCAAGAGCTAGAAGGGCACCCTGCAGTTGGAAAGGGAATTATTTCGTAAGGCGAGCCCATACCGTCATTCATGCGGAAGAGTTAACACGATTGGAAGTAGGAATAGTT',
+            value = 'CTAGGGATGTGGCTGCATGCTACGTTGACACACCTACACTGCTCGAAGTAAATATACGAAGCGCGCGGCCTGGCCGGAGCCGTTCCGCATCGTCACGTGTTCGTTTACTGTTAATTGGTGGCACATAAGCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTT',
             minLength = 70,  
             maxLength = 2000,  
             style = dict(
@@ -187,35 +194,54 @@ layout = html.Div([
         ###################################################
         # Module: Detailed genotypes
         ###################################################
-  
-        # Datatable
-        dt.DataTable(
-          id = 'B_table-stats',
-          rows = [{}], # init rows
-          row_selectable = True,
-          # row_single_select = True,
-          filterable = True,
-          sortable = True,
-          selected_row_indices = [],
+
+        # Multi drop down to select columns
+        dcc.Dropdown(
+          id = 'B_dropdown-columns',
+          options = [
+            {'label': 'Cutsite', 'value': 'Cutsite'},
+            {'label': 'Precision', 'value': 'Precision'},
+            {'label': 'Frameshift (%)', 'value': 'Frameshift (%)'},
+            {'label': 'Frame +0 (%)', 'value': 'Frame +0 (%)'},
+            {'label': 'Frame +1 (%)', 'value': 'Frame +1 (%)'},
+            {'label': 'Frame +2 (%)', 'value': 'Frame +2 (%)'},
+            {'label': 'Log phi (microhomology strength)', 'value': 'Log phi'},
+            {'label': 'Most frequent genotype (%)', 'value': 'M.F. gt (%)'},
+            {'label': 'Most frequent deletion (%)', 'value': 'M.F. del (%)'},
+            {'label': 'Most frequent insertion (%)', 'value': 'M.F. ins (%)'},
+            {'label': 'Expected indel length', 'value': 'Exp. indel len'},
+          ],
+          multi = True,
+          searchable = False,
+          clearable = False,
+          value = ['Cutsite', 'Precision', 'Frameshift (%)', 'Log phi', 'M.F. gt (%)']
+        ),
+
+        # Sorting columns
+        dcc.Dropdown(
+          id = 'B_dropdown-sortcol',
+          options = [],
+          searchable = False,
+          clearable = False,
+        ),
+        # Sort direction
+        dcc.RadioItems(
+          id = 'B_sortdirection',
+          options = [
+            {'label': 'Up', 'value': 'Up'},
+            {'label': 'Down', 'value': 'Down'},
+          ],
+          labelStyle = {'display': 'inline-block'}
+        ),
+
+        # Hists
+        html.Div(
+          id = 'B_hist-stats'
         ),
 
         # Plots
         html.Div(
-          [
-            # Plots: Scatter
-            html.Div(
-              id = 'B_plot-stats',
-              className = 'nine columns',
-            ),
-
-            # Plots: Histograms
-            html.Div(
-              id = 'B_hist-stats',
-              className = 'three columns',
-            ),
-
-          ],
-          className = 'row',
+          id = 'B_plot-stats'
         ),
 
         # Sharable link, move this later
@@ -267,7 +293,7 @@ def update_textarea_from_url(url, default_value):
   Output('B_textbox_pam', 'value'),
   [Input('B_url', 'pathname')],
   [State('B_textbox_pam', 'value')])
-def update_textarea_from_url(url, default_value):
+def update_pam_from_url(url, default_value):
   valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
   if valid_flag:
     return pam
@@ -314,25 +340,39 @@ def update_pred_df_stats(nclicks, seq, pam):
   ]
   all_stats = all_stats.drop(drop_cols, axis = 1)
 
-  all_stats['ID'] = all_stats.index
+  all_stats['ID'] = all_stats.index + 1
 
   for col in dd:
     all_stats[col] = dd[col]
   return all_stats.to_csv()
   # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
 
+##
+# Column selection and sorting callbacks
+##
+@app.callback(
+  Output('B_dropdown-sortcol', 'options'),
+  [Input('B_dropdown-columns', 'value')])
+def update_sortcol_options(values):
+  options = []
+  for value in values:
+    options.append({'label': value, 'value': value})
+  return options
 
 ##
 # Stats table callbacks
 ## 
 @app.callback(
   Output('B_table-stats', 'rows'), 
-  [Input('B_hidden-pred-df-stats', 'children')
+  [Input('B_hidden-pred-df-stats', 'children'),
+   Input('B_dropdown-columns', 'value'),
+   Input('B_dropdown-sortcol', 'value'),
+   Input('B_sortdirection', 'value'),
   ])
-def update_stats_table(all_stats_string):
+def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction):
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
 
-  # Drop
+  # Drop extra cols
   drop_cols = [
     'Reference sequence',
     '1-bp ins frequency',
@@ -341,19 +381,36 @@ def update_stats_table(all_stats_string):
   ]
   stats = stats.drop(drop_cols, axis = 1)
 
+  # Rename to shorter versions
+  stats = lib.rename_batch_columns(stats)
+
+  # Sort by, if possible
+  if sort_col is not None and sort_direction is not None:
+    if sort_direction == 'Up':
+      ascending_flag = True
+    else:
+      ascending_flag = False
+    print(stats.columns)
+    stats = stats.sort_values(by = sort_col, ascending = ascending_flag)
+
   # Reformat floats
   stats_cols = list(stats.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
+  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM']
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
   for stat_col in stats_cols:
+    # Filter down to selected columns
+    if stat_col not in chosen_columns:
+      stats.drop(stat_col, axis = 1, inplace = True)
+      continue
+    # Reformat
     if stat_col in ['Precision', 'Log phi']:
       stats[stat_col] = [float('%.2f' % (s)) for s in stats[stat_col]]    
     else:
       stats[stat_col] = [float('%.1f' % (s)) for s in stats[stat_col]]    
 
   # Reorder columns
-  stats = stats[nonstat_cols + sorted(stats_cols)]
+  stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
 
   return stats.to_dict('records')
 
@@ -365,11 +422,16 @@ def update_stats_table(all_stats_string):
 def update_statstable_selected(clickData, selected_row_indices):
   # Update selections in table based on clicking plot
   if clickData:
-    for point in clickData['points']:
-      if point['pointNumber'] in selected_row_indices:
-        selected_row_indices.remove(point['pointNumber'])
-      else:
-        selected_row_indices.append(point['pointNumber'])
+    clicked_idx = clickData['points'][0]['pointNumber']
+    if selected_row_indices != [clicked_idx]:
+      selected_row_indices = [clicked_idx]
+    else:
+      # Point already selected, user clicked on same point twice:
+      # so, deselect
+      selected_row_indices = []
+      # Only allow selecting one point in plot-stats
+  # Need to add: if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
+  # Need to add: If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
   return selected_row_indices
 
 ##
@@ -384,20 +446,18 @@ def update_stats_plot(rows, selected_row_indices):
     df = pd.DataFrame(rows)
   except:
     # On page load, hide empty dash figure
+    # Can put estimated loading time here
     return ''
 
   # Determine statistics to plot
-  stats_cols = list(df.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
-  for nonstat_col in nonstat_cols:
-    stats_cols.remove(nonstat_col)
-  stats_cols = sorted(stats_cols)
+  stats_cols = lib.order_chosen_columns(list(df.columns))
+
 
   fig = plotly.tools.make_subplots(
-    rows = len(stats_cols), cols = 1)
+    rows = 1, cols = len(stats_cols),
+    shared_yaxes = True)
 
   # Color selected markers
-
 
   if len(selected_row_indices) > 0:
     selected_row_index = selected_row_indices[0]
@@ -413,65 +473,88 @@ def update_stats_plot(rows, selected_row_indices):
       marker['color'][i] = '#000000'
     # Scatter
     fig.append_trace(
-      go.Scatter(
-        x = np.array(df.index) + 1,
-        y = df[stats_col],
+      go.Scattergl(
+        x = df[stats_col],
+        y = np.array(df.index) + 1,
         mode = 'markers',
         marker = marker,
         name = '',
-        xaxis = 'x_%s' % (subplot_num),
-        yaxis = 'y_%s' % (subplot_num),
       ), 
-      subplot_num, 1
+      1, subplot_num
     )
     if selected_row_index is not None:
       selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][selected_row_index])
 
   # Subplot formatting
+  fig['layout']['yaxis1'].update(
+    fixedrange = True,
+    tickvals = np.arange(1, len(df.index) + 1),
+    ticktext = [str(s) for s in df['ID']],
+    zeroline = True,
+    zerolinewidth = 2,
+    autorange = 'reversed',
+    titlefont = dict(
+      size = 10,
+    ),
+    range = [0, len(df)],
+  )
+
+  x_domains = lib.get_x_domains(len(stats_cols))
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
+    [xmin, xmax] = lib.get_batch_statcol_xrange(df[stats_col], stats_col)
     fig['layout']['xaxis%s' % (subplot_num)].update(
+      # title = stats_col,
+      domain = x_domains[idx],
       fixedrange = True,
-      tickvals = np.arange(len(df.index)) + 1,
-      ticktext = [str(s) for s in df['ID']],
-      zeroline = True,
-      zerolinewidth = 2,
-    )
-
-    fig['layout']['yaxis%s' % (subplot_num)].update(
-      title = stats_col,
-      fixedrange = True,
+      # showgrid = False,
       showgrid = True,
       zeroline = False,
+      titlefont = dict(
+        size = 12,
+      ),
+      range = [xmin, xmax],
+      # showspikes = True,
+      # spikesnap = 'cursor',
+      # spikemode = 'across+marker',
+      # spikedash = 'solid',
+      # spikethickness = 1,
+      # spikecolor = '#777',
     )
 
     if selected_row_index is not None:
       fig['layout']['shapes'].append(
-        dict(
-          type = 'line',
+        lib.get_batch_select_line(
+          x0 = selected_line[subplot_num][1],
+          x1 = selected_line[subplot_num][1],
+          y0 = 0,
+          y1 = len(df),
           xref = 'x%s' % (subplot_num),
-          yref = 'y%s' % (subplot_num),
-          x0 = 0,
-          x1 = len(df),
-          y0 = selected_line[subplot_num][1],
-          y1 = selected_line[subplot_num][1],
-          opacity = 0.8,
-          line = dict(
-            color = 'rgb(33, 33, 33)',
-            width = 1,
-            dash = 'dot',
-          ),
+          yref = 'y1',
+        )
+      )
+      fig['layout']['shapes'].append(
+        lib.get_batch_select_line(
+          x0 = xmin,
+          x1 = xmax,
+          y0 = selected_line[subplot_num][0] + 1,
+          y1 = selected_line[subplot_num][0] + 1,
+          xref = 'x%s' % (subplot_num),
+          yref = 'y1',
         )
       )
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
-  fig['layout']['height'] = 200 * len(stats_cols)
+  fig['layout']['hovermode'] = 'y'
+  # fig['layout']['spikedistance'] = -1
+  fig['layout']['width'] = 50 + len(stats_cols) * 150
+  fig['layout']['height'] = 150 + len(df) * 11
   fig['layout']['margin'] = {
-    'l': 40,
-    'r': 10,
-    't': 60,
-    'b': 200
+    'l': 25,
+    'r': 25,
+    't': 0,
+    'b': 150,
   }
   child = dcc.Graph(
     id = 'B_plot-stats-child',
@@ -487,21 +570,24 @@ def update_stats_plot(rows, selected_row_indices):
     Output('B_hist-stats', 'children'),
     [Input('B_table-stats', 'rows'),
      Input('B_table-stats', 'selected_row_indices')])
-def update_stats_plot(rows, selected_row_indices):
+def update_hist_plot(rows, selected_row_indices):
   try:
     df = pd.DataFrame(rows)
   except:
+    # On page load, hide empty dash figure
+    # Can put estimated loading time here
     return ''
 
+  # if len(df) <= 5:
+    # return ''
+
   # Determine statistics to plot
-  stats_cols = list(df.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'Cutsite']
-  for nonstat_col in nonstat_cols:
-    stats_cols.remove(nonstat_col)
-  stats_cols = sorted(stats_cols)
+  stats_cols = lib.order_chosen_columns(list(df.columns))
 
   fig = plotly.tools.make_subplots(
-    rows = len(stats_cols), cols = 1)
+    rows = 1, cols = len(stats_cols))
+
+  # Color selected markers
 
   if len(selected_row_indices) > 0:
     selected_row_index = selected_row_indices[0]
@@ -512,72 +598,75 @@ def update_stats_plot(rows, selected_row_indices):
   # Generate each plot
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
-    # Hist    
     fig.append_trace(
       go.Histogram(
-        y = df[stats_col],
+        x = df[stats_col],
         marker = dict(color = lib.get_color(stats_col)),
         name = '',
-        xaxis = 'x_%s' % (subplot_num),
-        yaxis = 'y_%s' % (subplot_num),
+        opacity = 0.4,
       ), 
-      subplot_num, 1
+      1, subplot_num
     )
     if selected_row_index is not None:
       selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][selected_row_index])
 
   # Subplot formatting
+
+  x_domains = lib.get_x_domains(len(stats_cols))
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
-    fig['layout']['xaxis%s' % (subplot_num)].update(
-      fixedrange = True,
-      zeroline = True,
-    )
     fig['layout']['yaxis%s' % (subplot_num)].update(
+      fixedrange = True,
+      showticklabels = False,
+      showgrid = False,
+      zeroline = False,
+    )
+    fig['layout']['xaxis%s' % (subplot_num)].update(
+      domain = x_domains[idx],
       title = stats_col,
       fixedrange = True,
       showgrid = True,
       zeroline = False,
+      ticks = 'outside',
+      ticklen = 3,
+      tickcolor = '#eee',
+      tickangle = 0, # disable automatic tick rotation
+      range = lib.get_batch_statcol_xrange(df[stats_col], stats_col),
     )
 
-    # Draw horizontal line for selection
     if selected_row_index is not None:
       fig['layout']['shapes'].append(
-        dict(
-          type = 'line',
+        lib.get_batch_select_line(
+          x0 = selected_line[subplot_num][1],
+          x1 = selected_line[subplot_num][1],
+          y0 = 0,
+          y1 = len(df) / 2.5,
           xref = 'x%s' % (subplot_num),
-          yref = 'y%s' % (subplot_num),
-          x0 = 0,
-          x1 = len(df) / 2,
-          y0 = selected_line[subplot_num][1],
-          y1 = selected_line[subplot_num][1],
-          opacity = 0.8,
-          line = dict(
-            color = 'rgb(33, 33, 33)',
-            width = 1,
-            dash = 'dot',
-          ),
+          yref = 'y1',
         )
       )
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
-  fig['layout']['height'] = 200 * len(stats_cols)
+  fig['layout']['width'] = 50 + len(stats_cols) * 150
+  fig['layout']['height'] = 140
   fig['layout']['margin'] = {
-    'l': 40,
-    'r': 10,
+    'l': 25,
+    'r': 25,
     't': 60,
-    'b': 200
+    # 'b': 25,
+    'b': 40,
   }
   child = dcc.Graph(
-    figure = fig,
     id = 'B_hist-stats-child',
+    figure = fig,
     config = dict(
       modeBarButtonsToRemove = modebarbuttons_2d,
       displaylogo = False,
     ),
   )
   return child
+
 
 
 ##

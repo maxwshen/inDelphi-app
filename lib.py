@@ -1,3 +1,5 @@
+import numpy as np
+
 ###############################################
 # Functions and variables for URL shortening
 ###############################################
@@ -209,22 +211,23 @@ def match(template, dna):
 ###############################################
 
 def get_color(stats_col):
-#   - Expected indel length (Gray)
-  if stats_col == 'Expected indel length':
+  if stats_col == 'Cutsite':
     return '#86898C'
-  if stats_col == 'Frame +0 frequency':
+  if stats_col == 'Exp. indel len':
+    return '#86898C'
+  if stats_col == 'Frame +0 (%)':
     return '#68C7EC'
-  if stats_col == 'Frame +1 frequency':
+  if stats_col == 'Frame +1 (%)':
     return '#68C7EC'
-  if stats_col == 'Frame +2 frequency':
+  if stats_col == 'Frame +2 (%)':
     return '#68C7EC'
-  if stats_col == 'Frameshift frequency':
+  if stats_col == 'Frameshift (%)':
     return '#00A0DC'
-  if stats_col == 'Highest del frequency':
+  if stats_col == 'M.F. del (%)':
     return '#ED4795'
-  if stats_col == 'Highest ins frequency':
+  if stats_col == 'M.F. ins (%)':
     return '#F47B16'
-  if stats_col == 'Highest outcome frequency':
+  if stats_col == 'M.F. gt (%)':
     return '#7CB82F'
   if stats_col == 'Log phi':
     return '#EC4339'
@@ -236,15 +239,24 @@ def get_color(stats_col):
 # Batch mode: xaxis ticks 
 ###############################################
 def get_batch_statcol_xrange(stats, stat_nm):
-  if 'frequency' in stat_nm:
+  if '(%)' in stat_nm:
     buff = 3
-  elif stat_nm == 'Expected indel length':
+  elif stat_nm == 'Exp. indel len':
     buff = 1
   elif stat_nm == 'Log phi':
     buff = 0.1
   elif stat_nm == 'Precision':
     buff = 0.05 
+  elif stat_nm == 'Cutsite':
+    buff = 10
+  else: 
+    # catch all
+    buff = 0
   return [min(stats) - buff, max(stats) + buff]
+
+# def get_batch_statcol_xticks(stats):
+  # pass
+  # return
 
 def get_batch_select_line(x0 = 0, x1 = 0, y0 = 0, y1 = 0, xref = '', yref = ''):
   return dict(
@@ -263,21 +275,51 @@ def get_batch_select_line(x0 = 0, x1 = 0, y0 = 0, y1 = 0, xref = '', yref = ''):
     )
   )
 
+def rename_batch_columns(stats):
+  name_changes = {
+    'Frameshift frequency': 'Frameshift (%)',
+    'Frame +0 frequency': 'Frame +0 (%)',
+    'Frame +1 frequency': 'Frame +1 (%)',
+    'Frame +2 frequency': 'Frame +2 (%)',
+    'Highest outcome frequency': 'M.F. gt (%)',
+    'Highest del frequency': 'M.F. del (%)',
+    'Highest ins frequency': 'M.F. ins (%)',
+    'Expected indel length': 'Exp. indel len',
+  }
+  for col in stats:
+    if col in name_changes:
+      stats[name_changes[col]] = stats[col]
+      stats.drop([col], axis = 1, inplace = True)
+  return stats
+
 def order_chosen_columns(cols):
   preferred_order = [
+    'Cutsite',
     'Precision',
-    'Frameshift frequency',
-    'Frame +0 frequency',
-    'Frame +1 frequency',
-    'Frame +2 frequency',
+    'Frameshift (%)',
+    'Frame +0 (%)',
+    'Frame +1 (%)',
+    'Frame +2 (%)',
     'Log phi',
-    'Highest outcome frequency',
-    'Highest del frequency',
-    'Highest ins frequency',
-    'Expected indel length',
+    'M.F. gt (%)',
+    'M.F. del (%)',
+    'M.F. ins (%)',
+    'Exp. indel len',
   ]
   reordered = []
   for pref in preferred_order:
     if pref in cols:
       reordered.append(pref)
   return reordered
+
+def get_x_domains(num_cols):
+  # Ensure uniform and consistent horizontal spacing with variable number of columns
+  margin_pct = 0.12
+
+  domains = []
+  for leftside in np.arange(0, 1, 1/num_cols):
+    size = 1 / num_cols
+    margin_size = size * margin_pct 
+    rightside = leftside + size
+    domains.append([leftside + margin_size, rightside - margin_size])
+  return domains
