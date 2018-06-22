@@ -158,6 +158,16 @@
     margin-bottom: 30px;
   }
 
+  .batch_postcomputation_sticky {
+    top: 0;
+    z-index: 100;
+    background-color: white;
+    /*border-bottom: 2px solid;*/
+    /*border-bottom-color: rgb(100, 100, 100);*/
+    position: -webkit-sticky;
+    position: sticky;
+  }
+
   /**/
   /* Tool tips */
   /**/

@@ -41,9 +41,9 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 layout = html.Div([
   html.Div([
 
-    ##
+    ###################################################
     # Hidden divs for light data storage
-    ##
+    ###################################################
     html.Div(
       [
         html.Div(
@@ -84,9 +84,9 @@ layout = html.Div([
       ),
     ),
 
-    ##
+    ###################################################
     # Header
-    ##
+    ###################################################
     html.Div(
       [
         ###################################################
@@ -199,15 +199,11 @@ layout = html.Div([
       ),
     ),
 
-    ##
-    # Body / plots
-    ##
+    ###################################################
+    # Post-computation settings
+    ###################################################
     html.Div(
       [
-        ###################################################
-        # Module: Detailed genotypes
-        ###################################################
-
         # Multi drop down to select columns
         dcc.Dropdown(
           id = 'B_dropdown-columns',
@@ -263,10 +259,6 @@ layout = html.Div([
           ),
         ),
 
-        #################
-        # Plots
-        #################
-
         # Hists
         html.Div(
           dcc.Graph(
@@ -281,7 +273,20 @@ layout = html.Div([
             display = 'none',
           )
         ),
+      ],
+      # body style
+      id = 'B_postcomputation_settings',
+      className = 'batch_postcomputation_sticky',
+      style = dict(
+        display = 'none',
+      ),
+    ),
 
+    ###################################################
+    # Plots
+    ###################################################
+    html.Div(
+      [
         # Plots
         html.Div(
           dcc.Graph(
@@ -289,6 +294,7 @@ layout = html.Div([
             config = dict(
               modeBarButtonsToRemove = modebarbuttons_2d,
               displaylogo = False,
+              displayModeBar = False,
             ),
           ),
           id = 'B_plot-stats-div',
@@ -615,6 +621,14 @@ def update_hist_plot_style(fig):
   else:
     return {}
 
+@app.callback(
+  Output('B_postcomputation_settings', 'style'),
+  [Input('B_plot-stats', 'figure')])
+def update_postcomputation_settings_style(fig):
+  if fig is None:
+    return {'display': 'none'}
+  else:
+    return {}
 
 ########################################################
 # Plot stats callback

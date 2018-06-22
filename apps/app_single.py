@@ -267,8 +267,6 @@ layout = html.Div([
           ),
         ),
 
-
-
       ],
       style = dict(
         position = 'fixed',
