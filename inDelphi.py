@@ -395,8 +395,12 @@ def get_precision(pred_df):
 ##
 def add_genotype_column(pred_df, stats):
   gts = []
-  seq = stats['Reference sequence'].iloc[0]
-  cutsite = stats['Cutsite'].iloc[0]
+  if type(stats) == pd.DataFrame:
+    seq = stats['Reference sequence'].iloc[0]
+    cutsite = stats['Cutsite'].iloc[0]
+  elif type(stats) == dict:
+    seq = stats['Reference sequence']
+    cutsite = stats['Cutsite']
 
   for idx, row in pred_df.iterrows():
     gt_pos = row['Genotype position']

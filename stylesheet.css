@@ -168,6 +168,21 @@
     position: sticky;
   }
 
+  /* Collapsing div with CSS only */
+  .collapse {
+    cursor: pointer;
+    display: block;
+  }
+  .collapse + input {
+    display: none;
+  }
+  .collapse + input + div{
+    display: none;
+  }
+  .collapse + input:checked + div{
+    display: block;
+  }
+
   /**/
   /* Tool tips */
   /**/

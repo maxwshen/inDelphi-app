@@ -168,6 +168,50 @@ layout = html.Div([
           ),
         ),
 
+        ###################################################
+        # Advanced options: Match sequence
+        ###################################################
+        html.Div([
+          dcc.Textarea(
+            id = 'B_adv_matchseq', 
+            placeholder = 'Provide a DNA sequence to be matched against all repair genotypes at all gRNAs.',
+            style = dict(
+              fontFamily = 'monospace',
+              fontSize = 16,
+              resize = 'none',
+              height = '60px',
+              width = '800px',
+            ),
+          )],
+          style = dict(
+            verticalAlign = 'center',
+            whiteSpace = 'nowrap',
+            overflowX = 'auto',
+            textAlign = 'center',
+          ),
+        ),
+
+        # Position of interest
+        html.Div(
+          [
+            dcc.Input(
+              id = 'B_adv_position_of_interest',
+              type = 'number',
+              inputmode = 'numeric',
+              min = 1,
+              step = 1,
+            ),
+            html.Span(
+              id = 'B_adv_poi_selected_seq',
+            ),
+          ],
+        ),
+
+        # positions to be deleted
+
+        ###################################################
+        # Click to run button + time estimate
+        ###################################################
         html.P(
           id = 'B_estimated_runtime',
           children = 'Provide a sequence and PAM.',
@@ -176,16 +220,12 @@ layout = html.Div([
           ),
         ),
 
-        ###################################################
-        # Click to run button
-        ###################################################
         html.Div([
           html.Button(
             'Submit',
             id = 'B_submit_button',
             style = dict(
             ),
-            # disabled = True,
           )],
           style = dict(
             textAlign = 'center',
@@ -372,60 +412,8 @@ def update_pam_from_url(url, default_value):
   return default_value
 
 ##
-# Prediction callback
+# Precomputation text / Advanced options callbacks
 ##
-@app.callback(
-  Output('B_hidden-pred-df-stats', 'children'),
-  [Input('B_submit_button', 'n_clicks')],
-  [State('B_textarea', 'value'),
-   State('B_textbox_pam', 'value')])
-def update_pred_df_stats(nclicks, seq, pam):
-  dd = defaultdict(list)
-  all_stats = pd.DataFrame()
-
-  assert pam.count('N') != len(pam)
-  assert 2 <= len(pam) <= 6
-  seq = seq.upper()
-  pam = pam.upper()
-
-  # Search for gRNAs matching PAM
-  seqs = [seq, lib.revcomp(seq)]
-  cutsites = range(30, len(seq) - 30)
-  single_mode_links = []
-  for local_seq, grna_orient in zip(seqs, ['+', '-']):
-    for local_cutsite in cutsites:
-      cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
-      if lib.match(pam, cand_pam):
-        dd['gRNA orientation'].append(grna_orient)
-        dd['gRNA'].append(local_seq[local_cutsite - 17 : local_cutsite + 3])
-        dd['PAM'].append(cand_pam)
-        if grna_orient == '+':
-          dd['Cutsite'].append(local_cutsite)
-        else:
-          dd['Cutsite'].append(len(seq) - local_cutsite)
-
-        pred_df, stats = inDelphi.predict(local_seq, local_cutsite)
-        all_stats = all_stats.append(stats, ignore_index = True)
-        
-        sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
-        single_mode_links.append('https://dev.crisprindelphi.design%s' % (sm_link))
-
-  all_stats['URL'] = single_mode_links
-
-  all_stats['Log phi'] = np.log(all_stats['Phi'])  
-  # Drop
-  drop_cols = [
-    'Phi',
-  ]
-  all_stats = all_stats.drop(drop_cols, axis = 1)
-
-  all_stats['ID'] = all_stats.index + 1
-
-  for col in dd:
-    all_stats[col] = dd[col]
-  return all_stats.to_csv()
-  # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
-
 @app.callback(
   Output('B_estimated_runtime', 'children'),
   [Input('B_textarea', 'value'),
@@ -476,6 +464,134 @@ def update_estimated_runtime(seq, pam):
     ans = '%s hours' % (int(round(est_runtime / (60*60))))
   return 'Estimated runtime: %s' % (ans)
 
+@app.callback(
+  Output('B_adv_poi_selected_seq', 'children'),
+  [Input('B_adv_position_of_interest', 'value'),
+   Input('B_textarea', 'value')])
+def update_position_of_interest_selected_seq(poi, seq):
+  # poi is 1-indexed
+  poi_0idx = poi - 1
+  buff = 8
+  if poi_0idx < buff or poi_0idx > len(seq) - buff:
+    return ''
+  selected_base = seq[poi_0idx]
+  left = seq[poi_0idx - buff : poi_0idx - 1]
+  right = seq[poi_0idx + 1: poi_0idx + buff]
+  def get_style_dict(color_char):
+    return dict(
+      fontFamily = 'monospace',
+      fontSize = 14,
+      color = '#%s' % (color_char * 6),
+    )
+  children = []
+
+  gradient = list('EDCBA987')
+  for nt, cc in zip(left, gradient):
+    children.append(
+      html.Span(nt, style = get_style_dict(cc)),
+    )
+  children.append(
+    html.Strong(selected_base, style = get_style_dict('4')),
+  )
+  for nt, cc in zip(right, gradient[::-1]):
+    children.append(
+      html.Span(nt, style = get_style_dict(cc)),
+    )
+  return children
+
+##
+# Prediction callback
+##
+@app.callback(
+  Output('B_hidden-pred-df-stats', 'children'),
+  [Input('B_submit_button', 'n_clicks')],
+  [State('B_textarea', 'value'),
+   State('B_textbox_pam', 'value'),
+   State('B_adv_matchseq', 'value'),
+   State('B_adv_position_of_interest', 'value'),
+  ])
+def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi):
+  # When submit button clicked, find all gRNAs matching PAM in sequence.
+  # Advanced options:
+  #   if matchseq is provided, include a column on
+  #     sum frequencies of repair gts matching sequence
+  #     e.g., pathogenic -> wildtype repair
+  #   if deletion range is provided, include a column on
+  #     sum frequencies of repair gts deleting specified positions.
+  #   if position of interest is provided, include a column on
+  #     cutsite distance to position of interest
+  dd = defaultdict(list)
+  all_stats = pd.DataFrame()
+
+  assert pam.count('N') != len(pam)
+  assert 2 <= len(pam) <= 6
+  seq = seq.upper()
+  pam = pam.upper()
+
+  # Check and initialize advanced settings
+  adv_matchseq_flag = False
+  if adv_matchseq is not None and len(adv_matchseq) != 0:
+    adv_matchseq = adv_matchseq.upper()
+    adv_matchseq_flag = True
+  adv_poi_flag = False
+  if adv_poi is not None:
+    adv_poi = int(adv_poi)
+    adv_poi_flag = True
+
+  # Search for gRNAs matching PAM
+  seqs = [seq, lib.revcomp(seq)]
+  cutsites = range(30, len(seq) - 30)
+  for local_seq, grna_orient in zip(seqs, ['+', '-']):
+    for local_cutsite in cutsites:
+      cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
+      if lib.match(pam, cand_pam):
+        dd['gRNA orientation'].append(grna_orient)
+        dd['gRNA'].append(local_seq[local_cutsite - 17 : local_cutsite + 3])
+        dd['PAM'].append(cand_pam)
+        if grna_orient == '+':
+          cutsite_plus = local_cutsite
+        else:
+          cutsite_plus = len(seq) - local_cutsite
+        dd['Cutsite'].append(cutsite_plus)
+
+        pred_df, stats = inDelphi.predict(local_seq, local_cutsite)
+        all_stats = all_stats.append(stats, ignore_index = True)
+        
+        sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
+        dd['URL'].append('https://dev.crisprindelphi.design%s' % (sm_link))
+
+        if adv_matchseq_flag:
+          inDelphi.add_genotype_column(pred_df, stats)
+          crit = (pred_df['Genotype'] == adv_matchseq)
+          matched_seq_freq = sum(pred_df[crit]['Predicted frequency'])
+          dd['Matched repair'].append(matched_seq_freq)
+
+        if adv_poi_flag:
+          # adv_poi is 1-indexed, switch to 0-index
+          adv_poi_0idx = adv_poi - 1
+          if adv_poi < cutsite_plus:
+            dist = abs(cutsite_plus - 1 - adv_poi_0idx)
+          else:
+            dist = abs(cutsite_plus - adv_poi_0idx)
+          dd['Dist. to POI'].append(dist)
+
+  # Add metadata columns and advanced settings
+  for col in dd:
+    all_stats[col] = dd[col]
+
+  # Switch phi to log phi
+  all_stats['Log phi'] = np.log(all_stats['Phi'])  
+  all_stats = all_stats.drop(['Phi'], axis = 1)
+
+  # Sort by cutsite and relabel indices
+  all_stats = all_stats.sort_values(by = 'Cutsite')
+  all_stats = all_stats.reset_index(drop = True)
+
+  all_stats['ID'] = all_stats.index + 1
+
+  return all_stats.to_csv()
+  # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
+
 ##
 # Column selection and sorting callbacks
 ##
@@ -487,6 +603,43 @@ def update_sortcol_options(values):
   for value in values:
     options.append({'label': value, 'value': value})
   return options
+
+@app.callback(
+  Output('B_dropdown-columns', 'options'),
+  [Input('B_hidden-pred-df-stats', 'children')],
+  [State('B_dropdown-columns', 'options')]
+  )
+def update_columns_options(all_stats_string, prev_options):
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  options = prev_options
+
+  for d in ['Matched repair', 'Dist. to POI']:
+    td = {'label': d, 'value': d}
+    if d in stats.columns:
+      if td not in options:
+        options.append(td)
+    else:
+      if td in options:
+        options.remove(td)
+  return options
+
+@app.callback(
+  Output('B_dropdown-columns', 'value'),
+  [Input('B_hidden-pred-df-stats', 'children')],
+  [State('B_dropdown-columns', 'value')]
+  )
+def update_columns_value(all_stats_string, prev_value):
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  value = prev_value
+
+  for td in ['Matched repair', 'Dist. to POI']:
+    if td in stats.columns:
+      if td not in value:
+        value.append(td)
+    else:
+      if td in value:
+        value.remove(td)
+  return value
 
 ##
 # Stats table callbacks
@@ -541,7 +694,6 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
 
   # Reorder columns
   stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
-  print('Updated statstable')
   return stats.to_dict('records')
 
 @app.callback(
@@ -571,8 +723,7 @@ def update_statstable_selected(clickData, submit_time, sort_time, rows, selected
     # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
     selected_row_indices = []
     df = pd.DataFrame(rows)
-    new_idx = int(df[df['ID'] == prev_id].index[0])
-    print(new_idx)
+    new_idx = int(df[df['ID'] == int(prev_id)].index[0])
     selected_row_indices = [new_idx]
   elif submit_intxn:
     # if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
@@ -593,7 +744,6 @@ def update_statstable_selected(clickData, submit_time, sort_time, rows, selected
   [Input('B_table-stats', 'selected_row_indices')],
   [State('B_table-stats', 'rows')])
 def update_hidden_selected_id(selected_idx, rows):
-  print('Updating hidden selected id')
   if len(selected_idx) == 0:
     return ''
   idx = selected_idx[0]
@@ -601,7 +751,7 @@ def update_hidden_selected_id(selected_idx, rows):
   return list(df['ID'])[idx]
 
 ##
-# Plot stats callback: styles
+# Plot stats callback: styles, hide when no figure
 ##
 @app.callback(
   Output('B_plot-stats-div', 'style'),
@@ -677,7 +827,7 @@ def update_stats_plot(rows, selected_row_indices):
   yticktexts = []
   fixedwidth_ids = lib.get_fixedwidth_ID(df['ID'])
   for idx, row in df.iterrows():
-    row_text = '%s %s %s <a href="%s">URL</a> %s' % (row['gRNA'], row['PAM'], row['gRNA orientation'], row['URL'], fixedwidth_ids[idx])
+    row_text = '%s %s %s <a href="%s">details</a> %s' % (row['gRNA'], row['PAM'], row['gRNA orientation'], row['URL'], fixedwidth_ids[idx])
     yticktexts.append(row_text)
 
 
@@ -853,7 +1003,6 @@ def update_hist_plot(rows, selected_row_indices):
   Output('B_download-link', 'href'), 
   [Input('B_table-stats', 'rows')])
 def update_link(rows):
-  print('Updating link')
   df = pd.DataFrame(rows)
   stats_cols = list(df.columns)
   nonstat_cols = ['gRNA', 'gRNA orientation', 'PAM', 'URL', 'ID']
@@ -864,7 +1013,6 @@ def update_link(rows):
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownloadBatch?value={}'.format(time)
   df.to_csv('user-csvs/%s.csv' % (time), index = False)
-  print('Updated link')
   return link_fn
 
 ##

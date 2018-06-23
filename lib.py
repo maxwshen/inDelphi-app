@@ -219,7 +219,7 @@ def estimate_pam_freq(pam):
 ###############################################
 
 def get_color(stats_col):
-  if stats_col == 'Cutsite':
+  if stats_col in ['Cutsite', 'Dist. to POI']:
     return '#86898C'
   if stats_col == 'Exp. indel len':
     return '#86898C'
@@ -241,7 +241,9 @@ def get_color(stats_col):
     return '#EC4339'
   if stats_col == 'Precision':
     return '#00AEB3'
-  return
+  if stats_col == 'Matched repair':
+    return '#C11F1D'
+  return '#333333' # default
 
 ###############################################
 # Batch mode: xaxis ticks 
@@ -257,8 +259,11 @@ def get_batch_statcol_xrange(stats, stat_nm):
     buff = 0.05 
   elif stat_nm == 'Cutsite':
     buff = 10
-  else: 
-    # catch all
+  elif stat_nm == 'Matched repair':
+    buff = 5
+  elif stat_nm == 'Dist. to POI':
+    buff = 5
+  else: # default
     buff = 0
   return [min(stats) - buff, max(stats) + buff]
 
@@ -303,6 +308,8 @@ def rename_batch_columns(stats):
 def order_chosen_columns(cols):
   preferred_order = [
     'Cutsite',
+    'Dist. to POI',
+    'Matched repair',
     'Precision',
     'Frameshift (%)',
     'Frame +0 (%)',
