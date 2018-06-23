@@ -241,7 +241,7 @@ def get_color(stats_col):
     return '#EC4339'
   if stats_col == 'Precision':
     return '#00AEB3'
-  if stats_col == 'Matched repair':
+  if stats_col in ['Repairs to spec.', 'Deletes spec.']:
     return '#C11F1D'
   return '#333333' # default
 
@@ -259,7 +259,7 @@ def get_batch_statcol_xrange(stats, stat_nm):
     buff = 0.05 
   elif stat_nm == 'Cutsite':
     buff = 10
-  elif stat_nm == 'Matched repair':
+  elif stat_nm in ['Repairs to spec.', 'Deletes spec.']:
     buff = 5
   elif stat_nm == 'Dist. to POI':
     buff = 5
@@ -309,7 +309,8 @@ def order_chosen_columns(cols):
   preferred_order = [
     'Cutsite',
     'Dist. to POI',
-    'Matched repair',
+    'Repairs to spec.',
+    'Deletes spec.',
     'Precision',
     'Frameshift (%)',
     'Frame +0 (%)',

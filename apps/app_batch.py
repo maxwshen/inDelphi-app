@@ -208,6 +208,28 @@ layout = html.Div([
         ),
 
         # positions to be deleted
+        html.Div(
+          [
+            dcc.Input(
+              id = 'B_adv_delstart',
+              type = 'number',
+              inputmode = 'numeric',
+              min = 1,
+              step = 1,
+            ),
+            dcc.Input(
+              id = 'B_adv_delend',
+              type = 'number',
+              inputmode = 'numeric',
+              min = 1,
+              step = 1,
+            ),
+            html.Span(
+              id = 'B_adv_delseq',
+            ),
+          ],
+        ),
+
 
         ###################################################
         # Click to run button + time estimate
@@ -317,6 +339,7 @@ layout = html.Div([
       # body style
       id = 'B_postcomputation_settings',
       className = 'batch_postcomputation_sticky',
+      # className = 'animate-bottom',
       style = dict(
         display = 'none',
       ),
@@ -340,7 +363,8 @@ layout = html.Div([
           id = 'B_plot-stats-div',
           style = dict(
             display = 'none',
-          )
+          ),
+          className = 'animate-bottom',
         ),
 
       ],
@@ -379,7 +403,7 @@ def update_submit_button_time(n_clicks):
   Output('B_hidden-sort-module-interaction', 'children'),
   [Input('B_sortdirection', 'value'),
    Input('B_dropdown-sortcol', 'value')])
-def update_submit_button_time(v1, v2):
+def update_sort_time(v1, v2):
   return '%s' % (time.time())
 
 @app.callback(
@@ -471,12 +495,12 @@ def update_estimated_runtime(seq, pam):
 def update_position_of_interest_selected_seq(poi, seq):
   # poi is 1-indexed
   poi_0idx = poi - 1
-  buff = 8
+  buff = 7
   if poi_0idx < buff or poi_0idx > len(seq) - buff:
     return ''
   selected_base = seq[poi_0idx]
-  left = seq[poi_0idx - buff + 1 : poi_0idx]
-  right = seq[poi_0idx + 1: poi_0idx + buff]
+  left = seq[poi_0idx - buff : poi_0idx]
+  right = seq[poi_0idx + 1: poi_0idx + 1 + buff]
   def get_style_dict(color_char):
     return dict(
       fontFamily = 'monospace',
@@ -484,14 +508,51 @@ def update_position_of_interest_selected_seq(poi, seq):
       color = '#%s' % (color_char * 6),
     )
   children = []
-
-  gradient = list('EDCBA987')
+  gradient = list('EDCBA98')
   for nt, cc in zip(left, gradient):
     children.append(
       html.Span(nt, style = get_style_dict(cc)),
     )
   children.append(
     html.Strong(selected_base, style = get_style_dict('4')),
+  )
+  for nt, cc in zip(right, gradient[::-1]):
+    children.append(
+      html.Span(nt, style = get_style_dict(cc)),
+    )
+  return children
+
+@app.callback(
+  Output('B_adv_delseq', 'children'),
+  [Input('B_adv_delstart', 'value'),
+   Input('B_adv_delend', 'value'),
+   Input('B_textarea', 'value')])
+def update_selected_delseq(del_start, del_end, seq):
+  # poi is 1-indexed, convert to 0-idx
+  del_start -= 1
+  del_end -= 1
+  buff = 7
+  if del_start >= del_end:
+    return ''
+  if del_start < buff or del_end > len(seq) - buff:
+    return ''
+  left = seq[del_start - buff : del_start]
+  selected_bases = seq[del_start : del_end]
+  right = seq[del_end : del_end + buff]
+  def get_style_dict(color_char):
+    return dict(
+      fontFamily = 'monospace',
+      fontSize = 14,
+      color = '#%s' % (color_char * 6),
+    )
+  children = []
+  gradient = list('EDCBA98')
+  for nt, cc in zip(left, gradient):
+    children.append(
+      html.Span(nt, style = get_style_dict(cc)),
+    )
+  children.append(
+    html.Strong(selected_bases, style = get_style_dict('4')),
   )
   for nt, cc in zip(right, gradient[::-1]):
     children.append(
@@ -509,8 +570,10 @@ def update_position_of_interest_selected_seq(poi, seq):
    State('B_textbox_pam', 'value'),
    State('B_adv_matchseq', 'value'),
    State('B_adv_position_of_interest', 'value'),
+   State('B_adv_delstart', 'value'),
+   State('B_adv_delend', 'value'),
   ])
-def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi):
+def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart, adv_delend):
   # When submit button clicked, find all gRNAs matching PAM in sequence.
   # Advanced options:
   #   if matchseq is provided, include a column on
@@ -535,8 +598,16 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi):
     adv_matchseq_flag = True
   adv_poi_flag = False
   if adv_poi is not None:
-    adv_poi = int(adv_poi)
+    # adv_poi is 1-indexed, switch to 0-index
+    adv_poi = int(adv_poi) - 1
     adv_poi_flag = True
+  adv_del_flag = False
+  if adv_delstart is not None and adv_delend is not None:
+    if adv_delstart < adv_delend:
+      adv_delstart -= 1
+      adv_delend -= 1
+      adv_del_flag = True
+
 
   # Search for gRNAs matching PAM
   seqs = [seq, lib.revcomp(seq)]
@@ -554,26 +625,43 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi):
           cutsite_plus = len(seq) - local_cutsite
         dd['Cutsite'].append(cutsite_plus)
 
+        # inDelphi predictions and standard statistics
         pred_df, stats = inDelphi.predict(local_seq, local_cutsite)
         all_stats = all_stats.append(stats, ignore_index = True)
         
+        # Detailed link
         sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
         dd['URL'].append('https://dev.crisprindelphi.design%s' % (sm_link))
 
+        # Handle advanced options
         if adv_matchseq_flag:
           inDelphi.add_genotype_column(pred_df, stats)
           crit = (pred_df['Genotype'] == adv_matchseq)
           matched_seq_freq = sum(pred_df[crit]['Predicted frequency'])
-          dd['Matched repair'].append(matched_seq_freq)
+          dd['Repairs to spec.'].append(matched_seq_freq)
 
         if adv_poi_flag:
-          # adv_poi is 1-indexed, switch to 0-index
-          adv_poi_0idx = adv_poi - 1
-          if adv_poi < cutsite_plus:
-            dist = abs(cutsite_plus - 1 - adv_poi_0idx)
+          if adv_poi > cutsite_plus:
+            dist = abs(cutsite_plus - 1 - adv_poi)
           else:
-            dist = abs(cutsite_plus - adv_poi_0idx)
+            dist = abs(cutsite_plus - adv_poi)
           dd['Dist. to POI'].append(dist)
+
+        if adv_del_flag:
+          crit = (pred_df['Category'] == 'del') & (pred_df['Genotype position'] != 'e')
+          delseq_freq = 0
+          if grna_orient == '+':
+            adv_delstart_local = adv_delstart
+            adv_delend_local = adv_delend
+          else:
+            adv_delstart_local = len(seq) - adv_delend
+            adv_delend_local = len(seq) - adv_delstart
+          for jdx, row in pred_df[crit].iterrows():
+            del_start = local_cutsite - row['Length'] + row['Genotype position']
+            del_end = del_start + row['Length']
+            if del_start <= adv_delstart_local < adv_delend_local <= del_end:
+              delseq_freq += row['Predicted frequency']
+          dd['Deletes spec.'].append(delseq_freq)
 
   # Add metadata columns and advanced settings
   for col in dd:
@@ -613,7 +701,7 @@ def update_columns_options(all_stats_string, prev_options):
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
   options = prev_options
 
-  for d in ['Matched repair', 'Dist. to POI']:
+  for d in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
     td = {'label': d, 'value': d}
     if d in stats.columns:
       if td not in options:
@@ -632,7 +720,7 @@ def update_columns_value(all_stats_string, prev_value):
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
   value = prev_value
 
-  for td in ['Matched repair', 'Dist. to POI']:
+  for td in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
     if td in stats.columns:
       if td not in value:
         value.append(td)

@@ -394,6 +394,8 @@ def get_precision(pred_df):
 # Data reformatting
 ##
 def add_genotype_column(pred_df, stats):
+  if 'Genotype' in pred_df.columns:
+    return
   gts = []
   if type(stats) == pd.DataFrame:
     seq = stats['Reference sequence'].iloc[0]
