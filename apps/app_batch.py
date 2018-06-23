@@ -475,7 +475,7 @@ def update_position_of_interest_selected_seq(poi, seq):
   if poi_0idx < buff or poi_0idx > len(seq) - buff:
     return ''
   selected_base = seq[poi_0idx]
-  left = seq[poi_0idx - buff : poi_0idx - 1]
+  left = seq[poi_0idx - buff + 1 : poi_0idx]
   right = seq[poi_0idx + 1: poi_0idx + buff]
   def get_style_dict(color_char):
     return dict(
