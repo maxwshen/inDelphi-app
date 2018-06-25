@@ -267,12 +267,13 @@ layout = html.Div([
     ],
     style = dict(
       position = 'fixed',
+      top = 0,
       backgroundColor = 'white',
       borderBottom = '3px solid #777777',
       zIndex = 1e6,
       width = '1010px',
       left = '50%',
-      transform = 'translate(-50%, 0)',
+      transform = 'translate(-50%, 0px)',
     ),
   ),
 
