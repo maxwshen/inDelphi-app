@@ -265,7 +265,7 @@
   }
 
   ._dash-loading-callback::after {
-    content: 'Loading';
+    content: '';
     font-family: sans-serif;
     padding-top: 50px;
     color: #000;

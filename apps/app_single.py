@@ -31,8 +31,6 @@ else:
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
 
 ## Parameters
-headerHeight = 130
-
 
 ###################################################################
 ###################################################################
@@ -40,301 +38,304 @@ headerHeight = 130
 # App layout
 ##
 layout = html.Div([
-  html.Div([
 
-    ##
-    # Hidden divs for light data storage
-    ##
-    html.Div(
-      [
-        html.Div(
-          id = 'S_hidden-pred-df',
-          children = 'init'
-        ),
-        html.Div(
-          id = 'S_hidden-pred-stats',
-          children = 'init'
-        ),
-        html.Div(
-          id = 'S_hidden-cache-dsb-left',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'S_hidden-cache-dsb-right',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'S_hidden-cache-pam-left',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'S_hidden-cache-pam-right',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'S_hidden-cache-revcomp',
-          children = '%s' % (time.time())
-        ),
-
-        dcc.Location(
-          id = 'S_url',
-          refresh = False,
-        ),
-      ],
-      style = dict(
-        display = 'none',
+  ##
+  # Hidden divs for light data storage
+  ##
+  html.Div(
+    [
+      html.Div(
+        id = 'S_hidden-pred-df',
+        children = 'init'
       ),
+      html.Div(
+        id = 'S_hidden-pred-stats',
+        children = 'init'
+      ),
+      html.Div(
+        id = 'S_hidden-cache-dsb-left',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'S_hidden-cache-dsb-right',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'S_hidden-cache-pam-left',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'S_hidden-cache-pam-right',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'S_hidden-cache-revcomp',
+        children = '%s' % (time.time())
+      ),
+
+      dcc.Location(
+        id = 'S_url',
+        refresh = False,
+      ),
+    ],
+    style = dict(
+      display = 'none',
     ),
+  ),
 
-    ##
-    # Header
-    ##
-    html.Div(
-      [
-        ###################################################
-        # Upper header
-        ###################################################
-        html.H4(
-          'inDelphi',
-          style = dict(
-            textAlign = 'center',
-          ),
+  ##
+  # Header
+  ##
+  html.Div(
+    [
+      ###################################################
+      # Upper header
+      ###################################################
+      html.H4(
+        'inDelphi',
+        style = dict(
+          textAlign = 'center',
         ),
+      ),
 
-        ###################################################
-        # Sequence boxes
-        ###################################################
-        html.Div([
-          # Left box
-          html.Div(
-            [
-              dcc.Input(
-                id = 'S_textbox1', 
-                size = 28,
-                value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
-                type = 'text',
-                autofocus = True,
-                style = dict(
-                  textAlign = 'right',
-                  direction = 'rtl',
-                  fontFamily = 'monospace',
-                  fontSize = 16,
-                  float = 'right',
-                ),
-              )
-            ],
-            className = 'dna_textbox',
-          ),
-
-          # Right box
-          html.Div(
-            [
-              dcc.Input(
-                id = 'S_textbox2', 
-                size = 28,
-                value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
-                type = 'text',
-                style = dict(
-                  textAlign = 'left',
-                  fontFamily = 'monospace',
-                  fontSize = 16,
-                  float = 'left',
-                ),
-              ),
-              html.A('🔃 strand',
-                id = 'S_button-revcomp',
-                style = dict(
-                  fontSize = 16,
-                  textDecoration = 'none',
-                  verticalAlign = 'middle',
-                  float = 'right',
-                  position = 'relative',
-                  transform = 'translateY(27%)',
-                ),
-              ),
-            ],
-            className = 'dna_textbox',
-          ),
-        ], 
-          style = dict(
-            verticalAlign = 'center',
-            whiteSpace = 'nowrap',
-            overflowX = 'auto',
-          ),
-        ),
-
-        ###################################################
-        # Row of PAM arrows 
-        ###################################################
+      ###################################################
+      # Sequence boxes
+      ###################################################
+      html.Div([
+        # Left box
         html.Div(
           [
-            html.Div(
-              [
-                # (Left) placeholder
-                html.Div('',
-                  style = dict(
-                    display = 'table-cell',
-                    width = '25%',
-                  ),
-                ),
+            dcc.Input(
+              id = 'S_textbox1', 
+              size = 28,
+              value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
+              type = 'text',
+              autofocus = True,
+              style = dict(
+                textAlign = 'right',
+                direction = 'rtl',
+                fontFamily = 'monospace',
+                fontSize = 16,
+                float = 'right',
+              ),
+            )
+          ],
+          className = 'dna_textbox',
+        ),
 
-                ###################################################
-                # (Center) DSB arrows: Simple
-                ###################################################
-                html.Div([
-                    html.A('◄',
-                      id = 'S_button-dsb-left',
-                      style = dict(
-                        textDecoration = 'none',
-                        fontFamily = 'monospace',
-                        color = 'rgb(0, 174, 179)',
-                        fontSize = 20,
-                      ),
-                    ),
-                    '\tDSB\t',
-                    html.A('►',
-                      id = 'S_button-dsb-right',
-                      style = dict(
-                        textDecoration = 'none',
-                        fontFamily = 'monospace',
-                        color = 'rgb(0, 174, 179)',
-                        fontSize = 20,
-                      ),
-                    ),
-                  ],
-                  style = dict(
-                    textAlign = 'center',
-                    display = 'table-cell',
-                    width = '50%',
-                  )
-                ),
+        # Right box
+        html.Div(
+          [
+            dcc.Input(
+              id = 'S_textbox2', 
+              size = 28,
+              value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
+              type = 'text',
+              style = dict(
+                textAlign = 'left',
+                fontFamily = 'monospace',
+                fontSize = 16,
+                float = 'left',
+              ),
+            ),
+            html.A('🔃 strand',
+              id = 'S_button-revcomp',
+              style = dict(
+                fontSize = 16,
+                textDecoration = 'none',
+                verticalAlign = 'middle',
+                float = 'right',
+                position = 'relative',
+                transform = 'translateY(27%)',
+              ),
+            ),
+          ],
+          className = 'dna_textbox',
+        ),
+      ], 
+        style = dict(
+          verticalAlign = 'center',
+          whiteSpace = 'nowrap',
+          overflowX = 'auto',
+        ),
+      ),
 
-                ###################################################
-                # (Right) PAM arrows
-                ###################################################
-                html.Div([
+      ###################################################
+      # Row of PAM arrows 
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # (Left) placeholder
+              html.Div('',
+                style = dict(
+                  display = 'table-cell',
+                  width = '25%',
+                ),
+              ),
+
+              ###################################################
+              # (Center) DSB arrows: Simple
+              ###################################################
+              html.Div([
                   html.A('◄',
-                    id = 'S_button-pam-left',
+                    id = 'S_button-dsb-left',
                     style = dict(
                       textDecoration = 'none',
                       fontFamily = 'monospace',
+                      color = 'rgb(0, 174, 179)',
                       fontSize = 20,
-                      color = 'rgb(237, 71, 149)',
-                      verticalAlign = 'middle',
                     ),
                   ),
-                  dcc.Input(
-                    id = 'S_textbox_pam', 
-                    size = 5,
-                    value = 'NGG',
-                    type = 'text',
-                    autofocus = True,
-                    style = dict(
-                      fontFamily = 'monospace',
-                      fontSize = 14,
-                      textAlign = 'center',
-                      height = '18px',
-                      width = '70px',
-                      marginLeft = '5px',
-                      marginRight = '5px',
-                    ),
-                  ),
+                  '\tDSB\t',
                   html.A('►',
-                    id = 'S_button-pam-right',
+                    id = 'S_button-dsb-right',
                     style = dict(
                       textDecoration = 'none',
                       fontFamily = 'monospace',
+                      color = 'rgb(0, 174, 179)',
                       fontSize = 20,
-                      color = 'rgb(237, 71, 149)',
-                      verticalAlign = 'middle',
                     ),
                   ),
                 ],
                 style = dict(
+                  textAlign = 'center',
                   display = 'table-cell',
-                  textAlign = 'right',
-                  width = '25%',
-                )),
+                  width = '50%',
+                )
+              ),
+
+              ###################################################
+              # (Right) PAM arrows
+              ###################################################
+              html.Div([
+                html.A('◄',
+                  id = 'S_button-pam-left',
+                  style = dict(
+                    textDecoration = 'none',
+                    fontFamily = 'monospace',
+                    fontSize = 20,
+                    color = 'rgb(237, 71, 149)',
+                    verticalAlign = 'middle',
+                  ),
+                ),
+                dcc.Input(
+                  id = 'S_textbox_pam', 
+                  size = 5,
+                  value = 'NGG',
+                  type = 'text',
+                  autofocus = True,
+                  style = dict(
+                    fontFamily = 'monospace',
+                    fontSize = 14,
+                    textAlign = 'center',
+                    height = '18px',
+                    width = '70px',
+                    marginLeft = '5px',
+                    marginRight = '5px',
+                  ),
+                ),
+                html.A('►',
+                  id = 'S_button-pam-right',
+                  style = dict(
+                    textDecoration = 'none',
+                    fontFamily = 'monospace',
+                    fontSize = 20,
+                    color = 'rgb(237, 71, 149)',
+                    verticalAlign = 'middle',
+                  ),
+                ),
               ],
               style = dict(
-                display = 'table-row',
-              ),
+                display = 'table-cell',
+                textAlign = 'right',
+                width = '25%',
+              )),
+            ],
+            style = dict(
+              display = 'table-row',
             ),
-          ], 
-          style = dict(
-            display = 'table',
-            width = '100%',
           ),
+        ], 
+        style = dict(
+          display = 'table',
+          width = '100%',
         ),
-
-      ],
-      style = dict(
-        position = 'fixed',
-        backgroundColor = 'white',
-        borderBottom = '3px solid #777777',
-        zIndex = 1e6,
-        width = '1010px',
-        left = '50%',
-        transform = 'translate(-50%, 0)',
-        height = headerHeight,
-        marginTop = '-%spx' % (headerHeight + 20),
       ),
+
+    ],
+    style = dict(
+      position = 'fixed',
+      backgroundColor = 'white',
+      borderBottom = '3px solid #777777',
+      zIndex = 1e6,
+      width = '1010px',
+      left = '50%',
+      transform = 'translate(-50%, 0)',
     ),
+  ),
 
-    ##
-    # Body / plots
-    ##
-    html.Div(
-      [
-        ###################################################
-        # Module: Summary, alignment preview
-        ###################################################
+  ##
+  # Body / plots
+  ##
+  html.Div(
+    [
+      ###################################################
+      # Module: Summary, alignment preview
+      ###################################################
+      html.Div([
+        # header
         html.Div([
-          # header
           html.Div([
-            html.Div([
-              html.Strong(
-                '',
-                id = 'S_text-summary-module-header'
-              )],
-              className = 'module_header_text'),
-            ],
-            className = 'module_header'
-          ),
-
-          html.Div(
-            [
-              # Text table
-              dcc.Graph(
-                id = 'S_summary-alignment-table',
-                config = dict(
-                  modeBarButtonsToRemove = modebarbuttons_2d,
-                  displaylogo = False,
-                ),
-                style = dict(
-                  height = 300,
-                ),
-                className = 'eight columns',
-              ),
-
-              # bar chart
-              dcc.Graph(
-                id = 'S_summary-alignment-barchart',
-                config = dict(
-                  modeBarButtonsToRemove = modebarbuttons_2d,
-                  displaylogo = False,
-                ),
-                style = dict(
-                  height = 300,
-                ),
-                className = 'four columns',
-              ),
-            ],
-            className = 'row',
-          ),
-        ], className = 'module_style',
+            html.Strong(
+              '',
+              id = 'S_text-summary-module-header'
+            )],
+            className = 'module_header_text'),
+          ],
+          className = 'module_header'
         ),
 
+        html.Div(
+          [
+            # Text table
+            dcc.Graph(
+              id = 'S_summary-alignment-table',
+              config = dict(
+                modeBarButtonsToRemove = modebarbuttons_2d,
+                displaylogo = False,
+                displayModeBar = False,
+              ),
+              style = dict(
+                height = 290,
+                width = 629,
+              ),
+              className = 'eight columns',
+            ),
+
+            # bar chart
+            dcc.Graph(
+              id = 'S_summary-alignment-barchart',
+              config = dict(
+                modeBarButtonsToRemove = modebarbuttons_2d,
+                displaylogo = False,
+                displayModeBar = False,
+              ),
+              style = dict(
+                height = 300,
+                width = 300,
+              ),
+              className = 'four columns',
+            ),
+          ],
+          className = 'row',
+        ),
+      ], className = 'module_style',
+      ),
+
+      # Animate bottom
+      html.Div([
 
         ###################################################
         # Module: Indel Lengths
@@ -359,10 +360,12 @@ layout = html.Div([
                     id = 'S_plot-fs',
                     style = dict(
                       height = 300, 
+                      width = 215,
                     ),
                     config = dict(
                       modeBarButtonsToRemove = modebarbuttons_2d,
                       displaylogo = False,
+                      displayModeBar = False,
                     ),
                   ),
                 ],
@@ -376,10 +379,12 @@ layout = html.Div([
                     id = 'S_plot-indel-len',
                     style = dict(
                       height = 300, 
+                      width = 715,
                     ),
                     config = dict(
                       modeBarButtonsToRemove = modebarbuttons_2d,
                       displaylogo = False,
+                      displayModeBar = False,
                     ),
                   ),
                 ],
@@ -419,6 +424,7 @@ layout = html.Div([
                     config = dict(
                       modeBarButtonsToRemove = modebarbuttons_2d,
                       displaylogo = False,
+                      displayModeBar = False,
                     ),
                   ),
                 ],
@@ -454,6 +460,7 @@ layout = html.Div([
                     config = dict(
                       modeBarButtonsToRemove = modebarbuttons_2d,
                       displaylogo = False,
+                      displayModeBar = False,
                     ),
                   ),
                 ],
@@ -489,6 +496,7 @@ layout = html.Div([
                     config = dict(
                       modeBarButtonsToRemove = modebarbuttons_2d,
                       displaylogo = False,
+                      displayModeBar = False,
                     ),
                   ),
                 ],
@@ -529,10 +537,12 @@ layout = html.Div([
           dcc.Graph(
             id = 'S_plot-table-genotypes',
             style = dict(
+              width = 970,
             ),
             config = dict(
               modeBarButtonsToRemove = modebarbuttons_2d,
               displaylogo = False,
+              displayModeBar = False,
             ),
           ),
 
@@ -542,7 +552,9 @@ layout = html.Div([
             row_selectable = True,
             filterable = True,
             sortable = True,
+            editable = False,
             selected_row_indices = [],
+            column_widths = [970/4] * 4,
           ),
 
           html.Div([
@@ -580,24 +592,30 @@ layout = html.Div([
         ], className = 'module_style',
         ),
 
-      ],
-      # body style
-      style = dict(
-        marginTop = '%spx' % (headerHeight + 20),
+        ],
+        id = 'S_plots_body',
+        style = dict(
+          display = 'none',
+        ),
+        className = 'animate-bottom',
       ),
-    ),
-    ##
-  ], 
+
+    ],
+    # body style
+    # id = 'S_plots_body',
     style = dict(
-      width = '970px',
-      margin = '0 auto',
-    )
+      # display = 'none',
+      transform = 'translateY(%spx)' % (160),
+    ),
+    # className = 'animate-bottom',
   ),
-],  # body div
-style = dict(
-  width = '1000px',
-  margin = '0 auto',
-)
+  ##
+
+  ],  # body div
+  style = dict(
+    width = '970px',
+    margin = '0 auto',
+  )
 )
 
 #######################################################################
@@ -773,6 +791,21 @@ def update_pred_stats(text1, text2):
   pred_df, stats = inDelphi.predict(seq, cutsite)
   return pd.DataFrame(stats, index = [0]).to_csv()
 
+## 
+# Style callbacks: Hide figures on page load until processing is complete
+##
+@app.callback(
+  Output('S_plots_body', 'style'),
+  [Input('S_plot-genstats-precision', 'figure')],
+  # [Input('S_summary-alignment-barchart', 'figure')],
+  [State('S_plots_body', 'style')])
+def update_plots_body_style(fig, prev_style):
+  new_style = prev_style
+  if fig is not None:
+    if 'display' in new_style:
+      del new_style['display']
+  return new_style
+
 ##
 # Summary of predictions callbacks
 ##
@@ -853,7 +886,7 @@ def update_summary_alignment_text(pred_df_string, pred_stats_string):
   return dict(
     data = [go.Table(
       type = 'table',
-      columnwidth = [300, 100, 80],
+      columnwidth = [310, 110, 60],
       header = dict(
         values = ['Alignment', 'Category', '%'],
         align = ['center', 'right', 'right'], 
