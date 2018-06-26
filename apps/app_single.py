@@ -412,6 +412,7 @@ layout = html.Div([
             className = 'module_header'
           ),
 
+          ## Precision
           html.Div(
             [
               html.Div(
@@ -608,7 +609,6 @@ layout = html.Div([
       # display = 'none',
       transform = 'translateY(%spx)' % (160),
     ),
-    # className = 'animate-bottom',
   ),
   ##
 

@@ -39,351 +39,482 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 # App layout
 ##
 layout = html.Div([
-  html.Div([
 
-    ###################################################
-    # Hidden divs for light data storage
-    ###################################################
-    html.Div(
-      [
-        html.Div(
-          id = 'B_hidden-pred-df-stats',
-          children = 'init'
-        ),
-        html.Div(
-          id = 'B_hidden-cache-submit-button',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'B_hidden-sort-module-interaction',
-          children = '%s' % (time.time())
-        ),
-        html.Div(
-          id = 'B_hidden-clickData',
-          children = '%s init' % (time.time())
-        ),
-        html.Div(
-          id = 'B_hidden-selected-id',
-          children = ''
-        ),
-
-        # Datatable
-        dt.DataTable(
-          id = 'B_table-stats',
-          rows = [{}], # init rows
-          selected_row_indices = [],
-        ),
-
-        dcc.Location(
-          id = 'B_url',
-          refresh = False,
-        ),
-      ],
-      style = dict(
-        display = 'none',
+  ###################################################
+  # Hidden divs for light data storage
+  ###################################################
+  html.Div(
+    [
+      html.Div(
+        id = 'B_hidden-pred-df-stats',
+        children = 'init'
       ),
+      html.Div(
+        id = 'B_hidden-cache-submit-button',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'B_hidden-sort-module-interaction',
+        children = '%s' % (time.time())
+      ),
+      html.Div(
+        id = 'B_hidden-clickData',
+        children = '%s init' % (time.time())
+      ),
+      html.Div(
+        id = 'B_hidden-selected-id',
+        children = ''
+      ),
+
+      # Datatable
+      dt.DataTable(
+        id = 'B_table-stats',
+        rows = [{}], # init rows
+        selected_row_indices = [],
+      ),
+
+      dcc.Location(
+        id = 'B_url',
+        refresh = False,
+      ),
+    ],
+    style = dict(
+      display = 'none',
     ),
+  ),
 
-    ###################################################
-    # Header
-    ###################################################
-    html.Div(
-      [
-        ###################################################
-        # Upper header
-        ###################################################
-        html.H4(
-          'inDelphi batch mode dev',
-          style = dict(
-            textAlign = 'center',
-          ),
+  ###################################################
+  # Header
+  ###################################################
+  html.Div(
+    [
+      ###################################################
+      # Upper header
+      ###################################################
+      html.H4(
+        'inDelphi batch mode dev',
+        style = dict(
+          textAlign = 'center',
         ),
+      ),
 
-        ###################################################
-        # Sequence box
-        ###################################################
-        html.Div([
-          dcc.Textarea(
-            id = 'B_textarea', 
-            value = 'CTAGGGATGTGGCTGCATGCTACGTTGACACACCTACACTGCTCGAAGTAAATATACGAAGCGCGCGGCCTGGCCGGAGCCGTTCCGCATCGTCACGTGTTCGTTTACTGTTAATTGGTGGCACATAAGCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTT',
-            minLength = 70,  
-            maxLength = 2000,  
+      ###################################################
+      # Sequence box
+      ###################################################
+      html.Div([
+        dcc.Textarea(
+          id = 'B_textarea', 
+          value = 'GCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTT',
+          minLength = 70,  
+          maxLength = 2000,  
+          style = dict(
+            fontFamily = 'monospace',
+            fontSize = 16,
+            resize = 'none',
+            height = '60px',
+            width = '800px',
+          ),
+        )],
+        style = dict(
+          verticalAlign = 'center',
+          whiteSpace = 'nowrap',
+          overflowX = 'auto',
+          textAlign = 'center',
+        ),
+      ),
+
+      ###################################################
+      # PAM box
+      ###################################################
+      html.Div(
+        [
+          html.Span(
+            'Cas9 PAM: '
+          ),
+          dcc.Input(
+            id = 'B_textbox_pam', 
+            size = 5,
+            value = 'NGG',
+            type = 'text',
+            minlength = 2,
+            maxlength = 6,
+            autofocus = True,
             style = dict(
               fontFamily = 'monospace',
-              fontSize = 16,
-              resize = 'none',
-              height = '60px',
-              width = '800px',
+              fontSize = 14,
+              height = '20px',
+              width = '70px',
+              verticalAlign = 'text-bottom',
             ),
-          )],
-          style = dict(
-            verticalAlign = 'center',
-            whiteSpace = 'nowrap',
-            overflowX = 'auto',
-            textAlign = 'center',
           ),
+          html.Strong(' ' * 3),
+          html.Div(
+            [
+              html.Img(
+                src = '/staticfiles/tooltip_logo',
+                className = 'tooltiplogo',
+              ),
+              html.Span(
+                'Cutsite assumed 3nt upstream of PAM match. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
+                className = 'tooltiptext'
+              ),
+            ], 
+            className = 'tooltip',
+          ),
+        ],
+        style = dict(
+          textAlign = 'center',
+        ),
+      ),
+
+      ###################################################
+      # Advanced options: 
+      ###################################################
+      html.Div(
+        [
+          # header
+          html.Div([
+            html.Div(
+              html.Strong(
+                '▶ Advanced options',
+                id = 'B_advanced_options_header_text',
+              ),
+              className = 'module_header_text'),
+            ],
+            id = 'B_advanced_options_header',
+            style = dict(
+              backgroundColor = 'rgba(0, 0, 0, 0.05)',
+              height = 34,
+              verticalAlign = 'middle',
+            ),
+          ),
+
+          # Body
+          html.Div(
+            [
+              # Match sequence specification
+              html.Div([
+                dcc.Textarea(
+                  id = 'B_adv_matchseq', 
+                  placeholder = 'Provide a DNA sequence to be matched against all repair genotypes at all gRNAs.',
+                  style = dict(
+                    fontFamily = 'monospace',
+                    fontSize = 16,
+                    resize = 'none',
+                    height = '60px',
+                    width = '800px',
+                  ),
+                )],
+                style = dict(
+                  verticalAlign = 'center',
+                  whiteSpace = 'nowrap',
+                  overflowX = 'auto',
+                  textAlign = 'center',
+                ),
+              ),
+
+              # Position of interest
+              html.Div(
+                [
+                  dcc.Input(
+                    id = 'B_adv_position_of_interest',
+                    type = 'number',
+                    inputmode = 'numeric',
+                    min = 1,
+                    step = 1,
+                  ),
+                  html.Span(
+                    id = 'B_adv_poi_selected_seq',
+                  ),
+                ],
+              ),
+
+              # Deletion specification
+              html.Div(
+                [
+                  dcc.Input(
+                    id = 'B_adv_delstart',
+                    type = 'number',
+                    inputmode = 'numeric',
+                    min = 1,
+                    step = 1,
+                  ),
+                  dcc.Input(
+                    id = 'B_adv_delend',
+                    type = 'number',
+                    inputmode = 'numeric',
+                    min = 1,
+                    step = 1,
+                  ),
+                  html.Span(
+                    id = 'B_adv_delseq',
+                  ),
+                ],
+              ),
+            ],
+            id = 'B_advanced_options_body',
+            style = dict(
+              display = 'none',
+              boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
+              marginBottom = 30,
+            ),
+            className = 'animate-top',
+          ),
+        ],
+        id = 'B_advanced_options_module',
+        style = dict(
+          width = 750,
+          margin = '0 auto',
+        )
+      ),
+
+
+      ###################################################
+      # Click to run button + time estimate
+      ###################################################
+      # Time estimate
+      html.P(
+        id = 'B_estimated_runtime',
+        children = 'Provide a sequence and PAM.',
+        style = dict(
+          textAlign = 'center',
+        ),
+      ),
+
+      # Submit button
+      html.Div([
+        html.Button(
+          'Submit',
+          id = 'B_submit_button',
+          style = dict(
+          ),
+        )],
+        style = dict(
+          textAlign = 'center',
+          marginBottom = '4px',
+        ),
+      ),
+
+    ],
+    style = dict(
+      backgroundColor = 'white',
+      width = '1010px',
+      position = 'relative',
+      left = '50%',
+      transform = 'translate(-50%, 0px)',
+      borderBottom = '3px solid #777777',
+      marginBottom = '50px',
+    ),
+  ),
+
+  ###################################################
+  # Post-computation settings module + Histograms (sticky)
+  ###################################################
+  html.Div(
+    [
+      # Module
+      html.Div([
+
+        # Header
+        html.Div([
+          html.Div([
+            html.Strong('',
+              id = 'B_postcomp_module_header',
+            )],
+            className = 'module_header_text'),
+          ],
+          className = 'module_header'
         ),
 
-        ###################################################
-        # PAM box
-        ###################################################
+        # Module body
         html.Div(
           [
-            html.Strong(
-              'Cas9 PAM: '
-            ),
-            dcc.Input(
-              id = 'B_textbox_pam', 
-              size = 5,
-              value = 'NGG',
-              type = 'text',
-              minlength = 2,
-              maxlength = 6,
-              autofocus = True,
-              style = dict(
-                fontFamily = 'monospace',
-                fontSize = 14,
-                height = '20px',
-                width = '70px',
-                verticalAlign = 'text-bottom',
-              ),
-            ),
-            html.Strong(' ' * 3),
+            # Row: Display columns...
             html.Div(
               [
-                html.Img(
-                  src = '/staticfiles/tooltip_logo',
-                  className = 'tooltiplogo',
+                html.Strong(
+                  'Display columns:',
+                  style = dict(
+                    textAlign = 'right',
+                    marginRight = '5px',
+                    height = '36px',  # height of one dropdown line
+                    lineHeight = '36px',  # centers vertically
+                  ),
+                  className = 'three columns',
                 ),
-                html.Span(
-                  'Cutsite assumed 3nt upstream of PAM match. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
-                  className = 'tooltiptext'
+
+                # Multi drop down to select columns
+                dcc.Dropdown(
+                  id = 'B_dropdown-columns',
+                  options = [
+                    {'label': 'Cutsite', 'value': 'Cutsite'},
+                    {'label': 'Precision', 'value': 'Precision'},
+                    {'label': 'Frameshift (%)', 'value': 'Frameshift (%)'},
+                    {'label': 'Frame +0 (%)', 'value': 'Frame +0 (%)'},
+                    {'label': 'Frame +1 (%)', 'value': 'Frame +1 (%)'},
+                    {'label': 'Frame +2 (%)', 'value': 'Frame +2 (%)'},
+                    {'label': 'Log phi (microhomology strength)', 'value': 'Log phi'},
+                    {'label': 'Most frequent genotype (%)', 'value': 'M.F. gt (%)'},
+                    {'label': 'Most frequent deletion (%)', 'value': 'M.F. del (%)'},
+                    {'label': 'Most frequent insertion (%)', 'value': 'M.F. ins (%)'},
+                    {'label': 'Expected indel length', 'value': 'Exp. indel len'},
+                  ],
+                  multi = True,
+                  searchable = False,
+                  clearable = False,
+                  value = ['Cutsite', 'Precision', 'Frameshift (%)', 'Log phi', 'M.F. gt (%)'],
+                  className = 'nine columns',
                 ),
-              ], 
-              className = 'tooltip',
+              ],
+              style = dict(
+                # width = '1050px',
+                marginBottom = '5px',
+                marginTop = '10px',
+              ),
+              className = 'row',
             ),
+
+            # Row: Sort by...
+            html.Div(
+              [
+                html.Strong(
+                  'Sort by:  ',
+                  className = 'three columns',
+                  style = dict(
+                    textAlign = 'right',
+                    marginRight = '5px',
+                    height = '36px',
+                    lineHeight = '36px',
+                  ),
+                ),
+                # Sorting columns
+                dcc.Dropdown(
+                  id = 'B_dropdown-sortcol',
+                  options = [],
+                  searchable = False,
+                  clearable = False,
+                  className = 'three columns',
+                ),
+                # Sort direction
+                dcc.RadioItems(
+                  id = 'B_sortdirection',
+                  options = [
+                    {'label': 'Ascending', 'value': 'Ascending'},
+                    {'label': 'Descending', 'value': 'Descending'},
+                  ],
+                  value = 'Descending',
+                  labelStyle = {'display': 'inline-block'},
+                  className = 'six columns',
+                  style = dict(
+                    marginLeft = 5,
+                    height = '36px',
+                    lineHeight = '36px',
+                  ),
+                ),
+              ],
+              style = dict(
+                marginBottom = '10px',
+              ),
+              className = 'row',
+            ),
+
+            # Links
+            html.Div([
+              html.Div(
+                # Sharable link
+                html.A(
+                  '🔗 Shareable link to page before computation', 
+                  id = 'B_page-link'
+                )
+              ),
+              html.Div(
+                # Download link: summary statistics
+                html.A(
+                  '📑 Download table of predictions',
+                  id = 'B_download-link'
+                )
+              )
+            ], style = dict(
+                transform = 'translateX(20px)',
+                height = 60,
+              )
+            ),
+
           ],
-          style = dict(
-            textAlign = 'center',
-          ),
         ),
 
-        ###################################################
-        # Advanced options: Match sequence
-        ###################################################
-        html.Div([
-          dcc.Textarea(
-            id = 'B_adv_matchseq', 
-            placeholder = 'Provide a DNA sequence to be matched against all repair genotypes at all gRNAs.',
-            style = dict(
-              fontFamily = 'monospace',
-              fontSize = 16,
-              resize = 'none',
-              height = '60px',
-              width = '800px',
-            ),
-          )],
-          style = dict(
-            verticalAlign = 'center',
-            whiteSpace = 'nowrap',
-            overflowX = 'auto',
-            textAlign = 'center',
-          ),
+        ##
+        ], 
+        style = dict(
+          transform = 'translateX(90px)',
+          width = '970px',
+          boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
+          marginBottom = '50px',
+          position = 'relative',
+          zIndex = 10,
         ),
-
-        # Position of interest
-        html.Div(
-          [
-            dcc.Input(
-              id = 'B_adv_position_of_interest',
-              type = 'number',
-              inputmode = 'numeric',
-              min = 1,
-              step = 1,
-            ),
-            html.Span(
-              id = 'B_adv_poi_selected_seq',
-            ),
-          ],
-        ),
-
-        # positions to be deleted
-        html.Div(
-          [
-            dcc.Input(
-              id = 'B_adv_delstart',
-              type = 'number',
-              inputmode = 'numeric',
-              min = 1,
-              step = 1,
-            ),
-            dcc.Input(
-              id = 'B_adv_delend',
-              type = 'number',
-              inputmode = 'numeric',
-              min = 1,
-              step = 1,
-            ),
-            html.Span(
-              id = 'B_adv_delseq',
-            ),
-          ],
-        ),
-
-
-        ###################################################
-        # Click to run button + time estimate
-        ###################################################
-        html.P(
-          id = 'B_estimated_runtime',
-          children = 'Provide a sequence and PAM.',
-          style = dict(
-            textAlign = 'center',
-          ),
-        ),
-
-        html.Div([
-          html.Button(
-            'Submit',
-            id = 'B_submit_button',
-            style = dict(
-            ),
-          )],
-          style = dict(
-            textAlign = 'center',
-          ),
-        ),
-
-      ],
-      style = dict(
-        backgroundColor = 'white',
-        width = '1010px',
       ),
-    ),
 
-    ###################################################
-    # Post-computation settings
-    ###################################################
-    html.Div(
-      [
-        # Multi drop down to select columns
-        dcc.Dropdown(
-          id = 'B_dropdown-columns',
-          options = [
-            {'label': 'Cutsite', 'value': 'Cutsite'},
-            {'label': 'Precision', 'value': 'Precision'},
-            {'label': 'Frameshift (%)', 'value': 'Frameshift (%)'},
-            {'label': 'Frame +0 (%)', 'value': 'Frame +0 (%)'},
-            {'label': 'Frame +1 (%)', 'value': 'Frame +1 (%)'},
-            {'label': 'Frame +2 (%)', 'value': 'Frame +2 (%)'},
-            {'label': 'Log phi (microhomology strength)', 'value': 'Log phi'},
-            {'label': 'Most frequent genotype (%)', 'value': 'M.F. gt (%)'},
-            {'label': 'Most frequent deletion (%)', 'value': 'M.F. del (%)'},
-            {'label': 'Most frequent insertion (%)', 'value': 'M.F. ins (%)'},
-            {'label': 'Expected indel length', 'value': 'Exp. indel len'},
-          ],
-          multi = True,
-          searchable = False,
-          clearable = False,
-          value = ['Cutsite', 'Precision', 'Frameshift (%)', 'Log phi', 'M.F. gt (%)']
-        ),
-
-        # Sorting columns
-        dcc.Dropdown(
-          id = 'B_dropdown-sortcol',
-          options = [],
-          searchable = False,
-          clearable = False,
-        ),
-        # Sort direction
-        dcc.RadioItems(
-          id = 'B_sortdirection',
-          options = [
-            {'label': 'Up', 'value': 'Up'},
-            {'label': 'Down', 'value': 'Down'},
-          ],
-          labelStyle = {'display': 'inline-block'}
-        ),
-
-        # Sharable link, move this later
-        html.Div(
-          html.A(
-            '🔗 Shareable link to page before computation', 
-            id = 'B_page-link'
+      # Hists
+      html.Div(
+        dcc.Graph(
+          id = 'B_hist-stats',
+          config = dict(
+            modeBarButtonsToRemove = modebarbuttons_2d,
+            displaylogo = False,
+            displayModeBar = False,
           ),
         ),
-
-        # Download link: summary statistics
-        html.Div(
-          html.A(
-            '📑 Download table of predictions',
-            id = 'B_download-link'
-          ),
-        ),
-
-        # Hists
-        html.Div(
-          dcc.Graph(
-            id = 'B_hist-stats',
-            config = dict(
-              modeBarButtonsToRemove = modebarbuttons_2d,
-              displaylogo = False,
-            ),
-          ),
-          id = 'B_hist-stats-div',
-          style = dict(
-            display = 'none',
-          )
-        ),
-      ],
-      # body style
-      id = 'B_postcomputation_settings',
-      className = 'batch_postcomputation_sticky',
-      # className = 'animate-bottom',
-      style = dict(
-        display = 'none',
+        id = 'B_hist-stats-div',
+        style = dict(
+          display = 'none',
+          position = 'relative',
+          zIndex = 1,
+        )
       ),
-    ),
-
-    ###################################################
-    # Plots
-    ###################################################
-    html.Div(
-      [
-        # Plots
-        html.Div(
-          dcc.Graph(
-            id = 'B_plot-stats',
-            config = dict(
-              modeBarButtonsToRemove = modebarbuttons_2d,
-              displaylogo = False,
-              displayModeBar = False,
-            ),
-          ),
-          id = 'B_plot-stats-div',
-          style = dict(
-            display = 'none',
-          ),
-          className = 'animate-bottom',
-        ),
-
-      ],
-      # body style
-      style = dict(
-      ),
-    ),
-    ##
-  ], 
+    ],
+    # body style
+    id = 'B_postcomputation_settings',
+    className = 'batch_postcomputation_sticky',
     style = dict(
-      width = '970px',
-      margin = '0 auto',
-    )
+      display = 'none',
+    ),
   ),
-],  # body div
-style = dict(
-  width = '1000px',
-  margin = '0 auto',
-)
+
+  ###################################################
+  # Plots
+  ###################################################
+  html.Div(
+    [
+      # Plots
+      html.Div(
+        dcc.Graph(
+          id = 'B_plot-stats',
+          config = dict(
+            modeBarButtonsToRemove = modebarbuttons_2d,
+            displaylogo = False,
+            displayModeBar = False,
+          ),
+        ),
+        id = 'B_plot-stats-div',
+        style = dict(
+          display = 'none',
+        ),
+        className = 'animate-bottom',
+      ),
+
+    ],
+    # body style
+    style = dict(
+    ),
+  ),
+  ##
+
+  ],  # body div
+  style = dict(
+    width = '1150px',
+    margin = '0 auto',
+  )
 )
 
 #######################################################################
@@ -681,6 +812,45 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart,
   # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
 
 ##
+# Module header callbacks, Advanced options hiding/showing
+##
+@app.callback(
+  Output('B_postcomp_module_header', 'children'),
+  [Input('B_hidden-pred-df-stats', 'children')],
+  [State('B_textarea', 'value'),
+   State('B_textbox_pam', 'value')])
+def update_postcomp_module_header(all_stats_string, seq, pam):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  return 'Results of %s gRNAs with %s PAM found in %s-bp query' % (len(stats), pam, len(seq))
+
+@app.callback(
+  Output('B_advanced_options_body', 'style'),
+  [Input('B_advanced_options_header', 'n_clicks')],
+  [State('B_advanced_options_body', 'style')])
+def update_adv_options_body_style(n_clicks, prev_style):
+  new_style = prev_style
+  if n_clicks > 0:  # ignore first automatic click triggered by page load
+    if 'display' in prev_style:
+      del new_style['display']
+    else:
+      new_style['display'] = 'none'
+  return new_style
+
+@app.callback(
+  Output('B_advanced_options_header_text', 'children'),
+  [Input('B_advanced_options_header', 'n_clicks')],
+  [State('B_advanced_options_header_text', 'children')])
+def update_adv_options_header_text(n_clicks, prev_text):
+  if n_clicks > 0:
+    if '▶' in prev_text:
+      new_arrow = '▼'
+    else:
+      new_arrow = '▶'
+  return '%s Advanced options' % (new_arrow)
+
+##
 # Column selection and sorting callbacks
 ##
 @app.callback(
@@ -729,6 +899,8 @@ def update_columns_value(all_stats_string, prev_value):
         value.remove(td)
   return value
 
+
+
 ##
 # Stats table callbacks
 ## 
@@ -758,7 +930,7 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
 
   # Sort by, if possible
   if sort_col is not None and sort_direction is not None:
-    if sort_direction == 'Up':
+    if sort_direction == 'Ascending':
       ascending_flag = True
     else:
       ascending_flag = False
@@ -1071,13 +1243,16 @@ def update_hist_plot(rows, selected_row_indices):
       )
 
   # Global figure formatting
+  fig['layout']['paper_bgcolor'] = 'rgba(255, 255, 255, 0)'
+  fig['layout']['plot_bgcolor'] = 'rgba(255, 255, 255, 0)'
   fig['layout']['showlegend'] = False
   fig['layout']['width'] = 275 + len(stats_cols) * 150
-  fig['layout']['height'] = 140
+  fig['layout']['height'] = 100
   fig['layout']['margin'] = {
     'l': 250,
     'r': 25,
-    't': 60,
+    't': 0,
+    # 't': 60,
     # 'b': 25,
     'b': 40,
   }

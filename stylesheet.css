@@ -26,9 +26,9 @@
  */
 
 /* This was actually not quite right -
-   dropdowns were overlapping each other (edited October 26)
+   dropdowns were overlapping each other (edited October 26)*/
 
-.Select {
+/*.Select {
     z-index: 1002;
 }*/
 
@@ -159,11 +159,17 @@
   }
 
   .batch_postcomputation_sticky {
-    top: 0;
+    top: -1px;
     z-index: 10;
     background-color: white;
+    display: inline-block;
+    box-shadow: 0px 5px 3px -3px rgba(0, 0, 0, 0.2);
     /*border-bottom: 2px solid;*/
     /*border-bottom-color: rgb(100, 100, 100);*/
+    -webkit-animation-name: animatebottom;
+    -webkit-animation-duration: 1s;
+    animation-name: animatebottom;
+    animation-duration: 1s;
     position: -webkit-sticky;
     position: sticky;
   }
@@ -233,6 +239,27 @@
   .tooltiplogo {
     height: 18px;
     vertical-align: text-bottom;
+  }
+
+  /**/
+  /* Fade-in animation: fade in from top */
+  /**/
+  .animate-top {
+    position: relative;
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.5s;
+    animation-name: animatetop;
+    animation-duration: 0.5s
+  }
+
+  @-webkit-keyframes animatetop {
+    from { top: -20px; opacity: 0 } 
+    to { top: 0px; opacity: 1 }
+  }
+
+  @keyframes animatetop { 
+    from { top: -20px; opacity: 0 } 
+    to { top: 0; opacity: 1 }
   }
 
   /**/
