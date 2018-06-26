@@ -192,65 +192,155 @@ layout = html.Div([
           # Body
           html.Div(
             [
-              # Match sequence specification
-              html.Div([
-                dcc.Textarea(
-                  id = 'B_adv_matchseq', 
-                  placeholder = 'Provide a DNA sequence to be matched against all repair genotypes at all gRNAs.',
-                  style = dict(
-                    fontFamily = 'monospace',
-                    fontSize = 16,
-                    resize = 'none',
-                    height = '60px',
-                    width = '800px',
-                  ),
-                )],
+              html.Div(
+                html.Strong('Evaluate gRNAs by...'),
                 style = dict(
-                  verticalAlign = 'center',
-                  whiteSpace = 'nowrap',
-                  overflowX = 'auto',
-                  textAlign = 'center',
+                  height = '50px',
+                  lineHeight = '50px',
+                  textAlign = 'left',
+                  transform = 'translateX(35px)',
                 ),
               ),
 
-              # Position of interest
-              html.Div(
-                [
-                  dcc.Input(
-                    id = 'B_adv_position_of_interest',
-                    type = 'number',
-                    inputmode = 'numeric',
-                    min = 1,
-                    step = 1,
+              # Row: Match sequence specification
+              html.Div([
+                html.Span(
+                  'Repair frequency to a specific genotype',
+                  style = dict(
+                    textAlign = 'right',
+                    lineHeight = 1.2,
                   ),
-                  html.Span(
-                    id = 'B_adv_poi_selected_seq',
+                  className = 'three columns',
+                ),
+                # Match sequence specification
+                html.Div([
+                  dcc.Textarea(
+                    id = 'B_adv_matchseq', 
+                    placeholder = 'Provide a DNA sequence',
+                    style = dict(
+                      fontFamily = 'monospace',
+                      fontSize = 16,
+                      resize = 'none',
+                      height = '60px',
+                      width = '95%',
+                    ),
+                  )],
+                  style = dict(
+                    verticalAlign = 'center',
+                    whiteSpace = 'nowrap',
                   ),
-                ],
+                  className = 'nine columns'
+                ),
+                ##
+                ], 
+                style = dict(
+                  marginBottom = 10,
+                ),
+                className = 'row',
               ),
 
-              # Deletion specification
-              html.Div(
-                [
-                  dcc.Input(
-                    id = 'B_adv_delstart',
-                    type = 'number',
-                    inputmode = 'numeric',
-                    min = 1,
-                    step = 1,
+              # Row: position of interest
+              html.Div([
+                html.Span(
+                  'Distance to specific nucleotide',
+                  style = dict(
+                    textAlign = 'right',
+                    lineHeight = 1.2,
                   ),
-                  dcc.Input(
-                    id = 'B_adv_delend',
-                    type = 'number',
-                    inputmode = 'numeric',
-                    min = 1,
-                    step = 1,
+                  className = 'three columns',
+                ),
+                # Position of interest
+                html.Div(
+                  [
+                    dcc.Input(
+                      id = 'B_adv_position_of_interest',
+                      type = 'number',
+                      inputmode = 'numeric',
+                      placeholder = '#',
+                      min = 1,
+                      step = 1,
+                      style = dict(
+                        width = 60,
+                      ),
+                    ),
+                    html.Span(
+                      id = 'B_adv_poi_selected_seq',
+                    ),
+                  ],
+                  style = dict(
                   ),
-                  html.Span(
-                    id = 'B_adv_delseq',
-                  ),
+                  className = 'nine columns',
+                ),
+                ##
                 ],
+                style = dict(
+                  marginBottom = 10,
+                ),
+                className = 'row',
               ),
+
+              # Row: deletion specification
+              html.Div([
+                html.Span(
+                  'Frequency of deletions involving nucleotides',
+                  style = dict(
+                    textAlign = 'right',
+                    lineHeight = 1.2,
+                  ),
+                  className = 'three columns',
+                ),
+                # Deletion specification
+                html.Div(
+                  [
+                    dcc.Input(
+                      id = 'B_adv_delstart',
+                      type = 'number',
+                      inputmode = 'numeric',
+                      placeholder = '#',
+                      min = 1,
+                      step = 1,
+                      style = dict(
+                        width = 60,
+                      ),
+                    ),
+                    html.Strong(
+                      ' — '
+                    ),
+                    dcc.Input(
+                      id = 'B_adv_delend',
+                      type = 'number',
+                      inputmode = 'numeric',
+                      placeholder = '#',
+                      min = 1,
+                      step = 1,
+                      style = dict(
+                        width = 60,
+                      ),
+                    ),
+                    html.Span(
+                      id = 'B_adv_delseq',
+                    ),
+                  ],
+                  style = dict(
+                  ),
+                  className = 'nine columns',
+                ),
+                ##
+                ],
+                style = dict(
+                  marginBottom = 20,
+                ),
+                className = 'row',
+              ),
+
+              # Empty spacer
+              html.Div(
+                '',
+                style = dict(
+                  height = '10px',
+                ),
+              )
+
             ],
             id = 'B_advanced_options_body',
             style = dict(
@@ -284,7 +374,7 @@ layout = html.Div([
       # Submit button
       html.Div([
         html.Button(
-          'Submit',
+          'PREDICT REPAIR',
           id = 'B_submit_button',
           style = dict(
           ),
@@ -576,21 +666,21 @@ def update_pam_from_url(url, default_value):
 def update_estimated_runtime(seq, pam):
   # Error catching
   if len(seq) < 70:
-    return 'Provide a sequence longer than 70 bp.'
+    return 'Error: Provide a sequence longer than 70 bp.'
   if len(seq) > 5000:
-    return 'Provide a sequence shorter than 5kb.'
+    return 'Error: Provide a sequence shorter than 5kb.'
   if len(pam) < 2 or len(pam) > 6:
-    return 'Provide a PAM between 2 and 6 bp long.'
+    return 'Error: Provide a PAM between 2 and 6 bp long.'
   allowed_seq_chars = set(list('ACGTacgt'))
   for char in set(seq):
     if char not in allowed_seq_chars:
-      return 'Sanitize your sequence: %s disallowed' % (char)
+      return 'Error: Sanitize your sequence: %s disallowed' % (char)
   allowed_pam_chars = set(list('ACGTYRWSKMDVHBNacgtyrwskmdvhbn'))
   for char in set(pam):
     if char not in allowed_pam_chars:
-      return 'Sanitize your PAM: %s disallowed' % (char)
+      return 'Error: Sanitize your PAM: %s disallowed' % (char)
   if pam.count('N') == len(pam):
-    return 'PAM cannot only consist of N'
+    return 'Error: PAM cannot only consist of N'
 
 
   pam_freq = lib.estimate_pam_freq(pam) * 2 # rc also
@@ -690,6 +780,33 @@ def update_selected_delseq(del_start, del_end, seq):
       html.Span(nt, style = get_style_dict(cc)),
     )
   return children
+
+##
+# Submit button
+##
+@app.callback(
+  Output('B_submit_button', 'children'),
+  [Input('B_textarea', 'value'),
+   Input('B_textbox_pam', 'value')])
+def update_submit_button_text(seq, pam):
+  default_text = 'PREDICT REPAIR'
+
+  num_grnas = 0
+  seqs = [seq, lib.revcomp(seq)]
+  cutsites = range(30, len(seq) - 30)
+  for local_seq, grna_orient in zip(seqs, ['+', '-']):
+    for local_cutsite in cutsites:
+      cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
+      if lib.match(pam, cand_pam):
+        num_grnas += 1
+  return 'PREDICT REPAIR FOR %s gRNAs' % (num_grnas)
+
+@app.callback(
+  Output('B_submit_button', 'disabled'),
+  [Input('B_estimated_runtime', 'children')])
+def update_submit_button_disabled(est_runtime_text):
+  return bool('Error' in est_runtime_text)
+
 
 ##
 # Prediction callback
