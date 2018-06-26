@@ -164,6 +164,7 @@ layout = html.Div([
         ],
         style = dict(
           textAlign = 'center',
+          marginBottom = 10,
         ),
       ),
 
@@ -274,7 +275,7 @@ layout = html.Div([
                 ##
                 ],
                 style = dict(
-                  marginBottom = 10,
+                  marginBottom = 15,
                 ),
                 className = 'row',
               ),
@@ -345,8 +346,6 @@ layout = html.Div([
             id = 'B_advanced_options_body',
             style = dict(
               display = 'none',
-              boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
-              marginBottom = 30,
             ),
             className = 'animate-top',
           ),
@@ -355,6 +354,8 @@ layout = html.Div([
         style = dict(
           width = 750,
           margin = '0 auto',
+          boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
+          marginBottom = 30,
         )
       ),
 
@@ -377,11 +378,12 @@ layout = html.Div([
           'PREDICT REPAIR',
           id = 'B_submit_button',
           style = dict(
+            boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
           ),
         )],
         style = dict(
           textAlign = 'center',
-          marginBottom = '4px',
+          marginBottom = 15,
         ),
       ),
 
@@ -787,9 +789,11 @@ def update_selected_delseq(del_start, del_end, seq):
 @app.callback(
   Output('B_submit_button', 'children'),
   [Input('B_textarea', 'value'),
-   Input('B_textbox_pam', 'value')])
-def update_submit_button_text(seq, pam):
-  default_text = 'PREDICT REPAIR'
+   Input('B_textbox_pam', 'value'),
+   Input('B_estimated_runtime', 'children')])
+def update_submit_button_text(seq, pam, est_runtime_text):
+  if 'Error' in est_runtime_text:
+    return 'PREDICT REPAIR'
 
   num_grnas = 0
   seqs = [seq, lib.revcomp(seq)]
@@ -802,10 +806,17 @@ def update_submit_button_text(seq, pam):
   return 'PREDICT REPAIR FOR %s gRNAs' % (num_grnas)
 
 @app.callback(
-  Output('B_submit_button', 'disabled'),
-  [Input('B_estimated_runtime', 'children')])
-def update_submit_button_disabled(est_runtime_text):
-  return bool('Error' in est_runtime_text)
+  Output('B_submit_button', 'style'),
+  [Input('B_estimated_runtime', 'children')],
+  [State('B_submit_button', 'style')])
+def update_submit_button_style(est_runtime_text, style):
+  if 'Error' in est_runtime_text:
+    style['backgroundColor'] = '#86898C'
+    style['color'] = 'white'
+  else:
+    style['backgroundColor'] = '#00A0DC'
+    style['color'] = 'white'
+  return style
 
 
 ##
