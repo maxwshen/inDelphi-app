@@ -44,6 +44,41 @@ def __append_alphabet(output, alphabet):
       new_output.append(o + a)
   return new_output
 
+def parse_coded_seq_leftover(dd, coded_nm, leftover_nm):
+  # Process encoded DNA
+  if len(dd[coded_nm]) != 1 and len(dd[coded_nm]) % 3 != 0:
+    return '-'
+  if dd[coded_nm] == '-':
+    return dd[leftover_nm]
+
+  seq = ''
+  for jdx in range(0, len(dd[coded_nm]), 3):
+    w = dd[coded_nm][jdx : jdx + 3]
+    seq += code_to_dna[w]
+  if dd[leftover_nm] != '-':
+    seq += dd[leftover_nm]
+  return seq
+
+def encode_dna(seq):
+  if seq is None or len(seq) == 0:
+    return '-', '-'
+
+  if len(seq) < KMER_LEN:
+    return '-', seq
+
+  encodeddna = ''
+  for idx in range(0, len(seq), KMER_LEN):
+    chomp = seq[idx : idx + KMER_LEN]
+    if len(chomp) == KMER_LEN:
+      encodeddna += dna_to_code[chomp]
+    else:
+      break
+  if len(seq[idx:]) != KMER_LEN:
+    leftoverdna = seq[idx:]
+  else:
+    leftoverdna = '-'
+  return encodeddna, leftoverdna
+
 ###############################################
 # Single
 ###############################################
@@ -58,24 +93,16 @@ def parse_valid_url_path_single(url_path):
   if len(url_path) == 0 or '_' not in url_path:
     return False, None, None
 
-  threeparts = url_path.split('_')
-  if len(threeparts) != 3:
+  parts = url_path.split('_')
+
+  cats = ['coded', 'leftover', 'tail']
+  if len(parts) != len(cats):
     return False, None, None
+  dd = dict()
+  for idx, cat in enumerate(cats):
+    dd[cat] = parts[idx]
 
-  [coded, leftover, tail] = threeparts
-
-  # Process encoded DNA
-  if len(coded) % 3 != 0:
-    return False, None, None  
-
-  seq = ''
-  for jdx in range(0, len(coded), 3):
-    w = coded[jdx : jdx + 3]
-    seq += code_to_dna[w]
-
-  # Process leftover eDNA
-  if leftover != '-':
-    seq += leftover
+  seq = parse_coded_seq_leftover(dd, 'coded', 'leftover')
 
   # Process cutsite
   try:
@@ -86,17 +113,7 @@ def parse_valid_url_path_single(url_path):
 
 def encode_dna_to_url_path_single(seq, cutsite):
   seq = seq.upper()
-  encodeddna = ''
-  for idx in range(0, len(seq), KMER_LEN):
-    chomp = seq[idx : idx + KMER_LEN]
-    if len(chomp) == KMER_LEN:
-      encodeddna += dna_to_code[chomp]
-    else:
-      break
-  if len(seq[idx:]) != KMER_LEN:
-    leftoverdna = seq[idx:]
-  else:
-    leftoverdna = '-'
+  encodeddna, leftoverdna = encode_dna(seq)
   return '/single_%s_%s_%s' % (encodeddna, leftoverdna, cutsite)
 
 
@@ -106,50 +123,76 @@ def encode_dna_to_url_path_single(seq, cutsite):
 
 def parse_valid_url_path_batch(url_path):
   ## Expected format:
-  # [encodedDNA]_[leftoverDNA]_[pam in plaintext]
+  # [encodedDNA]_[leftoverDNA]_[pam in plaintext] + more
+  dd = dict()
   if url_path[:len('/batch_')] != '/batch_':
-    return False, None, None
+    return False, dd
 
   url_path = url_path.replace('/batch_', '')
   if len(url_path) == 0 or '_' not in url_path:
-    return False, None, None
+    return False, dd
 
-  threeparts = url_path.split('_')
-  if len(threeparts) != 3:
-    return False, None, None
+  parts = url_path.split('_')
+  cats = ['coded', 'leftover', 'pam', 'adv_flag', 'coded_spec', 'leftover_spec', 'adv_poi', 'adv_delstart', 'adv_delend', 'chosen_columns', 'sort_by', 'sort_dir']
+  if len(parts) != len(cats):
+    return False, dd
+  for idx, cat in enumerate(cats):
+    dd[cat] = parts[idx]
 
-  [coded, leftover, pam] = threeparts
+  dd['seq'] = parse_coded_seq_leftover(dd, 'coded', 'leftover')
+  dd['adv_seq_spec'] = parse_coded_seq_leftover(dd, 'coded_spec', 'leftover_spec')
 
-  # Process encoded DNA
-  if len(coded) % 3 != 0:
-    return False, None, None  
+  # Reword some values
+  if dd['adv_flag'] == '1':
+    dd['adv_flag'] = True
+  elif dd['adv_flag'] == '0':
+    dd['adv_flag'] = False
 
-  seq = ''
-  for jdx in range(0, len(coded), 3):
-    w = coded[jdx : jdx + 3]
-    seq += code_to_dna[w]
-
-  # Process leftover eDNA
-  if leftover != '-':
-    seq += leftover
-
-  return True, seq, pam
-
-def encode_dna_to_url_path_batch(seq, pam):
-  seq, pam = seq.upper(), pam.upper()
-  encodeddna = ''
-  for idx in range(0, len(seq), KMER_LEN):
-    chomp = seq[idx : idx + KMER_LEN]
-    if len(chomp) == KMER_LEN:
-      encodeddna += dna_to_code[chomp]
-    else:
-      break
-  if len(seq[idx:]) != KMER_LEN:
-    leftoverdna = seq[idx:]
+  if dd['sort_dir'] == '1':
+    dd['sort_dir'] = 'Ascending'
   else:
-    leftoverdna = '-'
-  return '/batch_%s_%s_%s' % (encodeddna, leftoverdna, pam)
+    dd['sort_dir'] = 'Descending'
+  print('Sort: %s' % (dd['sort_dir']))
 
+  return True, dd
+
+def encode_dna_to_url_path_batch(seq, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir):
+  seq, pam = seq.upper(), pam.upper()
+  edna, ldna = encode_dna(seq)
+  edna2, ldna2 = encode_dna(adv_seq_spec)
+
+  if adv_flag == True:
+    adv_flag_val = '1'
+  else:
+    adv_flag_val = '0'
+
+  adv_poi = transform_empty_value_to_dash(adv_poi)
+  adv_delstart = transform_empty_value_to_dash(adv_delstart)
+  adv_delend = transform_empty_value_to_dash(adv_delend)
+  sort_by = transform_empty_value_to_dash(sort_by)
+
+  binary_flags_chosen_cols = ''
+  for co in sorted([s['label'] for s in column_options]):
+    if co in chosen_columns:
+      binary_flags_chosen_cols += '1'
+    else:
+      binary_flags_chosen_cols += '0'
+
+  if sort_by != '-':
+    sort_by = sorted(chosen_columns).index(sort_by)
+
+  if sort_dir == 'Ascending':
+    sort_dir_val = '1'
+  else:
+    sort_dir_val = '0'
+
+  return '/batch_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s' % (edna, ldna, pam, adv_flag_val, edna2, ldna2, adv_poi, adv_delstart, adv_delend, binary_flags_chosen_cols, sort_by, sort_dir_val)
+
+def transform_empty_value_to_dash(val):
+  if val is None or len(val) == 0 or val == 'None':
+    return '-'
+  else:
+    return val
 
 __init_chars()
 __init_mappers()

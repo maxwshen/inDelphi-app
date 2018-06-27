@@ -255,7 +255,7 @@ layout = html.Div([
                   [
                     dcc.Input(
                       id = 'B_adv_position_of_interest',
-                      type = 'number',
+                      type = 'text',
                       inputmode = 'numeric',
                       placeholder = '#',
                       min = 1,
@@ -295,7 +295,7 @@ layout = html.Div([
                   [
                     dcc.Input(
                       id = 'B_adv_delstart',
-                      type = 'number',
+                      type = 'text',
                       inputmode = 'numeric',
                       placeholder = '#',
                       min = 1,
@@ -309,7 +309,7 @@ layout = html.Div([
                     ),
                     dcc.Input(
                       id = 'B_adv_delend',
-                      type = 'number',
+                      type = 'text',
                       inputmode = 'numeric',
                       placeholder = '#',
                       min = 1,
@@ -643,9 +643,9 @@ def update_hidden_clickdata(clickData):
   [Input('B_url', 'pathname')],
   [State('B_textarea', 'value')])
 def update_textarea_from_url(url, default_value):
-  valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
   if valid_flag:
-    return textarea
+    return dd['seq']
   return default_value
 
 @app.callback(
@@ -653,9 +653,61 @@ def update_textarea_from_url(url, default_value):
   [Input('B_url', 'pathname')],
   [State('B_textbox_pam', 'value')])
 def update_pam_from_url(url, default_value):
-  valid_flag, textarea, pam = lib.parse_valid_url_path_batch(url)
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
   if valid_flag:
-    return pam
+    return dd['pam']
+  return default_value
+
+@app.callback(
+  Output('B_adv_matchseq', 'value'),
+  [Input('B_url', 'pathname')],
+  [State('B_adv_matchseq', 'value')])
+def update_adv_matchseq_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    if dd['adv_seq_spec'] == '-':
+      return default_value
+    else:
+      return dd['adv_seq_spec']
+  return default_value
+
+@app.callback(
+  Output('B_adv_position_of_interest', 'value'),
+  [Input('B_url', 'pathname')],
+  [State('B_adv_position_of_interest', 'value')])
+def update_adv_poi_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    if dd['adv_poi'] == '-':
+      return default_value
+    else:
+      return dd['adv_poi']
+  return default_value
+
+@app.callback(
+  Output('B_adv_delstart', 'value'),
+  [Input('B_url', 'pathname')],
+  [State('B_adv_delstart', 'value')])
+def update_adv_delstart_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    if dd['adv_delstart'] == '-':
+      return default_value
+    else:
+      return dd['adv_delstart']
+  return default_value
+
+@app.callback(
+  Output('B_adv_delend', 'value'),
+  [Input('B_url', 'pathname')],
+  [State('B_adv_delend', 'value')])
+def update_adv_delend_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    if dd['adv_delend'] == '-':
+      return default_value
+    else:
+      return dd['adv_delend']
   return default_value
 
 ##
@@ -709,6 +761,9 @@ def update_estimated_runtime(seq, pam):
     ans = '1 hour'
   else:
     ans = '%s hours' % (int(round(est_runtime / (60*60))))
+  if est_runtime > 25:
+    # Address Heroku's 30-second timeout
+    ans += '. Warning: Jobs over 30 seconds will time out.'
   return 'Estimated runtime: %s' % (ans)
 
 @app.callback(
@@ -717,7 +772,7 @@ def update_estimated_runtime(seq, pam):
    Input('B_textarea', 'value')])
 def update_position_of_interest_selected_seq(poi, seq):
   # poi is 1-indexed
-  poi_0idx = poi - 1
+  poi_0idx = int(poi) - 1
   buff = 7
   if poi_0idx < buff or poi_0idx > len(seq) - buff:
     return ''
@@ -752,8 +807,8 @@ def update_position_of_interest_selected_seq(poi, seq):
    Input('B_textarea', 'value')])
 def update_selected_delseq(del_start, del_end, seq):
   # poi is 1-indexed, convert to 0-idx
-  del_start -= 1
-  del_end -= 1
+  del_start = int(del_start) - 1
+  del_end = int(del_end) - 1
   buff = 7
   if del_start >= del_end:
     return ''
@@ -795,6 +850,7 @@ def update_submit_button_text(seq, pam, est_runtime_text):
   if 'Error' in est_runtime_text:
     return 'PREDICT REPAIR'
 
+  seq, pam = seq.upper(), pam.upper()
   num_grnas = 0
   seqs = [seq, lib.revcomp(seq)]
   cutsites = range(30, len(seq) - 30)
@@ -856,16 +912,18 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart,
     adv_matchseq = adv_matchseq.upper()
     adv_matchseq_flag = True
   adv_poi_flag = False
-  if adv_poi is not None:
+  if adv_poi is not None and len(adv_poi) > 0:
     # adv_poi is 1-indexed, switch to 0-index
     adv_poi = int(adv_poi) - 1
     adv_poi_flag = True
   adv_del_flag = False
   if adv_delstart is not None and adv_delend is not None:
-    if adv_delstart < adv_delend:
-      adv_delstart -= 1
-      adv_delend -= 1
-      adv_del_flag = True
+    if len(adv_delstart) > 0 and len(adv_delend) > 0:
+      adv_delstart, adv_delend = int(adv_delstart), int(adv_delend)
+      if adv_delstart < adv_delend:
+        adv_delstart -= 1
+        adv_delend -= 1
+        adv_del_flag = True
 
 
   # Search for gRNAs matching PAM
@@ -955,11 +1013,17 @@ def update_postcomp_module_header(all_stats_string, seq, pam):
 
 @app.callback(
   Output('B_advanced_options_body', 'style'),
-  [Input('B_advanced_options_header', 'n_clicks')],
+  [Input('B_advanced_options_header', 'n_clicks'),
+   Input('B_url', 'pathname')],
   [State('B_advanced_options_body', 'style')])
-def update_adv_options_body_style(n_clicks, prev_style):
+def update_adv_options_body_style(n_clicks, url, prev_style):
   new_style = prev_style
-  if n_clicks > 0:  # ignore first automatic click triggered by page load
+  if n_clicks is None:
+    valid_flag, dd = lib.parse_valid_url_path_batch(url)
+    if valid_flag and dd['adv_flag'] == True:
+      del new_style['display']
+
+  elif n_clicks > 0:  # ignore first automatic click triggered by page load
     if 'display' in prev_style:
       del new_style['display']
     else:
@@ -991,6 +1055,20 @@ def update_sortcol_options(values):
   return options
 
 @app.callback(
+  Output('B_dropdown-sortcol', 'value'),
+  [Input('B_dropdown-sortcol', 'options')],
+  [State('B_url', 'pathname'),
+   State('B_dropdown-sortcol', 'value')])
+def update_sortcol_value_from_url(options, url, prev_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if not valid_flag or dd['sort_by'] == '-':
+    return prev_value
+  else:
+    all_options = [s['value'] for s in options]
+    idx = int(dd['sort_by'])
+    return sorted(all_options)[idx]
+
+@app.callback(
   Output('B_dropdown-columns', 'options'),
   [Input('B_hidden-pred-df-stats', 'children')],
   [State('B_dropdown-columns', 'options')]
@@ -1011,23 +1089,43 @@ def update_columns_options(all_stats_string, prev_options):
 
 @app.callback(
   Output('B_dropdown-columns', 'value'),
-  [Input('B_hidden-pred-df-stats', 'children')],
-  [State('B_dropdown-columns', 'value')]
+  [Input('B_dropdown-columns', 'options')],
+  [State('B_dropdown-columns', 'value'),
+   State('B_url', 'pathname')]
   )
-def update_columns_value(all_stats_string, prev_value):
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+def update_columns_value(options, prev_value, url):
   value = prev_value
+  all_options = [s['label'] for s in options]
 
   for td in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
-    if td in stats.columns:
+    if td in all_options:
       if td not in value:
         value.append(td)
     else:
       if td in value:
         value.remove(td)
+
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    value = []
+    alphabetical_options = sorted(all_options)
+    for idx, flag in enumerate(dd['chosen_columns']):
+      if flag == '1':
+        value.append(alphabetical_options[idx])
+
   return value
 
-
+@app.callback(
+  Output('B_sortdirection', 'value'),
+  [Input('B_dropdown-sortcol', 'options')],
+  [State('B_url', 'pathname'),
+   State('B_sortdirection', 'value')])
+def update_sortdir_from_url(sort_options, url, prev_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    return dd['sort_dir']
+  else:
+    return prev_value
 
 ##
 # Stats table callbacks
@@ -1430,6 +1528,16 @@ def download_csv_batch():
   Output('B_page-link', 'href'),
   [Input('B_textarea', 'value'),
    Input('B_textbox_pam', 'value'),
+   Input('B_advanced_options_body', 'style'),
+   Input('B_adv_matchseq', 'value'),
+   Input('B_adv_position_of_interest', 'value'),
+   Input('B_adv_delstart', 'value'),
+   Input('B_adv_delend', 'value'),
+   Input('B_dropdown-columns', 'value'),
+   Input('B_dropdown-columns', 'options'),
+   Input('B_dropdown-sortcol', 'value'),
+   Input('B_sortdirection', 'value'),
   ])
-def update_pagelink(textarea, pam):
-  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam))
+def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir):
+  adv_flag = bool('display' not in adv_style)
+  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir))
