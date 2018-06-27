@@ -94,8 +94,7 @@ def parse_valid_url_path_single(url_path):
     return False, None, None
 
   parts = url_path.split('_')
-
-  cats = ['coded', 'leftover', 'tail']
+  cats = ['coded', 'leftover', 'cutsite']
   if len(parts) != len(cats):
     return False, None, None
   dd = dict()
@@ -103,13 +102,7 @@ def parse_valid_url_path_single(url_path):
     dd[cat] = parts[idx]
 
   seq = parse_coded_seq_leftover(dd, 'coded', 'leftover')
-
-  # Process cutsite
-  try:
-    cutsite_index = int(tail)
-  except:
-    return False, None, None
-  return True, seq, cutsite_index
+  return True, seq, int(dd['cutsite'])
 
 def encode_dna_to_url_path_single(seq, cutsite):
   seq = seq.upper()
