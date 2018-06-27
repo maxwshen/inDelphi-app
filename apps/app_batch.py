@@ -464,6 +464,7 @@ layout = html.Div([
                 marginTop = '10px',
               ),
               className = 'row',
+              id = 'B_row_dropdown-columns',
             ),
 
             # Row: Sort by...
@@ -508,6 +509,7 @@ layout = html.Div([
                 marginBottom = '10px',
               ),
               className = 'row',
+              id = 'B_row_dropdown-sortcol',
             ),
 
             # Links
@@ -1058,8 +1060,15 @@ def update_sortcol_options(values):
   Output('B_dropdown-sortcol', 'value'),
   [Input('B_dropdown-sortcol', 'options')],
   [State('B_url', 'pathname'),
-   State('B_dropdown-sortcol', 'value')])
-def update_sortcol_value_from_url(options, url, prev_value):
+   State('B_dropdown-sortcol', 'value'),
+   State('B_advanced_options_module', 'n_clicks'),
+   State('B_row_dropdown-columns', 'n_clicks'),
+   State('B_row_dropdown-sortcol', 'n_clicks'),
+   ])
+def update_sortcol_value_from_url(options, url, prev_value, nc1, nc2, nc3):
+  if nc1 or nc2 or nc3:
+    # If clicked on any module that might change the sortcol
+    return prev_value
   valid_flag, dd = lib.parse_valid_url_path_batch(url)
   if not valid_flag or dd['sort_by'] == '-':
     return prev_value
@@ -1091,11 +1100,12 @@ def update_columns_options(all_stats_string, prev_options):
   Output('B_dropdown-columns', 'value'),
   [Input('B_dropdown-columns', 'options')],
   [State('B_dropdown-columns', 'value'),
-   State('B_url', 'pathname')]
+   State('B_url', 'pathname'),
+   State('B_row_dropdown-columns', 'n_clicks')]
   )
-def update_columns_value(options, prev_value, url):
+def update_columns_value(options, prev_value, url, n_clicks):
   value = prev_value
-  all_options = [s['label'] for s in options]
+  all_options = [s['value'] for s in options]
 
   for td in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
     if td in all_options:
@@ -1105,13 +1115,14 @@ def update_columns_value(options, prev_value, url):
       if td in value:
         value.remove(td)
 
-  valid_flag, dd = lib.parse_valid_url_path_batch(url)
-  if valid_flag:
-    value = []
-    alphabetical_options = sorted(all_options)
-    for idx, flag in enumerate(dd['chosen_columns']):
-      if flag == '1':
-        value.append(alphabetical_options[idx])
+  if n_clicks is None or n_clicks == 0:
+    valid_flag, dd = lib.parse_valid_url_path_batch(url)
+    if valid_flag:
+      value = []
+      alphabetical_options = sorted(all_options)
+      for idx, flag in enumerate(dd['chosen_columns']):
+        if flag == '1':
+          value.append(alphabetical_options[idx])
 
   return value
 
@@ -1540,4 +1551,6 @@ def download_csv_batch():
   ])
 def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir):
   adv_flag = bool('display' not in adv_style)
-  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir))
+  url = 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir))
+  print(url)
+  return url

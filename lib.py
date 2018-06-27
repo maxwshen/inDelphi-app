@@ -172,7 +172,7 @@ def encode_dna_to_url_path_batch(seq, pam, adv_flag, adv_seq_spec, adv_poi, adv_
   sort_by = transform_empty_value_to_dash(sort_by)
 
   binary_flags_chosen_cols = ''
-  for co in sorted([s['label'] for s in column_options]):
+  for co in sorted([s['value'] for s in column_options]):
     if co in chosen_columns:
       binary_flags_chosen_cols += '1'
     else:
