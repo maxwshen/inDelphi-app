@@ -626,8 +626,8 @@ def update_submit_button_time(n_clicks):
 
 @app.callback(
   Output('B_hidden-sort-module-interaction', 'children'),
-  [Input('B_sortdirection', 'value'),
-   Input('B_dropdown-sortcol', 'value')])
+  [Input('B_row_dropdown-columns', 'n_clicks'),
+   Input('B_row_dropdown-sortcol', 'n_clicks')])
 def update_sort_time(v1, v2):
   return '%s' % (time.time())
 
@@ -1197,11 +1197,25 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
   Output('B_table-stats', 'selected_row_indices'),
   [Input('B_hidden-clickData', 'children'),
    Input('B_hidden-cache-submit-button', 'children'),
-   Input('B_hidden-sort-module-interaction', 'children'),
+   Input('B_dropdown-columns', 'value'),
+   Input('B_dropdown-sortcol', 'value'),
    Input('B_table-stats', 'rows')],
   [State('B_table-stats', 'selected_row_indices'),
-   State('B_hidden-selected-id', 'children')])
-def update_statstable_selected(clickData, submit_time, sort_time, rows, selected_row_indices, prev_id):
+   State('B_hidden-sort-module-interaction', 'children'),
+   State('B_hidden-selected-id', 'children'),
+   State('B_url', 'pathname'),
+   State('B_postcomputation_settings', 'n_clicks'),
+   State('B_plot-stats-div', 'n_clicks'),
+   State('B_submit_button', 'n_clicks'),
+   ])
+def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, rows, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
+  if not bool(nc1 or nc2) and nc_submit == 1:
+    # On page load, select row from URL
+    valid_flag, dd = lib.parse_valid_url_path_batch(url)
+    if valid_flag:
+      if dd['row_select'] != '-':
+        return [int(dd['row_select'])]
+
   # Only allow selecting one point in plot-stats
   submit_time = float(submit_time)
   sort_time = float(sort_time)
@@ -1216,7 +1230,11 @@ def update_statstable_selected(clickData, submit_time, sort_time, rows, selected
   click_intxn = bool(click_time > max(sort_time, submit_time))
   sort_intxn = bool(sort_time > max(click_time, submit_time))
 
-  if sort_intxn:
+  print('Submit: %s' % (submit_intxn))
+  print('Click: %s' % (click_intxn))
+  print('Sort: %s' % (sort_intxn))
+
+  if sort_intxn and prev_id != '':
     # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
     selected_row_indices = []
     df = pd.DataFrame(rows)
@@ -1548,9 +1566,9 @@ def download_csv_batch():
    Input('B_dropdown-columns', 'options'),
    Input('B_dropdown-sortcol', 'value'),
    Input('B_sortdirection', 'value'),
+   Input('B_table-stats', 'selected_row_indices'),
   ])
-def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir):
+def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
   adv_flag = bool('display' not in adv_style)
-  url = 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir))
-  print(url)
+  url = 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
   return url
