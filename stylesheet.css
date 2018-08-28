@@ -352,9 +352,6 @@
   }
 
   /* Header navigation dynamic underlines */
-  $durationul: .2s;
-  $distanceul: 8px;
-  $easeOutBackul: cubic-bezier(0.175, 0.885, 0.320, 1.275);
 
   .dynamicunderline {
     position: relative;
