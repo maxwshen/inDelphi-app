@@ -189,7 +189,7 @@ layout = html.Div([
                       fontSize = 20,
                     ),
                   ),
-                  '\tDSB\t',
+                  '\tCutsite\t',
                   html.A('►',
                     id = 'S_button-dsb-right',
                     style = dict(
@@ -608,7 +608,7 @@ layout = html.Div([
     # id = 'S_plots_body',
     style = dict(
       # display = 'none',
-      transform = 'translateY(%spx)' % (160),
+      transform = 'translateY(%spx)' % (190),
     ),
   ),
   ##
@@ -940,7 +940,7 @@ def update_summary_alignment_barchart(pred_df_string, pred_stats_string):
       if cat == 'del':
         colors.append('rgb(221, 46, 31)')
       else:
-        colors.append('rgb(0, 160, 220)')
+        colors.append('rgb(0, 190, 220)')
 
   return dict(
     data = [go.Bar(
