@@ -17,7 +17,7 @@ import plotly
 
 import inDelphi
 import generalStats
-import lib
+import lib, header
 
 from indelphi_app import app
 

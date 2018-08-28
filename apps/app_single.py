@@ -16,7 +16,7 @@ import flask
 
 import inDelphi
 import generalStats
-import lib
+import lib, header
 
 from indelphi_app import app
 
@@ -91,12 +91,13 @@ layout = html.Div([
       ###################################################
       # Upper header
       ###################################################
-      html.H4(
-        'inDelphi',
-        style = dict(
-          textAlign = 'center',
-        ),
-      ),
+      # html.H4(
+      #   'inDelphi',
+      #   style = dict(
+      #     textAlign = 'center',
+      #   ),
+      # ),
+      header.navigation_header,
 
       ###################################################
       # Sequence boxes
