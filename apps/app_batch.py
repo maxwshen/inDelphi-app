@@ -91,12 +91,7 @@ layout = html.Div([
       ###################################################
       # Upper header
       ###################################################
-      html.H4(
-        'inDelphi batch mode dev',
-        style = dict(
-          textAlign = 'center',
-        ),
-      ),
+      header.get_navigation_header('batch'),
 
       ###################################################
       # Sequence box

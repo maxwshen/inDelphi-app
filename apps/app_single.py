@@ -97,7 +97,7 @@ layout = html.Div([
       #     textAlign = 'center',
       #   ),
       # ),
-      header.navigation_header,
+      header.get_navigation_header('single'),
 
       ###################################################
       # Sequence boxes

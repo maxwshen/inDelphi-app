@@ -2,13 +2,88 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
-navigation_header = html.Div(
-  [
-    html.H4(
-      'inDelphi-test',
-      style = dict(
-        textAlign = 'center',
+divider_text = '   •   '
+
+def get_navigation_header(page_nm):
+  font_size_param = 16
+
+  dot_style = dict(
+    color = 'gray',
+    fontSize = '%spx' % (font_size_param),
+  )
+
+  default_style = dict(
+    position = 'relative',
+    textDecoration = 'none',
+    textTransform = 'uppercase',
+    fontFamily = 'sans-serif',
+    color = 'black',
+    marginBottom = '2px',
+    fontSize = '%spx' % (font_size_param),
+  )
+
+  import copy
+  selected_style = copy.copy(default_style)
+  selected_style['borderBottom'] = '1px solid'
+
+  styles = dict()
+  for nm in ['single', 'batch', 'guide', 'about']:
+    if page_nm == nm:
+      styles[nm] = selected_style
+    else:
+      styles[nm] = default_style
+
+  return html.Div(
+    [
+      html.H4(
+        'inDelphi',
+        style = dict(
+          textAlign = 'center',
+        ),
       ),
-    ),
-  ],
-)
+
+      html.Div(
+        [
+          html.A(
+            'Single mode',
+            href = 'https://dev.crisprindelphi.design/single',
+            style = styles['single'],
+            className = 'dynamicunderline',
+          ),
+          html.Span(
+            divider_text,
+          ),
+          html.A(
+            'Batch mode',
+            href = 'https://dev.crisprindelphi.design/batch',
+            style = styles['batch'],
+            className = 'dynamicunderline',
+          ),
+          html.Span(
+            divider_text,
+          ),
+          html.A(
+            'User guide',
+            href = 'https://dev.crisprindelphi.design/usage',
+            style = styles['guide'],
+            className = 'dynamicunderline',
+          ),
+          html.Span(
+            divider_text,
+          ),
+          html.A(
+            'About',
+            href = 'https://dev.crisprindelphi.design/about',
+            style = styles['about'],
+            className = 'dynamicunderline',
+          ),
+        ],
+        style = dict(
+          marginBottom = 20,
+          textAlign = 'center',
+        ),
+        className = 'row',
+      ),
+
+    ],
+  )

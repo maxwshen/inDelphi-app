@@ -351,6 +351,45 @@
       to   { opacity: 1; }
   }
 
+  /* Header navigation dynamic underlines */
+  $durationul: .2s;
+  $distanceul: 8px;
+  $easeOutBackul: cubic-bezier(0.175, 0.885, 0.320, 1.275);
+
+  .dynamicunderline {
+    position: relative;
+  }
+  .dynamicunderline:before, .dynamicunderline:after {
+    content: "";
+    position: absolute;
+    /*vertical-align: middle;*/
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    width: inherit;
+    background-color: #F37272;
+  }
+  .dynamicunderline:before {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: transform 0s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s;
+  }
+  .dynamicunderline:after {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+  }
+  .dynamicunderline:hover:before, .dynamicunderline:hover:after, .dynamicunderline:focus:before, .dynamicunderline:focus:after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .dynamicunderline:hover:before, .dynamicunderline:focus:before {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+  }
+  .dynamicunderline:hover:after, .dynamicunderline:focus:after {
+    transition: transform 0s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s 0.2s;
+  }
 
 }
 
