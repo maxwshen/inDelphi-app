@@ -369,12 +369,24 @@
   }
   .dynamicunderline:before {
     opacity: 0;
+    -webkit-transform: translateY(-8px);
+    -moz-transform: translateY(-8px);
+    -o-transform: translateY(-8px);
     transform: translateY(-8px);
+    -webkit-transition: transform 0s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s;
+    -moz-transition: transform 0s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s;
+    -o-transition: transform 0s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s;
     transition: transform 0s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s;
   }
   .dynamicunderline:after {
     opacity: 0;
+    -webkit-transform: translateY(4px);
+    -moz-transform: translateY(4px);
+    -o-transform: translateY(4px);
     transform: translateY(4px);
+    -webkit-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+    -moz-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+    -o-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
   }
   .dynamicunderline:hover:before, .dynamicunderline:hover:after, .dynamicunderline:focus:before, .dynamicunderline:focus:after {
@@ -382,9 +394,15 @@
     transform: translateY(0);
   }
   .dynamicunderline:hover:before, .dynamicunderline:focus:before {
+    -webkit-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+    -moz-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+    -o-transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
   }
   .dynamicunderline:hover:after, .dynamicunderline:focus:after {
+    -webkit-transition: transform 0s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s 0.2s;
+    -moz-transition: transform 0s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s 0.2s;
+    -o-transition: transform 0s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s 0.2s;
     transition: transform 0s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0s 0.2s;
   }
 
