@@ -1046,7 +1046,7 @@ def text_genstats_precision(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/staticfiles/tooltip_logo',
+          src = '/assets/tooltip_logo.png',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1086,7 +1086,7 @@ def text_genstats_logphi(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/staticfiles/tooltip_logo',
+          src = '/assets/tooltip_logo.png',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1126,7 +1126,7 @@ def text_genstats_frameshift(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/staticfiles/tooltip_logo',
+          src = '/assets/tooltip_logo.png',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1419,11 +1419,6 @@ def download_summary_csv():
     attachment_filename = 'inDelphi_targetsite_summary.csv',
     as_attachment = True,
   )
-
-@app.server.route('/staticfiles/tooltip_logo')
-def serve_image():
-  # BE VERY CAREFUL NOT TO SERVE ARBITRARY FILES
-  return flask.send_from_directory(os.getcwd() + '/staticfiles/', 'noun_646495_cc.png')
 
 ##
 # Page link callback
