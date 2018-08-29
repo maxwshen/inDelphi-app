@@ -889,7 +889,6 @@ def update_summary_alignment_text(pred_df_string, pred_stats_string):
 
   return dict(
     data = [go.Table(
-      type = 'table',
       columnwidth = [310, 110, 60],
       header = dict(
         values = ['Alignment', 'Category', '%'],
@@ -1048,7 +1047,7 @@ def text_genstats_precision(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/assets/tooltip_logo.png',
+          src = '/staticfiles/tooltip_logo',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1088,7 +1087,7 @@ def text_genstats_logphi(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/assets/tooltip_logo.png',
+          src = '/staticfiles/tooltip_logo',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1128,7 +1127,7 @@ def text_genstats_frameshift(pred_df_string, pred_stats_string):
     html.Div(
       [
         html.Img(
-          src = '/assets/tooltip_logo.png',
+          src = '/staticfiles/tooltip_logo',
           className = 'tooltiplogo',
         ),
         html.Span(
@@ -1421,6 +1420,12 @@ def download_summary_csv():
     attachment_filename = 'inDelphi_targetsite_summary.csv',
     as_attachment = True,
   )
+
+@app.server.route('/staticfiles/tooltip_logo')
+def serve_image():
+  # BE VERY CAREFUL NOT TO SERVE ARBITRARY FILES
+  return flask.send_from_directory(os.getcwd() + '/staticfiles/', 'noun_646495_cc.png')
+
 
 ##
 # Page link callback

@@ -47,28 +47,28 @@ def display_page(pathname):
 ###################################################################
 ###################################################################
 # CSS
-# css_directory = os.getcwd()
-# @app.server.route('/static/<stylesheet>')
-# def serve_stylesheet(stylesheet):
-#   if stylesheet not in stylesheets:
-#     raise Exception(
-#       '"{}" is excluded from the allowed static files'.format(
-#         stylesheet
-#       )
-#     )
-#   return flask.send_from_directory(css_directory, stylesheet)
+css_directory = os.getcwd()
+@app.server.route('/static/<stylesheet>')
+def serve_stylesheet(stylesheet):
+  if stylesheet not in stylesheets:
+    raise Exception(
+      '"{}" is excluded from the allowed static files'.format(
+        stylesheet
+      )
+    )
+  return flask.send_from_directory(css_directory, stylesheet)
 
-# stylesheets = ['stylesheet.css']
-# for stylesheet in stylesheets:
-#   app.css.append_css({'external_url': '/static/{}'.format(stylesheet)})
-#
+stylesheets = ['stylesheet.css']
+for stylesheet in stylesheets:
+  app.css.append_css({'external_url': '/static/{}'.format(stylesheet)})
+
 # As of 0.22.0, served automatically from /assets/
 
-# # Favicon
-# @app.server.route('/static/favicon_CEL_icon.ico')
-# def favicon():
-#   return flask.send_from_directory(os.get_cwd() + '/staticfiles/', 'favicon_CEL_icon.ico', mimetype = 'image/vnd.microsoft.icon')
-#
+# Favicon
+@app.server.route('/static/favicon_CEL_icon.ico')
+def favicon():
+  return flask.send_from_directory(os.get_cwd() + '/staticfiles/', 'favicon_CEL_icon.ico', mimetype = 'image/vnd.microsoft.icon')
+
 # As of 0.22.0, served automatically from /assets/
 
 
