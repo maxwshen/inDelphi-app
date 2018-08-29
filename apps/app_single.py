@@ -22,8 +22,10 @@ from indelphi_app import app
 
 # init
 inDelphi.init_model()
-if not os.path.isdir('user-csvs/'):
+try:
   os.mkdir('user-csvs/')
+except FileExistsError:
+  pass
 else:
   subprocess.check_output('rm -rf user-csvs/*', shell = True)
 
