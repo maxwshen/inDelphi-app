@@ -1436,5 +1436,5 @@ def serve_image():
 def update_pagelink(text1, text2):
   seq = text1 + text2
   cutsite = len(text1)
-  return 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite))
+  return 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite))
 

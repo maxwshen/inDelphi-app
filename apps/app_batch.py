@@ -945,7 +945,7 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart,
         
         # Detailed link
         sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
-        dd['URL'].append('https://dev.crisprindelphi.design%s' % (sm_link))
+        dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
 
         # Handle advanced options
         if adv_matchseq_flag:
@@ -1565,5 +1565,5 @@ def download_csv_batch():
   ])
 def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
   adv_flag = bool('display' not in adv_style)
-  url = 'https://dev.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
+  url = 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
   return url
