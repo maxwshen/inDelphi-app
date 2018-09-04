@@ -65,7 +65,7 @@ for stylesheet in stylesheets:
 # As of 0.22.0, served automatically from /assets/
 
 # Favicon
-@app.server.route('/static/favicon_CEL_icon.ico')
+@app.server.route('/favicon.ico')
 def favicon():
   return flask.send_from_directory(os.get_cwd() + '/staticfiles/', 'favicon_CEL_icon.ico', mimetype = 'image/vnd.microsoft.icon')
 
