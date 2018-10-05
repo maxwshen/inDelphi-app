@@ -12,7 +12,7 @@ nn2_params = None
 normalizer = None
 rate_model = None
 bp_model = None
-
+CELLTYPE = None
 
 ##
 # Private NN methods
@@ -224,13 +224,22 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   negfourbase = seq[cutsite - 1]
   negthreebase = seq[cutsite]
 
-  for ins_base in bp_model[negfivebase][negfourbase][negthreebase]:
-    freq = bp_model[negfivebase][negfourbase][negthreebase][ins_base]
-    freq *= rate_1bpins / (1 - rate_1bpins)
-    pred_1bpins_d['Category'].append('ins')
-    pred_1bpins_d['Length'].append(1)
-    pred_1bpins_d['Inserted Bases'].append(ins_base)
-    pred_1bpins_d['Predicted frequency'].append(freq)
+  if CELLTYPE in ['mESC', 'U2OS']:
+    for ins_base in bp_model[negfivebase][negfourbase][negthreebase]:
+      freq = bp_model[negfivebase][negfourbase][negthreebase][ins_base]
+      freq *= rate_1bpins / (1 - rate_1bpins)
+      pred_1bpins_d['Category'].append('ins')
+      pred_1bpins_d['Length'].append(1)
+      pred_1bpins_d['Inserted Bases'].append(ins_base)
+      pred_1bpins_d['Predicted frequency'].append(freq)
+  elif CELLTYPE in ['K562', 'HEK293', 'HCT116']:
+    for ins_base in bp_model[negfivebase]:
+      freq = bp_model[negfivebase][ins_base]
+      freq *= rate_1bpins / (1 - rate_1bpins)
+      pred_1bpins_d['Category'].append('ins')
+      pred_1bpins_d['Length'].append(1)
+      pred_1bpins_d['Inserted Bases'].append(ins_base)
+      pred_1bpins_d['Predicted frequency'].append(freq)
 
   pred_1bpins_df = pd.DataFrame(pred_1bpins_d)
   pred_df = pred_del_df.append(pred_1bpins_df, ignore_index = True)
@@ -444,37 +453,37 @@ def add_name_column(pred_df, stats):
 ##
 # Init
 ##
-def init_model(run_iter = 'abf', 
+def init_model(run_iter = 'aax', 
                param_iter = 'aag', 
-               ins_version = 'aau'):
+               celltype = 'mESC'):
   global init_flag
   if init_flag != False:
     return
 
-  print('Initializing model %s/%s, %s...' % (run_iter, param_iter, ins_version))
+  print('Initializing model %s/%s, %s...' % (run_iter, param_iter, celltype))
 
   model_dir = os.path.dirname(os.path.realpath(__file__))
   model_dir += '/model'
-  # model_dir = '%s' % (model_dir.replace(' ', '\\ ').replace('(', '\\(').replace(')', '\\)'))
-  del_prefix = '%s/%s_%s' % (model_dir, run_iter, param_iter)
-  ins_prefix = '%s/%s_%s_%s' % (model_dir, run_iter, param_iter, ins_version)
+
+  global CELLTYPE
+  CELLTYPE = celltype
 
   global nn_params
   global nn2_params
-  with open('%s_nn.pkl' % (del_prefix), 'rb') as f:
+  with open('%s/%s_%s_nn.pkl' % (model_dir, run_iter, param_iter), 'rb') as f:
     # load in python3.6 a pickle that was dumped from python2.7
     nn_params = pickle.load(f, encoding = 'latin1')
-  with open('%s_nn2.pkl' % (del_prefix), 'rb') as f:
+  with open('%s/%s_%s_nn2.pkl' % (model_dir, run_iter, param_iter), 'rb') as f:
     nn2_params = pickle.load(f, encoding = 'latin1')
 
   global normalizer
   global rate_model
   global bp_model
-  with open('%s_bp_model.pkl' % (ins_prefix), 'rb') as f:
+  with open('%s/bp_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
     bp_model = pickle.load(f, encoding = 'latin1')
-  with open('%s_rate_model.pkl' % (ins_prefix), 'rb') as f:
+  with open('%s/rate_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
     rate_model = pickle.load(f, encoding = 'latin1')
-  with open('%s_normalizer.pkl' % (ins_prefix), 'rb') as f:
+  with open('%s/Normalizer_%s.pkl' % (model_dir, celltype), 'rb') as f:
     normalizer = pickle.load(f, encoding = 'latin1')
 
   init_flag = True
