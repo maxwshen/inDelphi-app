@@ -15,9 +15,9 @@ class GenomeStatistic:
   maxY = None
   xlabel = None
 
-  def __init__(self, stat_nm, xlabel = 'stat_nm'):
+  def __init__(self, celltype, stat_nm, xlabel = 'stat_nm'):
     # Import statistics from file
-    with open('%s/%s.pkl' % (stats_dir, stat_nm), 'rb') as f:
+    with open('%s/%s_%s.pkl' % (stats_dir, celltype, stat_nm), 'rb') as f:
       ans = pickle.load(f, encoding = 'latin1')
     BarBins, Ns, step = ans
 
@@ -156,20 +156,41 @@ def get_tooltip_frameshift(var_text):
 ##
 # Init
 ##
-gs_precision = GenomeStatistic('Precision', xlabel = 'Precision score')
-gs_logphi = GenomeStatistic('logphi', xlabel = 'Log phi (Microhomology strength)')
+celltypes = [
+  'mESC',
+  'U2OS',
+  'HEK293',
+  'HCT116',
+  'K562',
+]
 
-gs_onebpfq = GenomeStatistic('1-bp ins frequency', xlabel = '1-bp insertion frequency')
-gs_mhfq = GenomeStatistic('MH del frequency', xlabel = 'Microhomology deletion frequency')
-gs_mhlessfq= GenomeStatistic('MHless del frequency', xlabel = 'Microhomology-less deletion frequency')
+stats = {
+  'Precision': 'Precision score',
+  'Phi': 'Microhomology strength score',
+  'Frameshift frequency': 'Frameshift frequency',
+}
 
-gs_frameshift = GenomeStatistic('Frameshift frequency')
-gs_frame0 = GenomeStatistic('Frame +0 frequency')
-gs_frame1 = GenomeStatistic('Frame +1 frequency')
-gs_frame2 = GenomeStatistic('Frame +2 frequency')
+GSD = dict()
+for celltype in celltypes:
+  for stat in stats:
+    xlabel = stats[stat]
+    gs = GenomeStatistic(celltype, stat, xlabel = xlabel)
+    GSD[(celltype, stat)] = gs
 
-gs_highest = GenomeStatistic('Highest outcome frequency')
-gs_highestdel = GenomeStatistic('Highest del frequency', xlabel = 'Highest deletion frequency')
-gs_highestins = GenomeStatistic('Highest ins frequency', xlabel = 'Highest insertion frequency')
+# gs_mESC_precision = GenomeStatistic('Precision', xlabel = 'Precision score')
+# gs_mESC_logphi = GenomeStatistic('Phi', xlabel = 'Log phi (Microhomology strength)')
+# gs_mESC_frameshift = GenomeStatistic('Frameshift frequency')
 
-gs_expectedindellength = GenomeStatistic('Expected indel length')
+# gs_onebpfq = GenomeStatistic('1-bp ins frequency', xlabel = '1-bp insertion frequency')
+# gs_mhfq = GenomeStatistic('MH del frequency', xlabel = 'Microhomology deletion frequency')
+# gs_mhlessfq= GenomeStatistic('MHless del frequency', xlabel = 'Microhomology-less deletion frequency')
+
+# gs_frame0 = GenomeStatistic('Frame +0 frequency')
+# gs_frame1 = GenomeStatistic('Frame +1 frequency')
+# gs_frame2 = GenomeStatistic('Frame +2 frequency')
+
+# gs_highest = GenomeStatistic('Highest outcome frequency')
+# gs_highestdel = GenomeStatistic('Highest del frequency', xlabel = 'Highest deletion frequency')
+# gs_highestins = GenomeStatistic('Highest ins frequency', xlabel = 'Highest insertion frequency')
+
+# gs_expectedindellength = GenomeStatistic('Expected indel length')

@@ -93,12 +93,6 @@ layout = html.Div([
       ###################################################
       # Upper header
       ###################################################
-      # html.H4(
-      #   'inDelphi',
-      #   style = dict(
-      #     textAlign = 'center',
-      #   ),
-      # ),
       header.get_navigation_header('single'),
 
       ###################################################
@@ -171,7 +165,22 @@ layout = html.Div([
           html.Div(
             [
               # (Left) placeholder
-              html.Div('',
+              html.Div([
+                # dcc.Dropdown(
+                #   id = 'S_celltype_dropdown',
+                #   options = [
+                #     {'label': 'mESC', 'value': 'mESC'},
+                #     {'label': 'U2OS', 'value': 'U2OS'},
+                #     {'label': 'HEK293', 'value': 'HEK293'},
+                #     {'label': 'HCT116', 'value': 'HCT116'},
+                #     {'label': 'K562', 'value': 'K562'},
+                #   ],
+                #   value = 'mESC',
+                #   searchable = False,
+                #   clearable = False,
+                # ),
+                'Cell type: mESC / K562 / HEK293 / HCT116 / U2OS'
+                ],
                 style = dict(
                   display = 'table-cell',
                   width = '25%',
@@ -191,7 +200,7 @@ layout = html.Div([
                       fontSize = 20,
                     ),
                   ),
-                  '\tCutsite\t',
+                  '\tCas9 cleavage site\t',
                   html.A('►',
                     id = 'S_button-dsb-right',
                     style = dict(
@@ -408,7 +417,7 @@ layout = html.Div([
           # header
           html.Div([
             html.Div([
-              html.Strong('Comparison to predictions at {:,} SpCas9 target sites in human exons and introns'.format(int(sum(generalStats.gs_logphi.unnormY))))
+              html.Strong('Comparison to predictions at {:,} SpCas9 target sites in human exons and introns'.format(int(sum(generalStats.GSD[('mESC', 'Phi')].unnormY))))
               ],
               className = 'module_header_text'),
             ],
@@ -986,9 +995,9 @@ def plot_genstats_precision(pred_df_string, pred_stats_string):
   xval = stats['Precision'].iloc[0]
   return dict(
     data = [
-      generalStats.gs_precision.trace(xval),
+      generalStats.GSD[('mESC', 'Precision')].trace(xval),
     ],
-    layout = generalStats.gs_precision.layout(xval),
+    layout = generalStats.GSD[('mESC', 'Precision')].layout(xval),
   )
 
 @app.callback(
@@ -1002,9 +1011,9 @@ def plot_genstats_logphi(pred_df_string, pred_stats_string):
   xval = np.log(stats['Phi'].iloc[0])
   return dict(
     data = [
-      generalStats.gs_logphi.trace(xval),
+      generalStats.GSD[('mESC', 'Phi')].trace(xval),
     ],
-    layout = generalStats.gs_logphi.layout(xval),
+    layout = generalStats.GSD[('mESC', 'Phi')].layout(xval),
   )
 
 @app.callback(
@@ -1018,9 +1027,9 @@ def plot_genstats_frameshift(pred_df_string, pred_stats_string):
   xval = stats['Frameshift frequency'].iloc[0]
   return dict(
     data = [
-      generalStats.gs_frameshift.trace(xval),
+      generalStats.GSD[('mESC', 'Frameshift frequency')].trace(xval),
     ],
-    layout = generalStats.gs_frameshift.layout(xval),
+    layout = generalStats.GSD[('mESC', 'Frameshift frequency')].layout(xval),
   )
 
 
@@ -1034,7 +1043,7 @@ def text_genstats_precision(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
-  cum, var_text, var_color = generalStats.gs_precision.cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[('mESC', 'Precision')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_precision(var_text)
   return [
     html.Strong('This target site has '),
@@ -1074,7 +1083,7 @@ def text_genstats_logphi(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
-  cum, var_text, var_color = generalStats.gs_logphi.cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[('mESC', 'Phi')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_phi(var_text)
   return [
     html.Strong('This target site has '),
@@ -1114,7 +1123,7 @@ def text_genstats_frameshift(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
-  cum, var_text, var_color = generalStats.gs_frameshift.cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[('mESC', 'Frameshift frequency')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_frameshift(var_text)
   return [
     html.Strong('This target site has '),
