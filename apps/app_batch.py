@@ -1292,7 +1292,7 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
 
   # Reformat floats
   stats_cols = list(stats.columns)
-  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'URL']
+  nonstat_cols = ['ID', 'gRNA', 'gRNA orientation', 'PAM', 'URL', 'Celltype']
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
   for stat_col in stats_cols:
@@ -1640,7 +1640,7 @@ def update_hist_plot(rows, selected_row_indices):
 def update_link(rows):
   df = pd.DataFrame(rows)
   stats_cols = list(df.columns)
-  nonstat_cols = ['gRNA', 'gRNA orientation', 'PAM', 'URL', 'ID']
+  nonstat_cols = ['gRNA', 'gRNA orientation', 'PAM', 'URL', 'ID', 'Celltype']
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
   df = df[nonstat_cols + lib.order_chosen_columns(stats_cols)]

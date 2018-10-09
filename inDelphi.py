@@ -245,7 +245,7 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score, celltype):
   pred_df['Predicted frequency'] /= sum(pred_df['Predicted frequency'])
   return pred_df
 
-def __build_stats(seq, cutsite, pred_df, total_phi_score):
+def __build_stats(seq, cutsite, pred_df, total_phi_score, celltype):
   # Precision stats
   overall_precision = 1 - entropy(pred_df['Predicted frequency']) / np.log(len(pred_df))
   highest_fq = max(pred_df['Predicted frequency'])
@@ -297,6 +297,7 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score):
            'Cutsite': cutsite,
            'gRNA': seq[cutsite - 18 : cutsite + 3],
            'gRNA orientation': '+',
+           'Celltype': celltype,
           }
   return stats
 
@@ -328,7 +329,7 @@ def predict(seq, cutsite, celltype):
   pred_df['Predicted frequency'] *= 100
 
   # Build stats
-  stats = __build_stats(seq, cutsite, pred_df, total_phi_score)
+  stats = __build_stats(seq, cutsite, pred_df, total_phi_score, celltype)
   
   return pred_df, stats
 
