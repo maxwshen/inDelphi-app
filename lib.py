@@ -293,7 +293,7 @@ def get_color(stats_col):
     return '#F47B16'
   if stats_col == 'M.F. gt (%)':
     return '#7CB82F'
-  if stats_col == 'Log phi':
+  if stats_col == 'MH strength':
     return '#EC4339'
   if stats_col == 'Precision':
     return '#00AEB3'
@@ -309,7 +309,7 @@ def get_batch_statcol_xrange(stats, stat_nm):
     buff = 3
   elif stat_nm == 'Exp. indel len':
     buff = 1
-  elif stat_nm == 'Log phi':
+  elif stat_nm == 'MH strength':
     buff = 0.1
   elif stat_nm == 'Precision':
     buff = 0.05 
@@ -372,7 +372,7 @@ def order_chosen_columns(cols):
     'Frame +0 (%)',
     'Frame +1 (%)',
     'Frame +2 (%)',
-    'Log phi',
+    'MH strength',
     'M.F. gt (%)',
     'M.F. del (%)',
     'M.F. ins (%)',

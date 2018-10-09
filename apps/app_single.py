@@ -1252,7 +1252,7 @@ def text_genstats_logphi(pred_df_string, pred_stats_string, celltype):
       className = 'tooltip',
     ),
     html.Br(),
-    html.Span('Log phi: %.2f' % (xval),
+    html.Span('Microhomology strength score: %.2f' % (xval),
       className = 'generalstats_subtext_style'),
     html.Br(),
     html.Span('Percentile: %s' % (cum),

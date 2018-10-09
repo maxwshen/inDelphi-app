@@ -551,7 +551,7 @@ layout = html.Div([
                     {'label': 'Frame +0 (%)', 'value': 'Frame +0 (%)'},
                     {'label': 'Frame +1 (%)', 'value': 'Frame +1 (%)'},
                     {'label': 'Frame +2 (%)', 'value': 'Frame +2 (%)'},
-                    {'label': 'Log phi (microhomology strength)', 'value': 'Log phi'},
+                    {'label': 'Microhomology strength', 'value': 'MH strength'},
                     {'label': 'Most frequent genotype (%)', 'value': 'M.F. gt (%)'},
                     {'label': 'Most frequent deletion (%)', 'value': 'M.F. del (%)'},
                     {'label': 'Most frequent insertion (%)', 'value': 'M.F. ins (%)'},
@@ -560,7 +560,7 @@ layout = html.Div([
                   multi = True,
                   searchable = False,
                   clearable = False,
-                  value = ['Cutsite', 'Precision', 'Frameshift (%)', 'Log phi', 'M.F. gt (%)'],
+                  value = ['Cutsite', 'Precision', 'Frameshift (%)', 'MH strength', 'M.F. gt (%)'],
                   className = 'nine columns',
                 ),
               ],
@@ -1104,7 +1104,7 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
     all_stats[col] = dd[col]
 
   # Switch phi to log phi
-  all_stats['Log phi'] = np.log(all_stats['Phi'])  
+  all_stats['MH strength'] = np.log(all_stats['Phi'])  
   all_stats = all_stats.drop(['Phi'], axis = 1)
 
   # Sort by cutsite and relabel indices
@@ -1301,7 +1301,7 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
       stats.drop(stat_col, axis = 1, inplace = True)
       continue
     # Reformat
-    if stat_col in ['Precision', 'Log phi']:
+    if stat_col in ['Precision', 'MH strength']:
       stats[stat_col] = [float('%.2f' % (s)) for s in stats[stat_col]]    
     else:
       stats[stat_col] = [float('%.1f' % (s)) for s in stats[stat_col]]    
