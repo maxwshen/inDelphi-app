@@ -133,7 +133,7 @@ layout = html.Div([
               id = 'S_textbox2', 
               size = 28,
               # value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
-              value = ''.join([random.choice(list('ACGT')) for s in range(60)]),
+              value = ''.join([random.choice(list('ACGT')) for s in range(4)]) + 'GG' + ''.join([random.choice(list('ACGT')) for s in range(54)]),
               type = 'text',
               style = dict(
                 textAlign = 'left',
@@ -1309,17 +1309,17 @@ def text_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
 def plot_indel_len(pred_df_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
 
-  lendf = inDelphi.get_indel_length_fqs(pred_df)
-
-  X, Y = [], []
-  for idx, row in lendf.iterrows():
-    idl = int(row['Indel length'])
-    if idl >= -35:
-      X.append(idl)
-      Y.append(row['Predicted frequency'])
-
-  return dict(
-    data = [
+  if False:
+    lendf = inDelphi.get_indel_length_fqs(pred_df)
+    X, Y = [], []
+    for idx, row in lendf.iterrows():
+      idl = int(row['Indel length'])
+      if idl >= -35:
+        X.append(idl)
+        Y.append(row['Predicted frequency'])
+    
+    barmode_flag = None
+    fig_data = [
       go.Bar(
         x = X,
         y = Y,
@@ -1332,8 +1332,58 @@ def plot_indel_len(pred_df_string):
           ),
         ),
       )
-    ],
+    ]
+  elif True:
+    bdf = inDelphi.get_indel_length_breakdown(pred_df)
+    X, Y = defaultdict(list), defaultdict(list)
+    for indel_len in ['+1'] + [str(s) for s in range(-1, -35 - 1, -1)]:
+      idl = str(indel_len)
+      for detail in ['A', 'C', 'G', 'T', 'MH-less', 'Microhomology']:
+        crit = (bdf['Detail'] == detail) & (bdf['Indel length'] == idl)
+        ss = bdf[crit]
+        if len(ss) == 0:
+          yval = 0
+        else:
+          yval = sum(bdf[crit]['Predicted frequency'])
+        if 'M' not in detail and indel_len != '+1':
+          continue
+        if 'M' in detail and indel_len == '+1':
+          continue
+        X[detail].append(indel_len)
+        Y[detail].append(yval)
+
+    colors = {
+      'A': '#7CB82F',
+      'C': '#00AEB3',
+      'G': '#68C7EC',
+      'T': '#00A0DC',
+      'Microhomology': 'rgb(221, 46, 31)',
+      'MH-less': 'rgb(236, 100, 12)',
+    }
+
+    traces = []
+    for detail in ['A', 'C', 'G', 'T', 'MH-less', 'Microhomology']:
+      trace = go.Bar(
+        x = X[detail],
+        y = Y[detail],
+        name = detail,
+        opacity = 0.6,
+        width = 0.9,
+        marker = dict(
+          color = colors[detail],
+          line = dict(width = 0),
+        ),
+      )
+      traces.append(trace)
+    
+    barmode_flag = 'stack'
+    fig_data = traces
+
+  return dict(
+    data = fig_data,
     layout = go.Layout(
+      barmode = barmode_flag,
+      showlegend = False,
       xaxis = dict(
         autorange = 'reversed',
         title = 'Indel length',

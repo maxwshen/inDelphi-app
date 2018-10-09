@@ -381,6 +381,35 @@ def get_indel_length_fqs(pred_df):
   df = pd.DataFrame(d)
   return df  
 
+def get_indel_length_breakdown(pred_df):
+  # Returns a dataframe
+  #   - Indel length
+  #   - Predicted frequency
+  d = defaultdict(list)
+
+  for ins_base in list('ACGT'):
+    crit = (pred_df['Category'] == 'ins') & (pred_df['Inserted Bases'] == ins_base)
+    ins1_fq = sum(pred_df[crit]['Predicted frequency'])
+    d['Indel length'].append('+1')
+    d['Predicted frequency'].append(ins1_fq)
+    d['Detail'].append(ins_base)
+
+  for del_len in set(pred_df['Length']):
+    crit = (pred_df['Category'] == 'del') & (pred_df['Length'] == del_len) & (pred_df['Genotype position'] == 'e')
+    fq = sum(pred_df[crit]['Predicted frequency'])
+    d['Indel length'].append('-%s' % (del_len))
+    d['Predicted frequency'].append(fq)
+    d['Detail'].append('MH-less')
+
+    crit = (pred_df['Category'] == 'del') & (pred_df['Length'] == del_len) & (pred_df['Genotype position'] != 'e')
+    fq = sum(pred_df[crit]['Predicted frequency'])
+    d['Indel length'].append('-%s' % (del_len))
+    d['Predicted frequency'].append(fq)
+    d['Detail'].append('Microhomology')
+
+  df = pd.DataFrame(d)
+  return df  
+
 def get_highest_frequency_indel(pred_df):
   # Returns a row of pred_df
   highest_fq = max(pred_df['Predicted frequency'])
