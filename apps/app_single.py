@@ -1311,8 +1311,13 @@ def plot_indel_len(pred_df_string):
 
   lendf = inDelphi.get_indel_length_fqs(pred_df)
 
-  X = [int(s) for s in lendf['Indel length']]
-  Y = [s for s in lendf['Predicted frequency']]
+  X, Y = [], []
+  for idx, row in lendf.iterrows():
+    idl = int(row['Indel length'])
+    if idl >= -35:
+      X.append(idl)
+      Y.append(row['Predicted frequency'])
+
   return dict(
     data = [
       go.Bar(
@@ -1335,8 +1340,8 @@ def plot_indel_len(pred_df_string):
         ticks = 'outside',
         ticklen = 3,
         tickwidth = 0.5,
-        tick0 = 0,
-        dtick = 5,
+        tick0 = 1,
+        dtick = 2,
         zeroline = False,
         fixedrange = True,
       ),

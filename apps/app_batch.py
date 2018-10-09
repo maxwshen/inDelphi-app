@@ -101,7 +101,7 @@ layout = html.Div([
           id = 'B_textarea', 
           value = 'GCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTT',
           minLength = 70,  
-          maxLength = 2000,  
+          maxLength = 1000,  
           style = dict(
             fontFamily = 'monospace',
             fontSize = 16,
@@ -123,42 +123,153 @@ layout = html.Div([
       ###################################################
       html.Div(
         [
-          html.Span(
-            'Cas9 PAM: '
-          ),
-          dcc.Input(
-            id = 'B_textbox_pam', 
-            size = 5,
-            value = 'NGG',
-            type = 'text',
-            minlength = 2,
-            maxlength = 6,
-            autofocus = True,
-            style = dict(
-              fontFamily = 'monospace',
-              fontSize = 14,
-              height = '20px',
-              width = '70px',
-              verticalAlign = 'text-bottom',
-            ),
-          ),
-          html.Strong(' ' * 3),
           html.Div(
             [
-              html.Img(
-                src = '/staticfiles/tooltip_logo',
-                className = 'tooltiplogo',
+              html.Div(
+                [
+                  html.Span('Cas9 PAM: '),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '50%',
+                  transform = 'translateX(-10px)',
+                ),
               ),
-              html.Span(
-                'Cutsite assumed 3nt upstream of PAM match. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
-                className = 'tooltiptext'
+              html.Div(
+                [
+                  dcc.Input(
+                    id = 'B_textbox_pam', 
+                    size = 5,
+                    value = 'NGG',
+                    type = 'text',
+                    minlength = 2,
+                    maxlength = 6,
+                    autofocus = True,
+                    style = dict(
+                      fontSize = 15,
+                      height = '36px',
+                      width = '100%',
+                    ),
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  width = '10%',
+                ),
               ),
-            ], 
-            className = 'tooltip',
+              html.Div(
+                [
+                  html.Div(
+                    [
+                      html.Img(
+                        src = '/staticfiles/tooltip_logo',
+                        className = 'tooltiprightlogo',
+                      ),
+                      html.Span(
+                        'Cutsite assumed 3nt upstream of PAM match. Supports IUPAC DNA encoding, ex: NNNRRT, NGG.',
+                        className = 'tooltiprighttext',
+                        style = dict(width = '200px',)
+                      ),
+                    ], 
+                    className = 'tooltipright',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'left',
+                  width = '40%',
+                  transform = 'translateX(10px)',
+                ),
+              ),
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
           ),
         ],
         style = dict(
-          textAlign = 'center',
+          display = 'table',
+          width = '100%',
+          marginBottom = '7px',
+        ),
+      ),
+
+      ###################################################
+      # Cell type
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # Left
+              html.Div(
+                [
+                  html.Span('Cell type: '),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '50%',
+                  transform = 'translateX(-10px)',
+                ),
+              ),
+              # Middle
+              html.Div(
+                [
+                  dcc.Dropdown(
+                    options = [
+                      {'label': 'HCT116', 'value': 'HCT116'},
+                      {'label': 'HEK293', 'value': 'HEK293'},
+                      {'label': 'K562', 'value': 'K562'},
+                      {'label': 'mESC', 'value': 'mESC'},
+                      {'label': 'U2OS', 'value': 'U2OS'},
+                    ],
+                    id = 'B_celltype_dropdown',
+                    searchable = False,
+                    clearable = False,
+                    value = 'mESC',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  width = '10%',
+                ),
+              ),
+              # Right
+              html.Div(
+                [
+                  html.Div(
+                    [
+                      html.Img(
+                        src = '/staticfiles/tooltip_logo',
+                        className = 'tooltiprightlogo',
+                      ),
+                      html.Span(
+                        'The relative frequency of 1-bp insertions to deletions varies by cell type. If your cell type of interest is not listed here, we recommend using mESC if your cell type has no expected defects in DNA repair.',
+                        className = 'tooltiprighttext',
+                        style = dict(width = '200px',)
+                      ),
+                    ], 
+                    className = 'tooltipright',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'left',
+                  width = '40%',
+                  transform = 'translateX(10px)',
+                ),
+              ),
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
+          ),
+        ],
+        style = dict(
+          display = 'table',
+          width = '100%',
           marginBottom = 10,
         ),
       ),
@@ -656,6 +767,16 @@ def update_pam_from_url(url, default_value):
   return default_value
 
 @app.callback(
+  Output('B_celltype_dropdown', 'value'),
+  [Input('B_url', 'pathname')],
+  [State('B_celltype_dropdown', 'value')])
+def update_pam_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_batch(url)
+  if valid_flag:
+    return dd['celltype']
+  return default_value
+
+@app.callback(
   Output('B_adv_matchseq', 'value'),
   [Input('B_url', 'pathname')],
   [State('B_adv_matchseq', 'value')])
@@ -880,12 +1001,13 @@ def update_submit_button_style(est_runtime_text, style):
   [Input('B_submit_button', 'n_clicks')],
   [State('B_textarea', 'value'),
    State('B_textbox_pam', 'value'),
+   State('B_celltype_dropdown', 'value'),
    State('B_adv_matchseq', 'value'),
    State('B_adv_position_of_interest', 'value'),
    State('B_adv_delstart', 'value'),
    State('B_adv_delend', 'value'),
   ])
-def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart, adv_delend):
+def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend):
   # When submit button clicked, find all gRNAs matching PAM in sequence.
   # Advanced options:
   #   if matchseq is provided, include a column on
@@ -940,11 +1062,11 @@ def update_pred_df_stats(nclicks, seq, pam, adv_matchseq, adv_poi, adv_delstart,
         dd['Cutsite'].append(cutsite_plus)
 
         # inDelphi predictions and standard statistics
-        pred_df, stats = inDelphi.predict(local_seq, local_cutsite)
+        pred_df, stats = inDelphi.predict(local_seq, local_cutsite, celltype)
         all_stats = all_stats.append(stats, ignore_index = True)
         
         # Detailed link
-        sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite)
+        sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite, celltype)
         dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
 
         # Handle advanced options
@@ -1552,6 +1674,7 @@ def download_csv_batch():
   Output('B_page-link', 'href'),
   [Input('B_textarea', 'value'),
    Input('B_textbox_pam', 'value'),
+   Input('B_celltype_dropdown', 'value'),
    Input('B_advanced_options_body', 'style'),
    Input('B_adv_matchseq', 'value'),
    Input('B_adv_position_of_interest', 'value'),
@@ -1563,7 +1686,7 @@ def download_csv_batch():
    Input('B_sortdirection', 'value'),
    Input('B_table-stats', 'selected_row_indices'),
   ])
-def update_pagelink(textarea, pam, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
+def update_pagelink(textarea, pam, celltype, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
   adv_flag = bool('display' not in adv_style)
-  url = 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
+  url = 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, celltype, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
   return url

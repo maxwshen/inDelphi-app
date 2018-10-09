@@ -126,7 +126,7 @@ def parse_valid_url_path_batch(url_path):
     return False, dd
 
   parts = url_path.split('_')
-  cats = ['coded', 'leftover', 'pam', 'adv_flag', 'coded_spec', 'leftover_spec', 'adv_poi', 'adv_delstart', 'adv_delend', 'chosen_columns', 'sort_by', 'sort_dir', 'row_select']
+  cats = ['celltype', 'coded', 'leftover', 'pam', 'adv_flag', 'coded_spec', 'leftover_spec', 'adv_poi', 'adv_delstart', 'adv_delend', 'chosen_columns', 'sort_by', 'sort_dir', 'row_select']
   if len(parts) != len(cats):
     return False, dd
   for idx, cat in enumerate(cats):
@@ -148,7 +148,7 @@ def parse_valid_url_path_batch(url_path):
 
   return True, dd
 
-def encode_dna_to_url_path_batch(seq, pam, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
+def encode_dna_to_url_path_batch(seq, pam, celltype, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
   seq, pam = seq.upper(), pam.upper()
   edna, ldna = encode_dna(seq)
   edna2, ldna2 = encode_dna(adv_seq_spec)
@@ -184,6 +184,7 @@ def encode_dna_to_url_path_batch(seq, pam, adv_flag, adv_seq_spec, adv_poi, adv_
     selected_row_val = selected_row[0]
 
   items = [
+    celltype,
     edna, 
     ldna, 
     pam, 

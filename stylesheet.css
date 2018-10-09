@@ -242,6 +242,43 @@
   }
 
   /**/
+  /* Tool tip: right side */
+  /**/
+  .tooltipright {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltipright .tooltiprighttext {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s;
+    position: absolute;
+    z-index: 1;
+
+    left: 130%;
+    padding: 8px 8px;
+    border-radius: 6px;
+
+    background-color: #555;
+    color: #eee;
+
+    font-size: small;
+    line-height: 1.2;
+  }
+
+  /* Show the tooltip text when you mouse over the tooltip container */
+  .tooltipright:hover .tooltiprighttext {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .tooltiprightlogo {
+    height: 18px;
+    vertical-align: text-bottom;
+  }
+
+  /**/
   /* Fade-in animation: fade in from top */
   /**/
   .animate-top {
