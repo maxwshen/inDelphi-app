@@ -102,7 +102,7 @@ def parse_valid_url_path_single(url_path):
     dd[cat] = parts[idx]
 
   seq = parse_coded_seq_leftover(dd, 'coded', 'leftover')
-  return True, celltype, seq, int(dd['cutsite'])
+  return True, dd['celltype'], seq, int(dd['cutsite'])
 
 def encode_dna_to_url_path_single(seq, cutsite, celltype):
   seq = seq.upper()
