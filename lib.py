@@ -85,29 +85,29 @@ def encode_dna(seq):
 
 def parse_valid_url_path_single(url_path):
   ## Expected format:
-  # [encodedDNA]_[leftoverDNA]_[cutsite]
+  # [celltype]_[encodedDNA]_[leftoverDNA]_[cutsite]
   if url_path[:len('/single_')] != '/single_':
-    return False, None, None
+    return False, None, None, None
 
   url_path = url_path.replace('/single_', '')
   if len(url_path) == 0 or '_' not in url_path:
-    return False, None, None
+    return False, None, None, None
 
   parts = url_path.split('_')
-  cats = ['coded', 'leftover', 'cutsite']
+  cats = ['celltype', 'coded', 'leftover', 'cutsite']
   if len(parts) != len(cats):
-    return False, None, None
+    return False, None, None, None
   dd = dict()
   for idx, cat in enumerate(cats):
     dd[cat] = parts[idx]
 
   seq = parse_coded_seq_leftover(dd, 'coded', 'leftover')
-  return True, seq, int(dd['cutsite'])
+  return True, celltype, seq, int(dd['cutsite'])
 
-def encode_dna_to_url_path_single(seq, cutsite):
+def encode_dna_to_url_path_single(seq, cutsite, celltype):
   seq = seq.upper()
   encodeddna, leftoverdna = encode_dna(seq)
-  return '/single_%s_%s_%s' % (encodeddna, leftoverdna, cutsite)
+  return '/single_%s_%s_%s_%s' % (celltype, encodeddna, leftoverdna, cutsite)
 
 
 ###############################################

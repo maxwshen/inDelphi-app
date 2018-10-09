@@ -1,5 +1,6 @@
 import pickle, copy, os, datetime, subprocess
 from collections import defaultdict
+import random
 import numpy as np
 import pandas as pd
 from scipy.stats import entropy
@@ -55,6 +56,10 @@ layout = html.Div([
         children = 'init'
       ),
       html.Div(
+        id = 'S_hidden-chosen-celltype',
+        children = 'mESC'
+      ),
+      html.Div(
         id = 'S_hidden-cache-dsb-left',
         children = '%s' % (time.time())
       ),
@@ -105,7 +110,8 @@ layout = html.Div([
             dcc.Input(
               id = 'S_textbox1', 
               size = 28,
-              value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
+              # value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
+              value = ''.join([random.choice(list('ACGT')) for s in range(60)]),
               type = 'text',
               autofocus = True,
               style = dict(
@@ -126,7 +132,8 @@ layout = html.Div([
             dcc.Input(
               id = 'S_textbox2', 
               size = 28,
-              value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
+              # value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
+              value = ''.join([random.choice(list('ACGT')) for s in range(60)]),
               type = 'text',
               style = dict(
                 textAlign = 'left',
@@ -165,22 +172,7 @@ layout = html.Div([
           html.Div(
             [
               # (Left) placeholder
-              html.Div([
-                # dcc.Dropdown(
-                #   id = 'S_celltype_dropdown',
-                #   options = [
-                #     {'label': 'mESC', 'value': 'mESC'},
-                #     {'label': 'U2OS', 'value': 'U2OS'},
-                #     {'label': 'HEK293', 'value': 'HEK293'},
-                #     {'label': 'HCT116', 'value': 'HCT116'},
-                #     {'label': 'K562', 'value': 'K562'},
-                #   ],
-                #   value = 'mESC',
-                #   searchable = False,
-                #   clearable = False,
-                # ),
-                'Cell type: mESC / K562 / HEK293 / HCT116 / U2OS'
-                ],
+              html.Div([],
                 style = dict(
                   display = 'table-cell',
                   width = '25%',
@@ -200,7 +192,7 @@ layout = html.Div([
                       fontSize = 20,
                     ),
                   ),
-                  '\tCas9 cleavage site\t',
+                  '\tCut site\t',
                   html.A('►',
                     id = 'S_button-dsb-right',
                     style = dict(
@@ -229,7 +221,6 @@ layout = html.Div([
                     fontFamily = 'monospace',
                     fontSize = 20,
                     color = 'rgb(237, 71, 149)',
-                    verticalAlign = 'middle',
                   ),
                 ),
                 dcc.Input(
@@ -237,7 +228,7 @@ layout = html.Div([
                   size = 5,
                   value = 'NGG',
                   type = 'text',
-                  autofocus = True,
+                  autofocus = False,
                   style = dict(
                     fontFamily = 'monospace',
                     fontSize = 14,
@@ -246,6 +237,7 @@ layout = html.Div([
                     width = '70px',
                     marginLeft = '5px',
                     marginRight = '5px',
+                    transform = 'translateY(-2px)',
                   ),
                 ),
                 html.A('►',
@@ -255,7 +247,6 @@ layout = html.Div([
                     fontFamily = 'monospace',
                     fontSize = 20,
                     color = 'rgb(237, 71, 149)',
-                    verticalAlign = 'middle',
                   ),
                 ),
               ],
@@ -273,8 +264,91 @@ layout = html.Div([
         style = dict(
           display = 'table',
           width = '100%',
+          # Defaults to 32px tall for some reason, force it to 24 px
+          marginTop = '-4px',
+          marginBottom = '-4px',
         ),
       ),
+
+      ################################################### 
+      # Row for cell-type choice
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # Left blank
+              html.Div([],
+                style = dict(
+                  textAlign = 'center',
+                  display = 'table-cell',
+                  width = '35%',
+                )
+              ),
+
+              # Middle
+              html.Div(
+                [
+                  html.Span(
+                    'Cell type: mESC',
+                    id = 'S_celltype_chosen',
+                  ),
+                ],
+                style = dict(
+                  textAlign = 'center',
+                  display = 'table-cell',
+                  width = '30%',
+                )
+              ),
+
+              # Right
+              html.Div(
+                [
+                  html.A(
+                    'HCT116',
+                    id = 'S_celltype_link1',
+                    n_clicks_timestamp = '0',
+                    style = dict(color = 'gray'),
+                  ),
+                  ', ',
+                  html.A(
+                    'HEK293',
+                    id = 'S_celltype_link2',
+                    n_clicks_timestamp = '0',
+                    style = dict(color = 'gray'),
+                  ),
+                  ', ',
+                  html.A(
+                    'K562',
+                    id = 'S_celltype_link3',
+                    n_clicks_timestamp = '0',
+                    style = dict(color = 'gray'),
+                  ),
+                  ', ',
+                  html.A(
+                    'U2OS',
+                    id = 'S_celltype_link4',
+                    n_clicks_timestamp = '0',
+                    style = dict(color = 'gray'),
+                  ),
+                ],
+                style = dict(
+                  textAlign = 'right',
+                  display = 'table-cell',
+                  width = '35%',
+                )
+              )
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
+          )
+        ],
+        style = dict(
+          display = 'table',
+          width = '100%',
+        )
+      )
 
     ],
     style = dict(
@@ -619,7 +693,7 @@ layout = html.Div([
     # id = 'S_plots_body',
     style = dict(
       # display = 'none',
-      transform = 'translateY(%spx)' % (190),
+      transform = 'translateY(%spx)' % (200),
     ),
   ),
   ##
@@ -690,7 +764,7 @@ def update_textbox1_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
   pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
-    valid_flag, seq, cutsite = lib.parse_valid_url_path_single(url)
+    valid_flag, celltype, seq, cutsite = lib.parse_valid_url_path_single(url)
     if not valid_flag or cutsite is None:
       return text1
     else:
@@ -741,7 +815,7 @@ def update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache
   pageload_pam = bool(abs(left_pam_time - right_pam_time) < pageload_time_threshold)
   pageload_rc = bool(abs(rc_time - left_pam_time) < pageload_time_threshold)
   if pageload_dsb and pageload_pam and pageload_rc:
-    valid_flag, seq, cutsite = lib.parse_valid_url_path_single(url)
+    valid_flag, celltype, seq, cutsite = lib.parse_valid_url_path_single(url)
     if not valid_flag or cutsite is None:
       return text2
     else:
@@ -770,6 +844,70 @@ def update_textbox2_arrow(cache_dsb_left, cache_dsb_right, cache_pam_left, cache
     return lib.revcomp(text1)
 
 ##
+# Celltype choice callbacks
+## 
+@app.callback(
+  Output('S_hidden-chosen-celltype', 'children'),
+  [Input('S_celltype_link1', 'n_clicks_timestamp'),
+   Input('S_celltype_link2', 'n_clicks_timestamp'),
+   Input('S_celltype_link3', 'n_clicks_timestamp'),
+   Input('S_celltype_link4', 'n_clicks_timestamp'),
+   Input('S_url', 'pathname')],
+  [State('S_hidden-chosen-celltype', 'children')])
+def update_hidden_celltype(link1, link2, link3, link4, url, prev_state):
+  pageload_time_threshold = 0.03
+  links = [int(s) for s in [link1, link2, link3, link4]]
+  if abs(max(links) - min(links)) <= pageload_time_threshold:
+    valid_flag, celltype, seq, cutsite = lib.parse_valid_url_path_single(url)
+    if not valid_flag:
+      return prev_state
+    else:
+      return celltype
+
+  celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
+  celltypes.remove(prev_state)
+  clicked_idx = links.index(max(links))
+  return celltypes[clicked_idx]
+
+@app.callback(
+  Output('S_celltype_chosen', 'children'),
+  [Input('S_hidden-chosen-celltype', 'children')])
+def update_celltype_chosen_text(celltype):
+  return 'Cell type: %s' % (celltype)
+
+@app.callback(
+  Output('S_celltype_link1', 'children'),
+  [Input('S_hidden-chosen-celltype', 'children')])
+def update_celltype_link(celltype):
+  celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
+  celltypes.remove(celltype)
+  return '%s' % (celltypes[0])
+
+@app.callback(
+  Output('S_celltype_link2', 'children'),
+  [Input('S_hidden-chosen-celltype', 'children')])
+def update_celltype_link(celltype):
+  celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
+  celltypes.remove(celltype)
+  return '%s' % (celltypes[1])
+
+@app.callback(
+  Output('S_celltype_link3', 'children'),
+  [Input('S_hidden-chosen-celltype', 'children')])
+def update_celltype_link(celltype):
+  celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
+  celltypes.remove(celltype)
+  return '%s' % (celltypes[2])
+
+@app.callback(
+  Output('S_celltype_link4', 'children'),
+  [Input('S_hidden-chosen-celltype', 'children')])
+def update_celltype_link(celltype):
+  celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
+  celltypes.remove(celltype)
+  return '%s' % (celltypes[3])
+
+##
 # Module header callbacks
 ##
 @app.callback(
@@ -786,22 +924,24 @@ def update_summary_module_header(text1, text2):
 @app.callback(
   Output('S_hidden-pred-df', 'children'),
   [Input('S_textbox1', 'value'),
-   Input('S_textbox2', 'value')])
-def update_pred_df(text1, text2):
+   Input('S_textbox2', 'value'),
+   Input('S_hidden-chosen-celltype', 'children')])
+def update_pred_df(text1, text2, celltype):
   seq = text1 + text2
   seq = seq.upper()
   cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+  pred_df, stats = inDelphi.predict(seq, cutsite, celltype)
   return pred_df.to_csv()
 
 @app.callback(
   Output('S_hidden-pred-stats', 'children'),
   [Input('S_textbox1', 'value'),
-   Input('S_textbox2', 'value')])
-def update_pred_stats(text1, text2):
+   Input('S_textbox2', 'value'),
+   Input('S_hidden-chosen-celltype', 'children')])
+def update_pred_stats(text1, text2, celltype):
   seq = text1 + text2
   cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite)
+  pred_df, stats = inDelphi.predict(seq, cutsite, celltype)
   return pd.DataFrame(stats, index = [0]).to_csv()
 
 ## 
@@ -988,48 +1128,51 @@ def update_summary_alignment_barchart(pred_df_string, pred_stats_string):
   Output('S_plot-genstats-precision', 'figure'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def plot_genstats_precision(pred_df_string, pred_stats_string):
+def plot_genstats_precision(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
   return dict(
     data = [
-      generalStats.GSD[('mESC', 'Precision')].trace(xval),
+      generalStats.GSD[(celltype, 'Precision')].trace(xval),
     ],
-    layout = generalStats.GSD[('mESC', 'Precision')].layout(xval),
+    layout = generalStats.GSD[(celltype, 'Precision')].layout(xval),
   )
 
 @app.callback(
   Output('S_plot-genstats-logphi', 'figure'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def plot_genstats_logphi(pred_df_string, pred_stats_string):
+def plot_genstats_logphi(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
   return dict(
     data = [
-      generalStats.GSD[('mESC', 'Phi')].trace(xval),
+      generalStats.GSD[(celltype, 'Phi')].trace(xval),
     ],
-    layout = generalStats.GSD[('mESC', 'Phi')].layout(xval),
+    layout = generalStats.GSD[(celltype, 'Phi')].layout(xval),
   )
 
 @app.callback(
   Output('S_plot-genstats-frameshift', 'figure'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def plot_genstats_frameshift(pred_df_string, pred_stats_string):
+def plot_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
   return dict(
     data = [
-      generalStats.GSD[('mESC', 'Frameshift frequency')].trace(xval),
+      generalStats.GSD[(celltype, 'Frameshift frequency')].trace(xval),
     ],
-    layout = generalStats.GSD[('mESC', 'Frameshift frequency')].layout(xval),
+    layout = generalStats.GSD[(celltype, 'Frameshift frequency')].layout(xval),
   )
 
 
@@ -1038,12 +1181,13 @@ def plot_genstats_frameshift(pred_df_string, pred_stats_string):
   Output('S_text-genstats-precision', 'children'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def text_genstats_precision(pred_df_string, pred_stats_string):
+def text_genstats_precision(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Precision'].iloc[0]
-  cum, var_text, var_color = generalStats.GSD[('mESC', 'Precision')].cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[(celltype, 'Precision')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_precision(var_text)
   return [
     html.Strong('This target site has '),
@@ -1078,12 +1222,13 @@ def text_genstats_precision(pred_df_string, pred_stats_string):
   Output('S_text-genstats-logphi', 'children'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def text_genstats_logphi(pred_df_string, pred_stats_string):
+def text_genstats_logphi(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = np.log(stats['Phi'].iloc[0])
-  cum, var_text, var_color = generalStats.GSD[('mESC', 'Phi')].cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[(celltype, 'Phi')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_phi(var_text)
   return [
     html.Strong('This target site has '),
@@ -1118,12 +1263,13 @@ def text_genstats_logphi(pred_df_string, pred_stats_string):
   Output('S_text-genstats-frameshift', 'children'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def text_genstats_frameshift(pred_df_string, pred_stats_string):
+def text_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   xval = stats['Frameshift frequency'].iloc[0]
-  cum, var_text, var_color = generalStats.GSD[('mESC', 'Frameshift frequency')].cumulative(xval)
+  cum, var_text, var_color = generalStats.GSD[(celltype, 'Frameshift frequency')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_frameshift(var_text)
   return [
     html.Strong('This target site has '),
@@ -1441,11 +1587,12 @@ def serve_image():
 ##
 @app.callback(
   Output('S_page-link', 'href'),
-  [Input('S_textbox1', 'value',),
-   Input('S_textbox2', 'value',),
+  [Input('S_textbox1', 'value'),
+   Input('S_textbox2', 'value'),
+   Input('S_hidden-chosen-celltype', 'children')
   ])
-def update_pagelink(text1, text2):
+def update_pagelink(text1, text2, celltype):
   seq = text1 + text2
   cutsite = len(text1)
-  return 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite))
+  return 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite, celltype))
 

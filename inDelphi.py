@@ -9,10 +9,9 @@ from scipy.stats import entropy
 init_flag = False
 nn_params = None
 nn2_params = None
-normalizer = None
-rate_model = None
-bp_model = None
-CELLTYPE = None
+normalizer = dict()
+rate_model = dict()
+bp_model = dict()
 
 ##
 # Private NN methods
@@ -186,7 +185,7 @@ def __predict_dels(seq, cutsite):
   pred_del_df['Category'] = 'del'
   return pred_del_df, total_phi_score
 
-def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
+def __predict_ins(seq, cutsite, pred_del_df, total_phi_score, celltype):
   ################################################################
   #####
   ##### Predict Insertions
@@ -214,9 +213,9 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   onebp_features = fiveohmapper[fivebase] + threeohmapper[threebase] + [precision] + [log_phi_score]
   for idx in range(len(onebp_features)):
     val = onebp_features[idx]
-    onebp_features[idx] = (val - normalizer[idx][0]) / normalizer[idx][1]
+    onebp_features[idx] = (val - normalizer[celltype][idx][0]) / normalizer[celltype][idx][1]
   onebp_features = np.array(onebp_features).reshape(1, -1)
-  rate_1bpins = float(rate_model.predict(onebp_features))
+  rate_1bpins = float(rate_model[celltype].predict(onebp_features))
 
   # Predict 1 bp genotype frequencies
   pred_1bpins_d = defaultdict(list)
@@ -224,17 +223,17 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   negfourbase = seq[cutsite - 1]
   negthreebase = seq[cutsite]
 
-  if CELLTYPE in ['mESC', 'U2OS']:
-    for ins_base in bp_model[negfivebase][negfourbase][negthreebase]:
-      freq = bp_model[negfivebase][negfourbase][negthreebase][ins_base]
+  if celltype in ['mESC', 'U2OS']:
+    for ins_base in bp_model[celltype][negfivebase][negfourbase][negthreebase]:
+      freq = bp_model[celltype][negfivebase][negfourbase][negthreebase][ins_base]
       freq *= rate_1bpins / (1 - rate_1bpins)
       pred_1bpins_d['Category'].append('ins')
       pred_1bpins_d['Length'].append(1)
       pred_1bpins_d['Inserted Bases'].append(ins_base)
       pred_1bpins_d['Predicted frequency'].append(freq)
-  elif CELLTYPE in ['K562', 'HEK293', 'HCT116']:
-    for ins_base in bp_model[negfivebase]:
-      freq = bp_model[negfivebase][ins_base]
+  elif celltype in ['K562', 'HEK293', 'HCT116']:
+    for ins_base in bp_model[celltype][negfivebase]:
+      freq = bp_model[celltype][negfivebase][ins_base]
       freq *= rate_1bpins / (1 - rate_1bpins)
       pred_1bpins_d['Category'].append('ins')
       pred_1bpins_d['Length'].append(1)
@@ -245,7 +244,6 @@ def __predict_ins(seq, cutsite, pred_del_df, total_phi_score):
   pred_df = pred_del_df.append(pred_1bpins_df, ignore_index = True)
   pred_df['Predicted frequency'] /= sum(pred_df['Predicted frequency'])
   return pred_df
-
 
 def __build_stats(seq, cutsite, pred_df, total_phi_score):
   # Precision stats
@@ -305,7 +303,7 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score):
 ##
 # Main public-facing prediction
 ##
-def predict(seq, cutsite):
+def predict(seq, cutsite, celltype):
   # Predict 1 bp insertions and all deletions (MH and MH-less)
   #
   # If no errors, returns a tuple (pred_df, stats)
@@ -314,7 +312,7 @@ def predict(seq, cutsite):
   # If errors, returns a string
   #
   if init_flag == False:
-    init_model()
+    init_model(celltype = celltype)
 
   # Sanitize input
   seq = seq.upper()
@@ -326,8 +324,7 @@ def predict(seq, cutsite):
 
   # Make predictions
   pred_del_df, total_phi_score = __predict_dels(seq, cutsite)
-  pred_df = __predict_ins(seq, cutsite, 
-                              pred_del_df, total_phi_score)
+  pred_df = __predict_ins(seq, cutsite, pred_del_df, total_phi_score, celltype)
   pred_df['Predicted frequency'] *= 100
 
   # Build stats
@@ -454,19 +451,15 @@ def add_name_column(pred_df, stats):
 # Init
 ##
 def init_model(run_iter = 'aax', 
-               param_iter = 'aag', 
-               celltype = 'mESC'):
+               param_iter = 'aag'):
   global init_flag
   if init_flag != False:
     return
 
-  print('Initializing model %s/%s, %s...' % (run_iter, param_iter, celltype))
+  print('Initializing models %s/%s...' % (run_iter, param_iter))
 
   model_dir = os.path.dirname(os.path.realpath(__file__))
   model_dir += '/model'
-
-  global CELLTYPE
-  CELLTYPE = celltype
 
   global nn_params
   global nn2_params
@@ -479,12 +472,13 @@ def init_model(run_iter = 'aax',
   global normalizer
   global rate_model
   global bp_model
-  with open('%s/bp_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
-    bp_model = pickle.load(f, encoding = 'latin1')
-  with open('%s/rate_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
-    rate_model = pickle.load(f, encoding = 'latin1')
-  with open('%s/Normalizer_%s.pkl' % (model_dir, celltype), 'rb') as f:
-    normalizer = pickle.load(f, encoding = 'latin1')
+  for celltype in ['mESC', 'U2OS', 'HEK293', 'HCT116', 'K562']:
+    with open('%s/bp_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
+      bp_model[celltype] = pickle.load(f, encoding = 'latin1')
+    with open('%s/rate_model_%s.pkl' % (model_dir, celltype), 'rb') as f:
+      rate_model[celltype] = pickle.load(f, encoding = 'latin1')
+    with open('%s/Normalizer_%s.pkl' % (model_dir, celltype), 'rb') as f:
+      normalizer[celltype] = pickle.load(f, encoding = 'latin1')
 
   init_flag = True
 
