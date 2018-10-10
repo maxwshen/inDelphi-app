@@ -36,7 +36,10 @@ class GenomeStatistic:
     for idx in range(len(self.X)):
       if self.X[idx] > xval:
         break
-    cum = 100 * sum(self.Y[:idx-1])
+    if idx == 0:
+      cum = 0
+    else:
+      cum = 100 * sum(self.Y[:idx-1])
 
     if cum <= 5:
       var_text, var_color = 'very low', 'rgb(221, 46, 31)'

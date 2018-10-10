@@ -60,6 +60,10 @@ layout = html.Div([
         children = 'mESC'
       ),
       html.Div(
+        id = 'S_hidden-pred-df-summary',
+        children = 'init'
+      ),
+      html.Div(
         id = 'S_hidden-cache-dsb-left',
         children = '%s' % (time.time())
       ),
@@ -878,7 +882,7 @@ def update_celltype_chosen_text(celltype):
 @app.callback(
   Output('S_celltype_link1', 'children'),
   [Input('S_hidden-chosen-celltype', 'children')])
-def update_celltype_link(celltype):
+def update_celltype_link1(celltype):
   celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
   celltypes.remove(celltype)
   return '%s' % (celltypes[0])
@@ -886,7 +890,7 @@ def update_celltype_link(celltype):
 @app.callback(
   Output('S_celltype_link2', 'children'),
   [Input('S_hidden-chosen-celltype', 'children')])
-def update_celltype_link(celltype):
+def update_celltype_link2(celltype):
   celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
   celltypes.remove(celltype)
   return '%s' % (celltypes[1])
@@ -894,7 +898,7 @@ def update_celltype_link(celltype):
 @app.callback(
   Output('S_celltype_link3', 'children'),
   [Input('S_hidden-chosen-celltype', 'children')])
-def update_celltype_link(celltype):
+def update_celltype_link3(celltype):
   celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
   celltypes.remove(celltype)
   return '%s' % (celltypes[2])
@@ -902,7 +906,7 @@ def update_celltype_link(celltype):
 @app.callback(
   Output('S_celltype_link4', 'children'),
   [Input('S_hidden-chosen-celltype', 'children')])
-def update_celltype_link(celltype):
+def update_celltype_link4(celltype):
   celltypes = ['HCT116', 'HEK293', 'K562', 'mESC', 'U2OS']
   celltypes.remove(celltype)
   return '%s' % (celltypes[3])
@@ -963,17 +967,36 @@ def update_plots_body_style(fig, prev_style):
 # Summary of predictions callbacks
 ##
 @app.callback(
-  Output('S_summary-alignment-table', 'figure'),
+  Output('S_hidden-pred-df-summary', 'children'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
   ])
-def update_summary_alignment_text(pred_df_string, pred_stats_string):
+def update_pred_df_top10_summary(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
-  
-  inDelphi.add_genotype_column(pred_df, stats)
 
-  top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats, length_cutoff = 6)
+  inDelphi.add_genotype_column(mhless_gt_df, stats)
+  top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  return top10.to_csv()
+
+
+@app.callback(
+  Output('S_summary-alignment-table', 'figure'),
+  [Input('S_hidden-pred-df-summary', 'children'),
+   Input('S_hidden-pred-stats', 'children'),
+  ])
+def update_summary_alignment_text(pred_df_summary_string, pred_stats_string):
+  top10 = pd.read_csv(StringIO(pred_df_summary_string), index_col = 0)
+  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  
+  # mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats)
+  # top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+
+  # top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  # inDelphi.add_genotype_column(pred_df, stats)
+  # inDelphi.add_genotype_column(mhless_gt_df, stats)
+
   gts = top10['Genotype']
   fqs = top10['Predicted frequency']
   lens = top10['Length']
@@ -1068,23 +1091,26 @@ def update_summary_alignment_text(pred_df_string, pred_stats_string):
 
 @app.callback(
   Output('S_summary-alignment-barchart', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
+  [Input('S_hidden-pred-df-summary', 'children'),
    Input('S_hidden-pred-stats', 'children'),
   ])
-def update_summary_alignment_barchart(pred_df_string, pred_stats_string):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+def update_summary_alignment_barchart(pred_df_summary_string, pred_stats_string):
+  top10 = pd.read_csv(StringIO(pred_df_summary_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
   
-  inDelphi.add_genotype_column(pred_df, stats)
+  # mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats)
+  # inDelphi.add_genotype_column(mhless_gt_df, stats)
+  # top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
 
-  top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
+  # inDelphi.add_genotype_column(pred_df, stats)
+  # top10 = pred_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
   fqs = top10['Predicted frequency'][::-1]
 
   cats = top10['Category'][::-1]
-  gts = top10['Genotype position'][::-1]
+  mhls = top10['Microhomology length'][::-1]
   colors = []
-  for cat, gt in zip(cats, gts):
-    if gt == 'e':
+  for cat, mhl in zip(cats, mhls):
+    if mhl == 0:
       colors.append('rgb(236, 100, 12)')
     else:
       if cat == 'del':
