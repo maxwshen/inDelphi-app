@@ -1054,6 +1054,15 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
         adv_delend -= 1
         adv_del_flag = True
 
+  num_grnas = 0
+  seqs = [seq, lib.revcomp(seq)]
+  cutsites = range(30, len(seq) - 30)
+  for local_seq, grna_orient in zip(seqs, ['+', '-']):
+    for local_cutsite in cutsites:
+      cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
+      if lib.match(pam, cand_pam):
+        num_grnas += 1
+  assert 1 <= num_grnas <= 80
 
   # Search for gRNAs matching PAM
   seqs = [seq, lib.revcomp(seq)]
