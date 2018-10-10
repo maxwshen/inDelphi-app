@@ -1112,9 +1112,16 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
             adv_delstart_local = len(seq) - adv_delend
             adv_delend_local = len(seq) - adv_delstart
           for jdx, row in pred_df[crit].iterrows():
+            mh_len = row['Microhomology length']
             del_start = local_cutsite - row['Length'] + row['Genotype position']
             del_end = del_start + row['Length']
-            if del_start <= adv_delstart_local < adv_delend_local <= del_end:
+
+            contains_deletion = False
+            for mhl in range(int(mh_len) + 1):
+              if del_start - mhl <= adv_delstart_local < adv_delend_local <= del_end - mhl:
+                contains_deletion = True
+
+            if contains_deletion:
               delseq_freq += row['Predicted frequency']
           dd['Deletes spec.'].append(delseq_freq)
 

@@ -142,6 +142,7 @@ def __predict_dels(seq, cutsite):
   # Store predictions to combine with mh-less deletion preds
   pred_del_len = copy.copy(del_len)
   pred_gt_pos = copy.copy(gt_pos)
+  pred_mh_len = copy.copy(mh_len)
 
   ################################################################
   #####
@@ -172,6 +173,7 @@ def __predict_dels(seq, cutsite):
 
     unfq.append(mhless_score)
     pred_gt_pos.append('e')
+    pred_mh_len.append(0)
     pred_del_len.append(dl)
 
   unfq = np.array(unfq)
@@ -180,7 +182,7 @@ def __predict_dels(seq, cutsite):
   nfq = np.divide(unfq, np.sum(unfq))  
   pred_freq = list(nfq.flatten())
 
-  d = {'Length': pred_del_len, 'Genotype position': pred_gt_pos, 'Predicted frequency': pred_freq}
+  d = {'Length': pred_del_len, 'Genotype position': pred_gt_pos, 'Predicted frequency': pred_freq, 'Microhomology length': pred_mh_len}
   pred_del_df = pd.DataFrame(d)
   pred_del_df['Category'] = 'del'
   return pred_del_df, total_phi_score
@@ -252,7 +254,6 @@ def __build_stats(seq, cutsite, pred_df, total_phi_score, celltype):
   highest_del_fq = max(pred_df[pred_df['Category'] == 'del']['Predicted frequency'])
   highest_ins_fq = max(pred_df[pred_df['Category'] == 'ins']['Predicted frequency'])
   
-
   # Outcomes
   ins_fq = sum(pred_df[pred_df['Category'] == 'ins']['Predicted frequency'])
   crit = (pred_df['Category'] == 'del') & (pred_df['Genotype position'] != 'e')
