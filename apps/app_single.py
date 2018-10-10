@@ -1506,6 +1506,7 @@ def update_genotype_table(pred_df_string, pred_stats_string):
     ], 
     axis = 1
   )
+  pred_df = pred_df[pred_df['Frequency (%)'] >= 0.1]
   pred_df = pred_df[['Name', 'Length', 'Frequency (%)', 'Genotype']]
   return pred_df.to_dict('records')
 

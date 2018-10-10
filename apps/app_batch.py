@@ -101,7 +101,7 @@ layout = html.Div([
           id = 'B_textarea', 
           value = 'GCAATATCGTAGTCCGTCAAATTCAGCCCTGTTATCCCCGGCGTTATGTGTCAAATGGCGTAGAACTGGATTGACTGTTTGACGGTACCTGCTGATCGGTACGGTGACCGAGAATCTGTCGGGCTATGTCACTAATACTTT',
           minLength = 70,  
-          maxLength = 1000,  
+          maxLength = 20000,  
           style = dict(
             fontFamily = 'monospace',
             fontSize = 16,
@@ -854,11 +854,21 @@ def update_estimated_runtime(seq, pam):
   if pam.count('N') == len(pam):
     return 'Error: PAM cannot only consist of N'
 
+  seqs = [seq, lib.revcomp(seq)]
+  cutsites = range(30, len(seq) - 30)
+  num_grnas = 0
+  for local_seq, grna_orient in zip(seqs, ['+', '-']):
+    for local_cutsite in cutsites:
+      cand_pam = local_seq[local_cutsite + 3 : local_cutsite + 3 + len(pam)]
+      if lib.match(pam, cand_pam):
+        num_grnas += 1
 
-  pam_freq = lib.estimate_pam_freq(pam) * 2 # rc also
-  num_est_pams = pam_freq * len(seq)
+  # pam_freq = lib.estimate_pam_freq(pam) * 2 # rc also
+  # num_grnas = pam_freq * len(seq)
+  if num_grnas > 80:
+    return 'Error: %s gRNAs detected. Online batch mode is limited to at most 80 gRNAs' % (num_grnas)
   est_time_per_pam = 0.2 # seconds
-  est_runtime = est_time_per_pam * num_est_pams
+  est_runtime = est_time_per_pam * num_grnas
 
   if est_runtime < 2:
     # ans = '1 second'
@@ -868,7 +878,7 @@ def update_estimated_runtime(seq, pam):
   elif est_runtime < 10:
     ans = '%s seconds' % (int(est_runtime))
   elif est_runtime < 60:
-    ans = '%s0 seconds' % (int(round(est_runtime / 10)))
+    ans = '%s seconds' % (5 * int(round(est_runtime / 5)))
     if ans == '60 seconds':
       ans = '1 minute'
   elif est_runtime < 90:
