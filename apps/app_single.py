@@ -1631,16 +1631,16 @@ def update_genotype_table_v2(pred_df_string, pred_stats_string, indel_types, sor
   filter_1bp_ins = bool(indel_len_range[0] > 0)
   if '1-bp insertions' not in indel_types or filter_1bp_ins:
     pred_df = pred_df[pred_df['Category'] != 'ins']
+  ins_crit = (pred_df['Category'] == 'ins')
   if 'Microhomology deletions' not in indel_types:
-    crit = (pred_df['Category'] == 'del') & (pred_df['Microhomology length'] > 0)
-    pred_df = pred_df[crit]
-  if 'Microhomology-less deletions' not in indel_types:
     crit = (pred_df['Category'] == 'del') & (pred_df['Microhomology length'] == 0)
-    pred_df = pred_df[crit]
+    pred_df = pred_df[ins_crit | crit]
+  if 'Microhomology-less deletions' not in indel_types:
+    crit = (pred_df['Category'] == 'del') & (pred_df['Microhomology length'] > 0)
+    pred_df = pred_df[ins_crit | crit]
 
   # Filter del len range
   [min_dellen, max_dellen] = [max(s - 1, 0) for s in indel_len_range]
-  ins_crit = (pred_df['Category'] == 'ins')
   crit = (pred_df['Category'] == 'del') & (pred_df['Length'] >= min_dellen) & (pred_df['Length'] <= max_dellen)
   pred_df = pred_df[ins_crit | crit]
 
