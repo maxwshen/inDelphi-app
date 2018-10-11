@@ -271,6 +271,49 @@ def estimate_pam_freq(pam):
   return factor
 
 ###############################################
+# Alignment text presentation
+###############################################
+def trim_alignment(gt, cutsite, name):
+  radius = 26
+  if name == 'ins':
+    trim_cand = gt[cutsite - radius : cutsite + radius + 1]
+    if len(trim_cand) == 2*radius + 1:
+      return trim_cand
+    else:
+      return gt
+  else:
+    trim_cand = gt[cutsite - radius : cutsite + radius + 1]
+    if len(trim_cand) == 2*radius + 1:
+      return trim_cand
+    else:
+      return gt
+  return
+
+def add_bar(seq, cutsite):
+  return seq[:cutsite] + '|' + seq[cutsite:]
+
+def get_gapped_alignments(top, stats):
+  cutsite = stats['Cutsite'].iloc[0]
+  gapped_aligns = []
+  for idx, row in top.iterrows():
+    gt = row['Genotype']
+    gt_pos = row['Genotype position']
+    length = row['Length']
+    cat = row['Category']
+    if cat == 'ins':
+      gapped_aligns.append(trim_alignment(gt, cutsite, 'ins'))
+      continue
+    if gt_pos == 'e':
+      gapped_aligns.append('multiple deletion genotypes')
+      continue
+
+    gt_pos = int(gt_pos)
+    gap_gt = gt[:cutsite - length + gt_pos] + '-'*length + gt[cutsite - length + gt_pos:]
+    gap_gt = add_bar(gap_gt, cutsite)
+    gapped_aligns.append(trim_alignment(gap_gt, cutsite, 'del'))
+  return gapped_aligns
+
+###############################################
 # Colors
 ###############################################
 

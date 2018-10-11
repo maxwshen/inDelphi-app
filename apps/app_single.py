@@ -14,6 +14,7 @@ import dash_table_experiments as dt
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import flask
+import plotly
 
 import inDelphi
 import generalStats
@@ -484,6 +485,41 @@ layout = html.Div([
             ],
             className = 'row',
           ),
+
+          html.Div([
+            html.Div(
+              html.A(
+                '📑 Download target site summary and statistics',
+                id = 'S_summary-download-link'
+              ),
+            ),
+            html.Div(
+              html.A(
+                '📜 Download table of inDelphi genotype predictions', 
+                id = 'S_csv-download-link'
+              ),
+            ),
+            html.Div(
+              html.A(
+                '🔗 Shareable link to your results', 
+                id = 'S_page-link'
+              ),
+            ),
+          ], style = dict(
+              marginLeft = '20',
+            ),
+          ),
+
+          html.Div(
+            'Copyright MIT 2018.\nAll Rights Reserved.',
+            style = dict(
+              textAlign = 'center',
+              marginTop = '30',
+              marginBottom = '30',
+            )
+          ),
+
+
         ], className = 'module_style',
         ),
 
@@ -613,7 +649,7 @@ layout = html.Div([
         ),
 
         ###################################################
-        # Module: Detailed genotypes
+        # Module: New version of last module
         ###################################################
         html.Div([
           # header
@@ -626,11 +662,163 @@ layout = html.Div([
             className = 'module_header'
           ),
 
-          dcc.Graph(
-            id = 'S_plot-table-genotypes',
+          # Settings
+          # Row: Display indel type...
+          html.Div(
+            [
+              html.Strong(
+                'Display indel type:',
+                style = dict(
+                  textAlign = 'right',
+                  marginRight = '5px',
+                  height = '36px',  # height of one dropdown line
+                  lineHeight = '36px',  # centers vertically
+                ),
+                className = 'three columns',
+              ),
+
+              # Multi drop down to select columns
+              dcc.Dropdown(
+                id = 'S_dropdown-indel-type',
+                options = [
+                  {'label': '1-bp insertions', 'value': '1-bp insertions'},
+                  {'label': 'Microhomology deletions', 'value': 'Microhomology deletions'},
+                  {'label': 'Microhomology-less deletions', 'value': 'Microhomology-less deletions'},
+                ],
+                multi = True,
+                searchable = False,
+                clearable = False,
+                value = ['1-bp insertions', 'Microhomology deletions', 'Microhomology-less deletions'],
+                className = 'nine columns',
+              ),
+            ],
             style = dict(
-              width = 970,
+              marginBottom = '5px',
+              marginTop = '10px',
             ),
+            className = 'row',
+          ),
+
+          # Row: Sort by...
+          html.Div(
+            [
+              html.Strong(
+                'Sort by:',
+                style = dict(
+                  textAlign = 'right',
+                  marginRight = '5px',
+                  height = '36px',  # height of one dropdown line
+                  lineHeight = '36px',  # centers vertically
+                ),
+                className = 'three columns',
+              ),
+              # Sorting columns
+              dcc.Dropdown(
+                id = 'S_dropdown-sort',
+                options = [
+                  {'label': 'Indel length', 'value': 'Indel length'},
+                  {'label': 'Predicted frequency', 'value': 'Predicted frequency'},
+                ],
+                value = 'Indel length',
+                searchable = False,
+                clearable = False,
+                className = 'four columns',
+              ),
+              html.Div('',
+                className = 'five columns',
+              ),
+            ],
+            style = dict(
+              marginBottom = '5px',
+              marginTop = '10px',
+            ),
+            className = 'row',
+          ),
+
+          # Row: Display frequencies within...
+          html.Div(
+            [
+              html.Strong(
+                'Frequency range:',
+                style = dict(
+                  textAlign = 'right',
+                  marginRight = '5px',
+                  height = '36px',  # height of one dropdown line
+                  lineHeight = '36px',  # centers vertically
+                ),
+                className = 'three columns',
+              ),
+              # Sorting columns
+              dcc.RangeSlider(
+                id = 'S_rangeslider-freq',
+                min = 0,
+                max = 7,
+                step = 1,
+                value = [0, 7],
+                marks = {
+                  0: '0.05%',
+                  1: '0.5%',
+                  2: '1%',
+                  3: '5%',
+                  4: '10%',
+                  5: '25%',
+                  6: '50%',
+                  7: '100%',
+                },
+                allowCross = False,
+                className = 'eight columns',
+              ),
+              html.Div('',
+                className = 'one columns',
+              ),
+            ],
+            style = dict(
+              marginBottom = '5px',
+              marginTop = '10px',
+            ),
+            className = 'row',
+          ),
+
+          # Row: Display indel range...
+          html.Div(
+            [
+              html.Strong(
+                'Indel length range:',
+                style = dict(
+                  textAlign = 'right',
+                  marginRight = '5px',
+                  height = '36px',  # height of one dropdown line
+                  lineHeight = '36px',  # centers vertically
+                ),
+                className = 'three columns',
+              ),
+              # Sorting columns
+              dcc.RangeSlider(
+                id = 'S_rangeslider-indel-len',
+                min = 0,
+                max = 36,
+                step = 1,
+                dots = True,
+                value = [0, 36],
+                marks = {i: '{} bp'.format(1 - i) if bool(1 - i <= 0) else '+1 bp' for i in [1 - 1, 1 - -1, 1 - -5, 1 - -10, 1 - -15, 1 - -20, 1 - -25, 1 - -30, 1 - -35]},
+                allowCross = False,
+                className = 'eight columns',
+              ),
+              html.Div('',
+                className = 'one columns',
+              ),
+            ],
+            style = dict(
+              marginBottom = '5px',
+              marginTop = '10px',
+            ),
+            className = 'row',
+          ),
+
+
+          # Table and barplot
+          dcc.Graph(
+            id = 'S_plot-table-genotypes-v2',
             config = dict(
               modeBarButtonsToRemove = modebarbuttons_2d,
               displaylogo = False,
@@ -638,49 +826,6 @@ layout = html.Div([
             ),
           ),
 
-          dt.DataTable(
-            id = 'S_table-genotypes',
-            rows = [{}], # init rows
-            row_selectable = True,
-            filterable = True,
-            sortable = True,
-            editable = False,
-            selected_row_indices = [],
-            column_widths = [970/4] * 4,
-          ),
-
-          html.Div([
-            html.Div(
-              html.A(
-                '📑 Download target site summary and statistics',
-                id = 'S_summary-download-link'
-              ),
-            ),
-            html.Div(
-              html.A(
-                '📜 Download table of inDelphi genotype predictions', 
-                id = 'S_csv-download-link'
-              ),
-            ),
-            html.Div(
-              html.A(
-                '🔗 Shareable link to your results', 
-                id = 'S_page-link'
-              ),
-            ),
-          ], style = dict(
-              marginLeft = '20',
-            ),
-          ),
-
-          html.Div(
-            'Copyright MIT 2018.\nAll Rights Reserved.',
-            style = dict(
-              textAlign = 'center',
-              marginTop = '30',
-              marginBottom = '30',
-            )
-          ),
         ], className = 'module_style',
         ),
 
@@ -1003,53 +1148,13 @@ def update_summary_alignment_text(pred_df_summary_string, pred_stats_string):
   cats = top10['Category']
   fq_strings = ['-'] + ['%.1f' % (s) for s in fqs]
 
-  def trim_alignment(gt, cutsite, name):
-    radius = 26
-    if name == 'ins':
-      trim_cand = gt[cutsite - radius : cutsite + radius + 1]
-      if len(trim_cand) == 2*radius + 1:
-        return trim_cand
-      else:
-        return gt
-    else:
-      trim_cand = gt[cutsite - radius : cutsite + radius + 1]
-      if len(trim_cand) == 2*radius + 1:
-        return trim_cand
-      else:
-        return gt
-    return
-
-  def add_bar(seq, cutsite):
-    return seq[:cutsite] + '|' + seq[cutsite:]
-
-  def get_gapped_alignments(top, stats):
-    cutsite = stats['Cutsite'].iloc[0]
-    gapped_aligns = []
-    for idx, row in top.iterrows():
-      gt = row['Genotype']
-      gt_pos = row['Genotype position']
-      length = row['Length']
-      cat = row['Category']
-      if cat == 'ins':
-        gapped_aligns.append(trim_alignment(gt, cutsite, 'ins'))
-        continue
-      if gt_pos == 'e':
-        gapped_aligns.append('multiple deletion genotypes')
-        continue
-
-      gt_pos = int(gt_pos)
-      gap_gt = gt[:cutsite - length + gt_pos] + '-'*length + gt[cutsite - length + gt_pos:]
-      gap_gt = add_bar(gap_gt, cutsite)
-      gapped_aligns.append(trim_alignment(gap_gt, cutsite, 'del'))
-    return gapped_aligns
-
-  gap_gts = get_gapped_alignments(top10, stats)
+  gap_gts = lib.get_gapped_alignments(top10, stats)
   
   alignments, categories = [], []
   cutsite = stats['Cutsite'].iloc[0]
   reference_seq = stats['Reference sequence'].iloc[0]
-  reference_seq = add_bar(reference_seq, cutsite)
-  alignments.append(trim_alignment(reference_seq, cutsite, 'ref'))
+  reference_seq = lib.add_bar(reference_seq, cutsite)
+  alignments.append(lib.trim_alignment(reference_seq, cutsite, 'ref'))
   categories.append('Reference')
 
   for gt, length, cat in zip(gap_gts, lens, cats):
@@ -1507,91 +1612,202 @@ def plot_fs(pred_df_string):
   )
 
 ##
-# Genotype table callbacks
-## 
+# Genotype table v2 callbacks
+##
 @app.callback(
-  Output('S_table-genotypes', 'rows'), 
+  Output('S_plot-table-genotypes-v2', 'figure'),
   [Input('S_hidden-pred-df', 'children'),
    Input('S_hidden-pred-stats', 'children'),
+   Input('S_dropdown-indel-type', 'value'),
+   Input('S_dropdown-sort', 'value'),
+   Input('S_rangeslider-freq', 'value'),
+   Input('S_rangeslider-indel-len', 'value'),
   ])
-def update_genotype_table(pred_df_string, pred_stats_string):
+def update_genotype_table_v2(pred_df_string, pred_stats_string, indel_types, sort_col, freq_range, indel_len_range):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
-  inDelphi.add_genotype_column(pred_df, stats)
-  inDelphi.add_name_column(pred_df, stats)
+  # Filter indel types and by indel length range
+  filter_1bp_ins = bool(indel_len_range[0] > 0)
+  if '1-bp insertions' not in indel_types or filter_1bp_ins:
+    pred_df = pred_df[pred_df['Category'] != 'ins']
+  if 'Microhomology deletions' not in indel_types:
+    crit = (pred_df['Category'] == 'del') & (pred_df['Microhomology length'] > 0)
+    pred_df = pred_df[crit]
+  if 'Microhomology-less deletions' not in indel_types:
+    crit = (pred_df['Category'] == 'del') & (pred_df['Microhomology length'] == 0)
+    pred_df = pred_df[crit]
 
-  # Edit for display
-  pred_df['Frequency (%)'] = [float('%.1f' % (s)) for s in pred_df['Predicted frequency']]
-  pred_df = pred_df.drop(
-    [
-      'Inserted Bases', 
-      'Genotype position',
-      'Predicted frequency',
-      'Category',
-    ], 
-    axis = 1
-  )
-  pred_df = pred_df[pred_df['Frequency (%)'] >= 0.1]
-  pred_df = pred_df[['Name', 'Length', 'Frequency (%)', 'Genotype']]
-  return pred_df.to_dict('records')
+  # Filter del len range
+  [min_dellen, max_dellen] = [max(s - 1, 0) for s in indel_len_range]
+  ins_crit = (pred_df['Category'] == 'ins')
+  crit = (pred_df['Category'] == 'del') & (pred_df['Length'] >= min_dellen) & (pred_df['Length'] <= max_dellen)
+  pred_df = pred_df[ins_crit | crit]
 
-@app.callback(
-  Output('S_plot-table-genotypes', 'figure'),
-  [Input('S_table-genotypes', 'rows'),
-   Input('S_table-genotypes', 'selected_row_indices')
-  ])
-def update_genotype_plot(rows, selected_row_indices):
-  df = pd.DataFrame(rows)
-  colors =  ['#0074D9'] * len(df)
-  for idx in (selected_row_indices or []):
-    colors[idx] = '#FF851B'
-  return dict(
-    data = [
-      go.Bar(
-        x = df['Name'],
-        y = df['Frequency (%)'],
-        marker = dict(
-          color = colors,
-          line = dict(
-            width = 0,
-          ),
-        ),
-      ),
-    ],
-    layout = go.Layout(
-      xaxis = dict(
-        fixedrange = True,
-      ),
-      yaxis = dict(
-        title = 'Frequency (%)',
-        fixedrange = True,
-      ),
-      font = dict(
-        family = 'Arial',
-      ),
-      margin = dict(
-        t = 10,
-        r = 20,
-      ),
+  # Expand MHless genotypes
+  mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats, length_cutoff = indel_len_range[1])
+
+  # Filter frequency range
+  freq_mapper = {
+    0: 0.05,
+    1: 0.5,
+    2: 1,
+    3: 5,
+    4: 10,
+    5: 25,
+    6: 50,
+    7: 100,
+  }
+  [min_freq, max_freq] = [freq_mapper[s] for s in freq_range]
+  crit = (mhless_gt_df['Predicted frequency'] >= min_freq) & (mhless_gt_df['Predicted frequency'] <= max_freq)
+  mhless_gt_df = mhless_gt_df[crit]
+
+  # Sort and process into table
+  if sort_col == 'Predicted frequency':
+    mhless_gt_df = mhless_gt_df.sort_values('Predicted frequency', ascending = True)
+  else:
+    tdf2 = mhless_gt_df[mhless_gt_df['Category'] == 'del'].sort_values('Length', ascending = False)
+    temp_df = mhless_gt_df[mhless_gt_df['Category'] == 'ins']
+    temp_df = tdf2.append(temp_df, ignore_index = True)
+    mhless_gt_df = temp_df
+  mhless_gt_df.reset_index(inplace = True)
+  inDelphi.add_genotype_column(mhless_gt_df, stats)
+
+  ins_colors = {
+    'A': '#7CB82F',
+    'C': '#00AEB3',
+    'G': '#68C7EC',
+    'T': '#00A0DC',
+  }
+
+  gap_gts = lib.get_gapped_alignments(mhless_gt_df, stats)
+
+  cutsite = stats['Cutsite'].iloc[0]
+  reference_seq = stats['Reference sequence'].iloc[0]
+  reference_seq = lib.add_bar(reference_seq, cutsite)
+  reference_seq = lib.trim_alignment(reference_seq, cutsite, 'ref')
+  reference_ticktext = '%s  Indel len.  MH len.  Freq.   ' % (reference_seq)
+
+  # Build bar plot with alignment text values for ticks 
+  X, yticktexts, colors = [], [], []
+  for idx, row in mhless_gt_df.iterrows():
+    # Add color
+    if row['Category'] == 'del':
+      if row['Microhomology length'] == 0:
+        colors.append('rgb(236, 100, 12)')
+      else:
+        colors.append('rgb(221, 46, 31)')
+      indel_len = '-%s bp' % (int(row['Length']))
+      mhbp = row['Microhomology length']
+      if np.isnan(mhbp):
+        mhbp = 0
+      else:
+        mhbp = '%s nt' % (int(mhbp))
+
+    else:
+      colors.append(ins_colors[row['Inserted Bases']])
+      indel_len = '+1 bp'
+      mhbp = '----'
+
+    # Add x, y
+    freq = row['Predicted frequency']
+    X.append(freq)
+
+    fixedwidth_mhbp = mhbp
+    while len(fixedwidth_mhbp) != 5:
+      fixedwidth_mhbp = ' ' + fixedwidth_mhbp
+
+    fixedwidth_freq = '%.2f%%' % (freq)
+    while len(fixedwidth_freq) != 6:
+      fixedwidth_freq = ' ' + fixedwidth_freq
+
+    fixedwidth_indel_len = indel_len
+    while len(fixedwidth_indel_len) != 6:
+      fixedwidth_indel_len = ' ' + fixedwidth_indel_len
+
+    yticktexts.append('%s    %s    %s   %s   ' % (gap_gts[idx], fixedwidth_indel_len, fixedwidth_mhbp, fixedwidth_freq))
+
+  ref_trace = go.Bar(
+    x = [0],
+    y = [1],
+    orientation = 'h',
+    opacity = 0.6,
+    hoverinfo = 'x',
+    width = 0.9,
+    marker = dict(
+      color = colors,
+      line = dict(width = 0),
     ),
   )
 
-@app.callback(
-  Output('S_table-genotypes', 'selected_row_indices'),
-  [Input('S_plot-table-genotypes', 'clickData')],
-  [State('S_table-genotypes', 'selected_row_indices')]
+  main_trace = go.Bar(
+    x = X,
+    y = np.arange(len(X)),
+    orientation = 'h',
+    opacity = 0.6,
+    hoverinfo = 'x',
+    width = 0.9,
+    marker = dict(
+      color = colors,
+      line = dict(width = 0),
+    ),
   )
-def update_datatable_selected(clickData, selected_row_indices):
-  # Update selections in table based on clicking plot
-  if clickData:
-    for point in clickData['points']:
-      if point['pointNumber'] in selected_row_indices:
-        selected_row_indices.remove(point['pointNumber'])
-      else:
-        selected_row_indices.append(point['pointNumber'])
-  return selected_row_indices
 
+  fig = plotly.tools.make_subplots(rows = 2, cols = 1)
+  fig.append_trace(ref_trace, 1, 1)
+  fig.append_trace(main_trace, 2, 1)
+
+  fig['layout']['showlegend'] = False
+  fig['layout']['hovermode'] = 'y'
+  fig['layout']['hoverlabel'].update(
+    font = dict(
+      size = 12,
+      family = 'monospace',
+    )
+  )
+  fig['layout']['xaxis1'].update(
+    showline = False,
+    zeroline = False,
+    showgrid = False,
+    showticklabels = False,
+    hoverformat = '.2f%%',
+    fixedrange = True,
+  )
+  fig['layout']['yaxis1'].update(
+    tickvals = [1],
+    ticktext = [reference_ticktext],
+    tickfont = dict(
+      size = 12,
+      family = 'monospace'
+    ),
+    domain = [1 - (1 / len(mhless_gt_df)), 1],
+    fixedrange = True,
+  )
+  fig['layout']['xaxis2'].update(
+    title = 'Frequency (%)',
+    hoverformat = '.2f%%',
+    zeroline = False,
+    fixedrange = True,
+  )
+  fig['layout']['yaxis2'].update(
+    tickvals = np.arange(len(yticktexts)),
+    ticktext = yticktexts,
+    tickfont = dict(
+      size = 12,
+      family = 'monospace'
+    ),
+    fixedrange = True,
+    domain = [0, 1 - 1.5 * (1 / len(mhless_gt_df))],
+  )
+  fig['layout']['height'] = max(105 + 14 + 14 * len(mhless_gt_df), 200)
+  fig['layout']['width'] = 920
+  fig['layout']['margin'] = {
+    'l': 600,
+    'r': 25,
+    't': 25,
+    'b': 80,
+  }
+  return fig
 
 ##
 # Download callbacks
