@@ -18,6 +18,7 @@ seaborn = "*"
 scipy = "*"
 numpy = "*"
 sklearn = "*"
+scikit-learn = "==0.18.1"
 rq = "*"
 "boto3" = "*"
 
