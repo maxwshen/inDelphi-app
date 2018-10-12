@@ -754,7 +754,7 @@ layout = html.Div([
                 min = 0,
                 max = 7,
                 step = 1,
-                value = [0, 7],
+                value = [1, 7],
                 marks = {
                   0: '0.05%',
                   1: '0.5%',

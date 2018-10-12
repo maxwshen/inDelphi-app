@@ -488,9 +488,8 @@ def add_mhless_genotypes(pred_df, stats, length_cutoff = None):
   new_pred_df = pred_df[pred_df['Category'] == 'ins']
 
   # Add MH deletions
-  for idx, row in pred_df.iterrows():
-    if row['Genotype position'] != 'e' and row['Category'] == 'del':
-      new_pred_df = new_pred_df.append(row, ignore_index = True)
+  crit = (pred_df['Genotype position'] != 'e') & (pred_df['Category'] == 'del')
+  new_pred_df = new_pred_df.append(pred_df[crit], ignore_index = True)
 
   # Add MHless deletions by length
   if length_cutoff is None:
@@ -498,6 +497,7 @@ def add_mhless_genotypes(pred_df, stats, length_cutoff = None):
   else:
     max_del_len = int(length_cutoff)
     
+  mhless_dd = defaultdict(list)
   for del_len in range(max_del_len):
     crit = (pred_df['Category'] == 'del') & (pred_df['Length'] == del_len) & (pred_df['Genotype position'] == 'e')
     subset = pred_df[crit]
@@ -525,28 +525,23 @@ def add_mhless_genotypes(pred_df, stats, length_cutoff = None):
 
     for gt_pos, flag in zip([0, del_len], [has0, hasN]):
       if flag:
-        new_row = pd.DataFrame({
-          'Category': 'del',
-          'Genotype position': gt_pos,
-          'Length': del_len,
-          'Microhomology length': 0,
-          'Predicted frequency': frac_freq,
-        }, index = [0])
-        new_pred_df = new_pred_df.append(new_row, ignore_index = True)
+        mhless_dd['Genotype position'].append(gt_pos)
+        mhless_dd['Length'].append(del_len)
+        mhless_dd['Predicted frequency'].append(frac_freq)
         total_freq_added += frac_freq
 
     for idx in range(1, del_len):
-      mid_pos = [idx]
-      if mid_pos in mhs:
-        new_row = pd.DataFrame({
-          'Category': 'del',
-          'Genotype position': mid_pos,
-          'Length': del_len,
-          'Microhomology length': 0,
-          'Predicted frequency': frac_freq / nummid,
-        }, index = [0])
-        new_pred_df = new_pred_df.append(new_row, ignore_index = True)
+      mid_pos = idx
+      if [mid_pos] in mhs:
+        mhless_dd['Genotype position'].append(mid_pos)
+        mhless_dd['Length'].append(del_len)
+        mhless_dd['Predicted frequency'].append(frac_freq / nummid)
         total_freq_added += frac_freq / nummid
+
+  mhless_df = pd.DataFrame(mhless_dd)
+  mhless_df['Category'] = 'del'
+  mhless_df['Microhomology length'] = 0
+  new_pred_df = new_pred_df.append(mhless_df, ignore_index = True)
 
   return new_pred_df
 
