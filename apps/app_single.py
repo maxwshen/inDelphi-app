@@ -22,6 +22,10 @@ import lib, header
 
 from indelphi_app import app
 
+# from rq import Queue
+# from worker import conn
+# rq = Queue(connection = conn)
+
 # init
 inDelphi.init_model()
 try:
