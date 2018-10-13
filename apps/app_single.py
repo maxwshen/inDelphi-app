@@ -489,36 +489,15 @@ layout = html.Div([
           html.Div([
             html.Div(
               html.A(
-                '📑 Download target site summary and statistics',
-                id = 'S_summary-download-link'
-              ),
-            ),
-            html.Div(
-              html.A(
-                '📜 Download table of inDelphi genotype predictions', 
-                id = 'S_csv-download-link'
-              ),
-            ),
-            html.Div(
-              html.A(
                 '🔗 Shareable link to your results', 
                 id = 'S_page-link'
               ),
             ),
           ], style = dict(
-              marginLeft = '20',
+              height = '30px',
+              textAlign = 'center',
             ),
           ),
-
-          html.Div(
-            'Copyright MIT 2018.\nAll Rights Reserved.',
-            style = dict(
-              textAlign = 'center',
-              marginTop = '30',
-              marginBottom = '30',
-            )
-          ),
-
 
         ], className = 'module_style',
         ),
@@ -645,6 +624,20 @@ layout = html.Div([
             ],
             className = 'row',
           ),
+
+          html.Div([
+            html.Div(
+              html.A(
+                '📑 Download summary statistics',
+                id = 'S_summary-download-link'
+              ),
+            ),
+          ], style = dict(
+              height = '30px',
+              textAlign = 'center',
+            ),
+          ),
+
         ], className = 'module_style',
         ),
 
@@ -815,6 +808,18 @@ layout = html.Div([
             className = 'row',
           ),
 
+          html.Div([
+            html.Div(
+              html.A(
+                '📜 Download table of inDelphi genotype predictions', 
+                id = 'S_csv-download-link'
+              ),
+            ),
+          ], style = dict(
+              height = '30px',
+              textAlign = 'center',
+            ),
+          ),
 
           # Table and barplot
           dcc.Graph(
@@ -824,6 +829,14 @@ layout = html.Div([
               displaylogo = False,
               displayModeBar = False,
             ),
+          ),
+
+          html.Div(
+            'Copyright MIT 2018.\nAll Rights Reserved.',
+            style = dict(
+              textAlign = 'center',
+              height = '40px',
+            )
           ),
 
         ], className = 'module_style',
@@ -1821,12 +1834,16 @@ def update_link(pred_df_string, pred_stats_string):
   pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
   stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
 
-  inDelphi.add_genotype_column(pred_df, stats)
-  inDelphi.add_name_column(pred_df, stats)
+  pdf = inDelphi.add_mhless_genotypes(pred_df, stats)
+  # inDelphi.add_genotype_column(pred_df, stats)
+  # inDelphi.add_name_column(pred_df, stats)
+  inDelphi.add_genotype_column(pdf, stats)
+  inDelphi.add_name_column(pdf, stats)
 
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownload?value={}'.format(time)
-  pred_df.to_csv('user-csvs/%s.csv' % (time))
+  # pred_df.to_csv('user-csvs/%s.csv' % (time))
+  pdf.to_csv('user-csvs/%s.csv' % (time))
   return link_fn
 
 @app.callback(
