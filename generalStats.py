@@ -4,6 +4,14 @@ import os, pickle
 
 stats_dir = os.path.dirname(os.path.realpath(__file__)) + '/statistics'
 
+mm10_genes = open(stats_dir + '/mm10_coding_genes.txt').readlines()
+mm10_genes = [s.strip() for s in mm10_genes]
+mm10_choices = [{'label': s, 'value': s} for s in mm10_genes]
+
+hg38_genes = open(stats_dir + '/hg38_coding_genes.txt').readlines()
+hg38_genes = [s.strip() for s in hg38_genes]
+hg38_choices = [{'label': s, 'value': s} for s in hg38_genes]
+
 ##
 # 
 ##

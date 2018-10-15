@@ -318,7 +318,7 @@ def get_gapped_alignments(top, stats):
 ###############################################
 
 def get_color(stats_col):
-  if stats_col in ['Cutsite', 'Dist. to POI']:
+  if stats_col in ['Cutsite', 'Exon number', 'Dist. to 5\' end', 'Dist. to 3\' end', 'Dist. to POI']:
     return '#86898C'
   if stats_col == 'Exp. indel len':
     return '#86898C'
@@ -350,13 +350,13 @@ def get_color(stats_col):
 def get_batch_statcol_xrange(stats, stat_nm):
   if '(%)' in stat_nm:
     buff = 3
-  elif stat_nm == 'Exp. indel len':
+  elif stat_nm in ['Exp. indel len', 'Exon number']:
     buff = 1
   elif stat_nm == 'MH strength':
     buff = 0.1
   elif stat_nm == 'Precision':
     buff = 0.05 
-  elif stat_nm == 'Cutsite':
+  elif stat_nm in ['Cutsite', 'Dist. to 5\' end', 'Dist. to 3\' end']:
     buff = 10
   elif stat_nm in ['Repairs to spec.', 'Deletes spec.']:
     buff = 5
@@ -397,6 +397,8 @@ def rename_batch_columns(stats):
     'Highest del frequency': 'M.F. del (%)',
     'Highest ins frequency': 'M.F. ins (%)',
     'Expected indel length': 'Exp. indel len',
+    'Distance to 5\' exon boundary': 'Dist. to 5\' end',
+    'Distance to 3\' exon boundary': 'Dist. to 3\' end',
   }
   for col in stats:
     if col in name_changes:
@@ -406,6 +408,9 @@ def rename_batch_columns(stats):
 
 def order_chosen_columns(cols):
   preferred_order = [
+    'Exon number',
+    'Dist. to 5\' end',
+    'Dist. to 3\' end',
     'Cutsite',
     'Dist. to POI',
     'Repairs to spec.',
@@ -447,3 +452,12 @@ def get_fixedwidth_ID(ids):
     fw_id = '%s#%s' % (' ' * num_spaces, item)
     fw_ids.append(fw_id)
   return fw_ids
+
+def get_fixedwidth_items(items):
+  largest_len = len(str(max(items)))
+  fw_items = []
+  for item in items:
+    num_spaces = largest_len - len(str(item))
+    fw_item = '%s%s' % (' ' * num_spaces, item)
+    fw_items.append(fw_item)
+  return fw_items

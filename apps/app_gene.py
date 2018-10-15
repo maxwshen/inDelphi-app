@@ -97,12 +97,206 @@ layout = html.Div([
       header.get_navigation_header('gene'),
 
       ###################################################
+      # Genome choice
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # Left
+              html.Div(
+                [
+                  html.Span('Genome: '),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '50%',
+                  transform = 'translateX(-10px)',
+                ),
+              ),
+              # Middle
+              html.Div(
+                [
+                  dcc.RadioItems(
+                    id = 'G_genome-radio',
+                    options = [
+                      {'label': 'Human (hg38)', 'value': 'hg38'},
+                      {'label': 'Mouse (mm10)', 'value': 'mm10'},
+                    ],
+                    value = 'hg38'
+                  )
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  width = '30%',
+                ),
+              ),
+              # Right
+              html.Div(
+                [],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'left',
+                  width = '20%',
+                  transform = 'translateX(10px)',
+                ),
+              ),
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
+          ),
+        ],
+        style = dict(
+          display = 'table',
+          width = '100%',
+          marginBottom = 10,
+        ),
+      ),
+
+      ###################################################
+      # Gene dropdown
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # Left
+              html.Div(
+                [
+                  html.Span('Gene: '),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '50%',
+                  transform = 'translateX(-10px)',
+                ),
+              ),
+              # Middle
+              html.Div(
+                [
+                  dcc.Dropdown(
+                    id = 'G_gene-dropdown',
+                    placeholder = 'Type to search for a gene',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  width = '25%',
+                ),
+              ),
+              # Right
+              html.Div(
+                [],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'left',
+                  width = '25%',
+                  transform = 'translateX(10px)',
+                ),
+              ),
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
+          ),
+        ],
+        style = dict(
+          display = 'table',
+          width = '100%',
+          marginBottom = 10,
+        ),
+      ),
+
+      ###################################################
+      # Cell type
+      ###################################################
+      html.Div(
+        [
+          html.Div(
+            [
+              # Left
+              html.Div(
+                [
+                  html.Span('Cell type: '),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'right',
+                  width = '50%',
+                  transform = 'translateX(-10px)',
+                ),
+              ),
+              # Middle
+              html.Div(
+                [
+                  dcc.Dropdown(
+                    options = [
+                      {'label': 'HCT116', 'value': 'HCT116'},
+                      {'label': 'HEK293', 'value': 'HEK293'},
+                      {'label': 'K562', 'value': 'K562'},
+                      {'label': 'mESC', 'value': 'mESC'},
+                      {'label': 'U2OS', 'value': 'U2OS'},
+                    ],
+                    id = 'G_celltype_dropdown',
+                    searchable = False,
+                    clearable = False,
+                    value = 'mESC',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  width = '10%',
+                ),
+              ),
+              # Right
+              html.Div(
+                [
+                  html.Div(
+                    [
+                      html.Img(
+                        src = '/staticfiles/tooltip_logo',
+                        className = 'tooltiprightlogo',
+                      ),
+                      html.Span(
+                        'Choose a cell type specific version of inDelphi. If your cell type of interest is not listed here, we recommend using mESC if your cell type has no expected defects in DNA repair. Contradicting the genome choice is not a problem: for example, human embryonic stem cells are likely to have more similar DNA repair outcomes to mESC than human cancer cell lines.',
+                        className = 'tooltiprighttext',
+                        style = dict(width = '200px',)
+                      ),
+                    ], 
+                    className = 'tooltipright',
+                  ),
+                ],
+                style = dict(
+                  display = 'table-cell',
+                  textAlign = 'left',
+                  width = '40%',
+                  transform = 'translateX(10px)',
+                ),
+              ),
+            ],
+            style = dict(
+              display = 'table-row',
+            ),
+          ),
+        ],
+        style = dict(
+          display = 'table',
+          width = '100%',
+          marginBottom = 10,
+        ),
+      ),
+
+
+      ###################################################
       # Submit button
       ###################################################
       # Submit button
       html.Div([
         html.Button(
-          'PREDICT REPAIR',
+          'SUBMIT',
           id = 'G_submit_button',
           style = dict(
             boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
@@ -166,7 +360,9 @@ layout = html.Div([
                 dcc.Dropdown(
                   id = 'G_dropdown-columns',
                   options = [
-                    {'label': 'Cutsite', 'value': 'Cutsite'},
+                    {'label': 'Exon number', 'value': 'Exon number'},
+                    {'label': 'Distance to 5\' exon boundary', 'value': 'Dist. to 5\' end'},
+                    {'label': 'Distance to 3\' exon boundary', 'value': 'Dist. to 3\' end'},
                     {'label': 'Precision', 'value': 'Precision'},
                     {'label': 'Frameshift (%)', 'value': 'Frameshift (%)'},
                     {'label': 'Frame +0 (%)', 'value': 'Frame +0 (%)'},
@@ -181,7 +377,7 @@ layout = html.Div([
                   multi = True,
                   searchable = False,
                   clearable = False,
-                  value = ['Precision', 'Frameshift (%)', 'MH strength', 'M.F. gt (%)'],
+                  value = ['Exon number', 'Dist. to 5\' end', 'Dist. to 3\' end', 'Precision', 'Frameshift (%)', 'Frame +0 (%)'],
                   className = 'nine columns',
                 ),
               ],
@@ -256,7 +452,7 @@ layout = html.Div([
                 )
               )
             ], style = dict(
-                transform = 'translateX(20px)',
+                textAlign = 'center',
                 height = 60,
               )
             ),
@@ -267,7 +463,7 @@ layout = html.Div([
         ##
         ], 
         style = dict(
-          transform = 'translateX(90px)',
+          transform = 'translateX(240px)',
           width = '970px',
           boxShadow = '1px 3px 6px 0 rgba(0, 0, 0, 0.2)',
           marginBottom = '50px',
@@ -333,7 +529,8 @@ layout = html.Div([
 
   ],  # body div
   style = dict(
-    width = '1150px',
+    # width = '1150px',
+    width = '1450px',
     margin = '0 auto',
   )
 )
@@ -366,23 +563,78 @@ def update_hidden_clickdata(clickData):
 
 
 ##
+# Header callbacks
+##
+@app.callback(
+  Output('G_gene-dropdown', 'options'),
+  [Input('G_genome-radio', 'value')])
+def update_gene_dropdown_choices(genome_build):
+  stats_dir = os.path.dirname(os.path.realpath(__file__)) + '/statistics/'
+  if genome_build == 'mm10':
+    return generalStats.mm10_choices
+  elif genome_build == 'hg38':
+    return generalStats.hg38_choices
+
+
+##
 # AWS S3 download callback
 ##
 @app.callback(
   Output('G_hidden-pred-df-stats', 'children'),
-  [Input('G_submit_button', 'n_clicks')]
+  [Input('G_submit_button', 'n_clicks')],
+  [State('G_genome-radio', 'value'),
+   State('G_gene-dropdown', 'value'),
+   State('G_celltype_dropdown', 'value')]
 )
-def update_df_stats(nclicks):
-  query_fn = 'hg38_0_mESC_SpCas9_0.csv'
+def update_df_stats(n_clicks, genome_build, gene, celltype):
+  query_fn = '%s_%s_SpCas9_%s.csv' % (genome_build, celltype, gene)
   local_dir = 'local-s3/'
   s3.Bucket('indelphi-storage').download_file(query_fn, local_dir + query_fn)
 
   all_stats = pd.read_csv(local_dir + query_fn, index_col = 0)
   all_stats['ID'] = all_stats.index + 1
+  all_stats['PAM'] = [s[63:66] for s in all_stats['Local context']]
   all_stats['MH strength'] = np.log(all_stats['Phi'])
-  return all_stats.iloc[:1000].to_csv()
-  # return all_stats.iloc[:100].to_csv()
-  # return all_stats.to_csv()
+
+  dd = defaultdict(list)
+  for idx, row in all_stats.iterrows():
+    sm_link = lib.encode_dna_to_url_path_single(row['Local context'], 60, celltype)
+    dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
+
+    if row['Exon strand'] == row['gRNA strand w.r.t. exon strand']:
+      dd['Strand'].append('+')
+    else:
+      dd['Strand'].append('-')
+
+    if row['Exon strand'] == '+':
+      cutsite_coord = row['Exon start'] + row['Cutsite distance to 5p boundary']
+    else:
+      cutsite_coord = row['Exon start'] + row['Cutsite distance to 3p boundary']
+    dd['Cutsite coordinate'].append(cutsite_coord)
+
+  for col in dd:
+    all_stats[col] = dd[col]
+
+  all_stats['Distance to 5\' exon boundary'] = all_stats['Cutsite distance to 5p boundary']
+  all_stats['Distance to 3\' exon boundary'] = all_stats['Cutsite distance to 3p boundary']
+
+  return all_stats.to_csv()
+
+##
+# Module header callbacks, Advanced options hiding/showing
+##
+@app.callback(
+  Output('G_postcomp_module_header', 'children'),
+  [Input('G_hidden-pred-df-stats', 'children')],
+  [State('G_genome-radio', 'value'),
+   State('G_gene-dropdown', 'value')]
+)
+def update_postcomp_module_header(all_stats_string, genome_build, gene):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  return 'Results of %s SpCas9 (NGG) gRNAs targeting %s in %s' % (len(stats), gene, genome_build)
+
 
 ##
 # Column selection and sorting callbacks
@@ -445,6 +697,7 @@ def update_columns_value(options, prev_value, url, n_clicks):
 
   return value
 
+
 ##
 # Stats table callbacks
 ## 
@@ -483,13 +736,15 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
   stats_cols = list(stats.columns)
   nonstat_cols = [
     'ID',
+    'PAM',
+    'URL',
     'Cas9 type',
     'Celltype',
     'Chromosome',
     'Cutsite distance to 3p boundary',
     'Cutsite distance to 5p boundary',
     'Exon end',
-    'Exon number',
+    # 'Exon number',
     'Exon start',
     'Exon strand',
     'Gene symbol',
@@ -499,6 +754,8 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
     'gRNA',
     'gRNA strand w.r.t. exon strand',
     'kgID',
+    'Strand',
+    'Cutsite coordinate',
   ]
 
   for nonstat_col in nonstat_cols:
@@ -594,6 +851,7 @@ def update_hidden_selected_id(selected_idx, rows):
   df = pd.DataFrame(rows)
   return list(df['ID'])[idx]
 
+
 ##
 # Plot stats callback: styles, hide when no figure
 ##
@@ -623,6 +881,7 @@ def update_postcomputation_settings_style(fig):
     return {'display': 'none'}
   else:
     return {}
+
 
 ########################################################
 # Plot stats callback
@@ -688,10 +947,11 @@ def update_stats_plot(rows, selected_row_indices):
 
   # Format y tick texts: ID, gRNA, PAM, orientation, URL.
   yticktexts = []
-  fixedwidth_ids = lib.get_fixedwidth_ID(df['ID'])
+  fw_ids = lib.get_fixedwidth_ID(df['ID'])
+  fw_kgids = lib.get_fixedwidth_items(df['kgID'])
+  fw_coords = lib.get_fixedwidth_items(df['Cutsite coordinate'])
   for idx, row in df.iterrows():
-    row_text = '%s %s' % (row['gRNA'], fixedwidth_ids[idx])
-    # row_text = '%s %s %s <a href="%s">details</a> %s' % (row['gRNA'], row['PAM'], row['gRNA orientation'], row['URL'], fixedwidth_ids[idx])
+    row_text = '%s %s %s %s %s %s <a href="%s">details</a> %s' % (row['gRNA'], row['PAM'], row['Chromosome'], fw_coords[idx], row['Strand'], fw_kgids[idx], row['URL'], fw_ids[idx])
     yticktexts.append(row_text)
 
 
@@ -763,10 +1023,10 @@ def update_stats_plot(rows, selected_row_indices):
   fig['layout']['showlegend'] = False
   fig['layout']['hovermode'] = 'y'
   # fig['layout']['spikedistance'] = -1
-  fig['layout']['width'] = 275 + len(stats_cols) * 150
+  fig['layout']['width'] = 455 + len(stats_cols) * 150
   fig['layout']['height'] = 150 + len(df) * 11
   fig['layout']['margin'] = {
-    'l': 250,
+    'l': 430,
     'r': 25,
     't': 0,
     'b': 150,
@@ -853,10 +1113,10 @@ def update_hist_plot(rows, selected_row_indices):
   fig['layout']['paper_bgcolor'] = 'rgba(255, 255, 255, 0)'
   fig['layout']['plot_bgcolor'] = 'rgba(255, 255, 255, 0)'
   fig['layout']['showlegend'] = False
-  fig['layout']['width'] = 275 + len(stats_cols) * 150
+  fig['layout']['width'] = 455 + len(stats_cols) * 150
   fig['layout']['height'] = 100
   fig['layout']['margin'] = {
-    'l': 250,
+    'l': 430,
     'r': 25,
     't': 0,
     # 't': 60,
@@ -864,4 +1124,61 @@ def update_hist_plot(rows, selected_row_indices):
     'b': 40,
   }
   return fig
+
+##
+# Download callbacks
+##
+@app.callback(
+  Output('G_download-link', 'href'), 
+  [Input('G_table-stats', 'rows')])
+def update_link(rows):
+  df = pd.DataFrame(rows)
+  stats_cols = list(df.columns)
+  nonstat_cols = [
+    'ID',
+    'PAM',
+    'URL',
+    'Cas9 type',
+    'Celltype',
+    'Chromosome',
+    'Cutsite distance to 3p boundary',
+    'Cutsite distance to 5p boundary',
+    'Exon end',
+    # 'Exon number',
+    'Exon start',
+    'Exon strand',
+    'Gene symbol',
+    'Genome',
+    'Local context',
+    'Local cutsite',
+    'gRNA',
+    'gRNA strand w.r.t. exon strand',
+    'kgID',
+    'Strand',
+    'Cutsite coordinate',
+  ]
+  for nonstat_col in nonstat_cols:
+    stats_cols.remove(nonstat_col)
+  df = df[nonstat_cols + lib.order_chosen_columns(stats_cols)]
+
+  time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
+  link_fn = '/dash/urlToDownloadGene?value={}'.format(time)
+  df.to_csv('user-csvs/%s.csv' % (time), index = False)
+  return link_fn
+
+##
+# Flask serving
+##
+@app.server.route('/dash/urlToDownloadGene') 
+def download_csv_gene():
+  value = flask.request.args.get('value')
+  # create a dynamic csv or file here using `StringIO` 
+  # (instead of writing to the file system)
+  local_csv_fn = value.split('/')[-1]
+  return flask.send_file(
+    open('user-csvs/%s.csv' % (local_csv_fn), 'rb'),
+    mimetype = 'text/csv',
+    attachment_filename = 'inDelphi_gene_output.csv',
+    as_attachment = True,
+  )
 
