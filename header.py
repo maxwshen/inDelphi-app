@@ -27,7 +27,7 @@ def get_navigation_header(page_nm):
   selected_style['borderBottom'] = '1px solid'
 
   styles = dict()
-  for nm in ['single', 'batch', 'guide', 'about']:
+  for nm in ['single', 'batch', 'gene', 'guide', 'about']:
     if page_nm == nm:
       styles[nm] = selected_style
     else:
@@ -57,6 +57,15 @@ def get_navigation_header(page_nm):
             'Batch mode',
             href = 'https://www.crisprindelphi.design/batch',
             style = styles['batch'],
+            className = 'dynamicunderline',
+          ),
+          html.Span(
+            divider_text,
+          ),
+          html.A(
+            'Gene mode',
+            href = 'https://www.crisprindelphi.design/gene',
+            style = styles['gene'],
             className = 'dynamicunderline',
           ),
           html.Span(

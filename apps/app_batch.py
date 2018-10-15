@@ -635,7 +635,7 @@ layout = html.Div([
                 )
               )
             ], style = dict(
-                transform = 'translateX(20px)',
+                textAlign = 'center',
                 height = 60,
               )
             ),
@@ -1381,7 +1381,13 @@ def update_statstable_selected(clickData, submit_time, col_values, sortcol_value
     # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
     selected_row_indices = []
     df = pd.DataFrame(rows)
-    new_idx = int(df[df['ID'] == int(prev_id)].index[0])
+
+    id_list = list(df['ID'])
+    real_new_idx = id_list.index(int(prev_id))
+    display_new_idx = len(df) - real_new_idx - 1
+    new_idx = display_new_idx
+    
+    # new_idx = int(df[df['ID'] == int(prev_id)].index[0])
     selected_row_indices = [new_idx]
   elif submit_intxn:
     # if hitting submit button, clear the selected rows. Otherwise, selecting a row M > number of rows N in new query, will fail
@@ -1406,7 +1412,9 @@ def update_hidden_selected_id(selected_idx, rows):
     return ''
   idx = selected_idx[0]
   df = pd.DataFrame(rows)
-  return list(df['ID'])[idx]
+  id_list = list(df['ID'])[::-1]
+  print('Selected id: %s' % (id_list[idx]))
+  return id_list[idx]
 
 ##
 # Plot stats callback: styles, hide when no figure
@@ -1461,25 +1469,45 @@ def update_stats_plot(rows, selected_row_indices):
     selected_row_index = None
   selected_line = dict()
 
+  yrange = np.arange(1, len(df.index) + 1)
+
   # Generate each plot
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
     marker = {'color': [lib.get_color(stats_col)] * len(df)}
     for i in (selected_row_indices or []):
       marker['color'][i] = '#000000'
+    
+    # Gray lines
+    fig.append_trace(
+      go.Bar(
+        x = df[stats_col][::-1],
+        y = yrange,
+        orientation = 'h',
+        hoverinfo = 'skip',
+        width = 0.1,
+        opacity = 0.2,
+        marker = dict(
+          color = 'gray',
+        )
+      ), 
+      1, subplot_num
+    )
+
     # Scatter
     fig.append_trace(
       go.Scattergl(
-        x = df[stats_col],
-        y = np.array(df.index) + 1,
+        x = df[stats_col][::-1],
+        y = yrange,
         mode = 'markers',
         marker = marker,
         name = '',
       ), 
       1, subplot_num
     )
+
     if selected_row_index is not None:
-      selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][selected_row_index])
+      selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][len(df) - selected_row_index - 1])
 
   # Format y tick texts: ID, gRNA, PAM, orientation, URL.
   yticktexts = []
@@ -1492,21 +1520,21 @@ def update_stats_plot(rows, selected_row_indices):
   # Subplot formatting
   fig['layout']['yaxis1'].update(
     fixedrange = True,
-    tickvals = np.arange(1, len(df.index) + 1),
-    ticktext = yticktexts,
+    tickvals = yrange,
+    range = [0, len(df) + 1],
+    ticktext = yticktexts[::-1],
     tickfont = dict(
       size = 12,
       family = 'monospace',
     ),
     zeroline = True,
     zerolinewidth = 2,
-    autorange = 'reversed',
     titlefont = dict(
       size = 10,
     ),
-    range = [0, len(df)],
   )
 
+  all_shapes = []
   x_domains = lib.get_x_domains(len(stats_cols))
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
@@ -1531,7 +1559,7 @@ def update_stats_plot(rows, selected_row_indices):
     )
 
     if selected_row_index is not None:
-      fig['layout']['shapes'].append(
+      all_shapes.append(
         lib.get_batch_select_line(
           x0 = selected_line[subplot_num][1],
           x1 = selected_line[subplot_num][1],
@@ -1541,7 +1569,7 @@ def update_stats_plot(rows, selected_row_indices):
           yref = 'y1',
         )
       )
-      fig['layout']['shapes'].append(
+      all_shapes.append(
         lib.get_batch_select_line(
           x0 = xmin,
           x1 = xmax,
@@ -1551,6 +1579,8 @@ def update_stats_plot(rows, selected_row_indices):
           yref = 'y1',
         )
       )
+
+  fig['layout']['shapes'] = all_shapes
 
   # Global figure formatting
   fig['layout']['showlegend'] = False
@@ -1602,11 +1632,12 @@ def update_hist_plot(rows, selected_row_indices):
       1, subplot_num
     )
     if selected_row_index is not None:
-      selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][selected_row_index])
+      selected_line[subplot_num] = (df.index[selected_row_index], df[stats_col][len(df) - selected_row_index - 1])
 
   # Subplot formatting
 
   x_domains = lib.get_x_domains(len(stats_cols))
+  all_shapes = []
   for idx, stats_col in enumerate(stats_cols):
     subplot_num = idx + 1
     fig['layout']['yaxis%s' % (subplot_num)].update(
@@ -1629,7 +1660,7 @@ def update_hist_plot(rows, selected_row_indices):
     )
 
     if selected_row_index is not None:
-      fig['layout']['shapes'].append(
+      all_shapes.append(
         lib.get_batch_select_line(
           x0 = selected_line[subplot_num][1],
           x1 = selected_line[subplot_num][1],
@@ -1639,6 +1670,8 @@ def update_hist_plot(rows, selected_row_indices):
           yref = 'y1',
         )
       )
+
+  fig['layout']['shapes'] = all_shapes
 
   # Global figure formatting
   fig['layout']['paper_bgcolor'] = 'rgba(255, 255, 255, 0)'
