@@ -1088,6 +1088,9 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
         sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite, celltype)
         dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
 
+        if adv_matchseq_flag or adv_del_flag:
+          pred_df = inDelphi.add_mhless_genotypes(pred_df, stats)
+
         # Handle advanced options
         if adv_matchseq_flag:
           inDelphi.add_genotype_column(pred_df, stats)
@@ -1103,7 +1106,7 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
           dd['Dist. to POI'].append(dist)
 
         if adv_del_flag:
-          crit = (pred_df['Category'] == 'del') & (pred_df['Genotype position'] != 'e')
+          crit = (pred_df['Category'] == 'del')
           delseq_freq = 0
           if grna_orient == '+':
             adv_delstart_local = adv_delstart
