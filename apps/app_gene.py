@@ -342,6 +342,38 @@ layout = html.Div([
         # Module body
         html.Div(
           [
+            # Row: Display kgIDs...
+            html.Div(
+              [
+                html.Strong(
+                  'Display kgIDs:',
+                  style = dict(
+                    textAlign = 'right',
+                    marginRight = '5px',
+                    height = '36px',  # height of one dropdown line
+                    lineHeight = '36px',  # centers vertically
+                  ),
+                  className = 'three columns',
+                ),
+
+                # Multi drop down to select columns
+                dcc.Dropdown(
+                  id = 'G_dropdown-kgid',
+                  multi = True,
+                  searchable = False,
+                  clearable = False,
+                  className = 'nine columns',
+                ),
+              ],
+              style = dict(
+                # width = '1050px',
+                marginBottom = '5px',
+                marginTop = '10px',
+              ),
+              className = 'row',
+              id = 'G_row_dropdown-kgid',
+            ),
+
             # Row: Display columns...
             html.Div(
               [
@@ -450,10 +482,15 @@ layout = html.Div([
                   '📑 Download table of predictions',
                   id = 'G_download-link'
                 )
-              )
+              ),
+              html.Div([
+                html.Span(
+                  'Note: Online visualization is limited to 1000 gRNAs.',
+                )
+              ])
             ], style = dict(
                 textAlign = 'center',
-                height = 60,
+                height = 90,
               )
             ),
 
@@ -624,7 +661,7 @@ def update_sortdir_from_url(url, default_value):
   [Input('G_url', 'pathname')],
   [State('G_dropdown-columns', 'value'),
    State('G_dropdown-columns', 'options')])
-def update_sortdir_from_url(url, default_value, options):
+def update_columns_from_url(url, default_value, options):
   all_options = [s['value'] for s in options]
   valid_flag, dd = lib.parse_valid_url_path_gene(url)
   if valid_flag:
@@ -725,19 +762,16 @@ def update_df_stats(n_clicks, genome_build, gene, celltype):
 ##
 @app.callback(
   Output('G_postcomp_module_header', 'children'),
-  [Input('G_hidden-pred-df-stats', 'children')],
+  [Input('G_table-stats', 'rows')],
   [State('G_genome-radio', 'value'),
    State('G_gene-dropdown', 'value')]
 )
-def update_postcomp_module_header(all_stats_string, genome_build, gene):
-  if all_stats_string == 'init':
-    assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
-  return 'Results of %s SpCas9 (NGG) gRNAs targeting %s in %s' % (len(stats), gene, genome_build)
-
+def update_postcomp_module_header(rows, genome_build, gene):
+  df = pd.DataFrame(rows)
+  return 'Results of %s SpCas9 (NGG) gRNAs targeting %s in %s' % (len(df), gene, genome_build)
 
 ##
-# Column selection and sorting callbacks
+# kgID, column selection and sorting callbacks
 ##
 @app.callback(
   Output('G_dropdown-sortcol', 'options'),
@@ -748,6 +782,44 @@ def update_sortcol_options(values):
     options.append({'label': value, 'value': value})
   return options
 
+@app.callback(
+  Output('G_dropdown-kgid', 'options'),
+  [Input('G_dropdown-kgid', 'value')],
+  [State('G_hidden-pred-df-stats', 'children')]
+)
+def update_dropdown_kgid_options(value, all_stats_string):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  kgids = list(set(stats['kgID']))
+  sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
+  options = []
+  total_size_of_selected = sum([sizes[kgids.index(s)] for s in value])
+  for kgid, size in zip(kgids, sizes):
+    curr_opt = {'label': '%s (%s gRNAs)' % (kgid, size), 'value': kgid}
+    if kgid not in value:
+      if size + total_size_of_selected > 1000:
+        curr_opt['disabled'] = True
+    options.append(curr_opt)
+  return options
+
+@app.callback(
+  Output('G_dropdown-kgid', 'value'),
+  [Input('G_hidden-pred-df-stats', 'children')]
+)
+def update_dropdown_kgid_value(all_stats_string):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  kgids = set(stats['kgID'])
+  sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
+  kgids_sorted = [x for _,x in sorted(zip(sizes, kgids))]
+  sizes_sorted = sorted(sizes)
+  for idx in range(1, len(sizes_sorted) + 1):
+    if sum(sizes_sorted[:idx]) > 1000:
+      break
+  return kgids_sorted[:idx - 1]
+
 ##
 # Stats table callbacks
 ## 
@@ -757,11 +829,16 @@ def update_sortcol_options(values):
    Input('G_dropdown-columns', 'value'),
    Input('G_dropdown-sortcol', 'value'),
    Input('G_sortdirection', 'value'),
+   Input('G_dropdown-kgid', 'value'),
   ])
-def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction):
+def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction, kgids):
   if all_stats_string == 'init':
     assert False, 'init'
   stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+
+  # Drop unselected kgids
+  stats = stats[stats['kgID'].isin(kgids)]
+  assert len(stats) <= 1000
 
   # Drop extra cols
   drop_cols = [
@@ -1180,10 +1257,25 @@ def update_hist_plot(rows, selected_row_indices):
 ##
 @app.callback(
   Output('G_download-link', 'href'), 
-  [Input('G_table-stats', 'rows')])
-def update_link(rows):
-  df = pd.DataFrame(rows)
-  stats_cols = list(df.columns)
+  [Input('G_hidden-pred-df-stats', 'children')])
+def update_link(all_stats_string):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+
+  # Drop extra cols
+  drop_cols = [
+    '1-bp ins frequency',
+    'MH del frequency',
+    'MHless del frequency',
+  ]
+  stats = stats.drop(drop_cols, axis = 1)
+
+  # Rename to shorter versions
+  stats = lib.rename_batch_columns(stats)
+
+  # Reformat floats
+  stats_cols = list(stats.columns)
   nonstat_cols = [
     'ID',
     'PAM',
@@ -1207,14 +1299,34 @@ def update_link(rows):
     'Strand',
     'Cutsite coordinate',
   ]
+
   for nonstat_col in nonstat_cols:
     stats_cols.remove(nonstat_col)
-  df = df[nonstat_cols + lib.order_chosen_columns(stats_cols)]
+  for stat_col in stats_cols:
+    # Reformat
+    if stat_col in ['Precision', 'MH strength']:
+      stats[stat_col] = [float('%.2f' % (s)) for s in stats[stat_col]]    
+    else:
+      stats[stat_col] = [float('%.1f' % (s)) for s in stats[stat_col]]    
+
+  # Reorder columns
+  stats = stats[nonstat_cols + lib.order_chosen_columns(stats_cols)]
 
   time = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-')
   link_fn = '/dash/urlToDownloadGene?value={}'.format(time)
-  df.to_csv('user-csvs/%s.csv' % (time), index = False)
+  stats.to_csv('user-csvs/%s.csv' % (time), index = False)
   return link_fn
+
+@app.callback(
+  Output('G_download-link', 'children'), 
+  [Input('G_hidden-pred-df-stats', 'children')])
+def update_link_text(all_stats_string):
+  if all_stats_string == 'init':
+    assert False, 'init'
+  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  num_grnas = len(stats)
+  num_kgids = len(set(stats['kgID']))
+  return '📑 Download full table of predictions for %s gRNAs and %s kgIDs' % (num_grnas, num_kgids)
 
 ##
 # Flask serving
