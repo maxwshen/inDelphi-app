@@ -561,6 +561,82 @@ def update_sort_time(v1, v2):
 def update_hidden_clickdata(clickData):
   return '%s %s' % (time.time(), clickData['points'][0]['pointNumber'])
 
+##
+# URL callbacks
+##
+@app.callback(
+  Output('G_genome-radio', 'value'),
+  [Input('G_url', 'pathname')],
+  [State('G_genome-radio', 'value')])
+def update_genome_build_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if valid_flag:
+    return dd['genome_build']
+  return default_value
+
+@app.callback(
+  Output('G_gene-dropdown', 'value'),
+  [Input('G_url', 'pathname')],
+  [State('G_gene-dropdown', 'value')])
+def update_gene_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if valid_flag:
+    return dd['gene']
+  return default_value
+
+@app.callback(
+  Output('G_celltype_dropdown', 'value'),
+  [Input('G_url', 'pathname')],
+  [State('G_celltype_dropdown', 'value')])
+def update_celltype_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if valid_flag:
+    return dd['celltype']
+  return default_value
+
+@app.callback(
+  Output('G_dropdown-sortcol', 'value'),
+  [Input('G_dropdown-sortcol', 'options')],
+  [State('G_dropdown-sortcol', 'value'),
+   State('G_url', 'pathname')])
+def update_sortcols_from_url(options, default_value, url):
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if not valid_flag or dd['sort_by'] == '-':
+    return default_value
+  else:
+    all_options = [s['value'] for s in options]
+    idx = int(dd['sort_by'])
+    return sorted(all_options)[idx]
+
+@app.callback(
+  Output('G_sortdirection', 'value'),
+  [Input('G_url', 'pathname')],
+  [State('G_sortdirection', 'value')])
+def update_sortdir_from_url(url, default_value):
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if valid_flag:
+    return dd['sort_dir']
+  else:
+    return default_value
+
+@app.callback(
+  Output('G_dropdown-columns', 'value'),
+  [Input('G_url', 'pathname')],
+  [State('G_dropdown-columns', 'value'),
+   State('G_dropdown-columns', 'options')])
+def update_sortdir_from_url(url, default_value, options):
+  all_options = [s['value'] for s in options]
+  valid_flag, dd = lib.parse_valid_url_path_gene(url)
+  if valid_flag:
+    value = []
+    alphabetical_options = sorted(all_options)
+    for idx, flag in enumerate(dd['chosen_columns']):
+      if flag == '1':
+        value.append(alphabetical_options[idx])
+    return value
+  else:
+    return default_value
+
 
 ##
 # Header callbacks
@@ -647,56 +723,6 @@ def update_sortcol_options(values):
   for value in values:
     options.append({'label': value, 'value': value})
   return options
-
-@app.callback(
-  Output('G_dropdown-columns', 'options'),
-  [Input('G_hidden-pred-df-stats', 'children')],
-  [State('G_dropdown-columns', 'options')]
-  )
-def update_columns_options(all_stats_string, prev_options):
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
-  options = prev_options
-
-  for d in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
-    td = {'label': d, 'value': d}
-    if d in stats.columns:
-      if td not in options:
-        options.append(td)
-    else:
-      if td in options:
-        options.remove(td)
-  return options
-
-@app.callback(
-  Output('G_dropdown-columns', 'value'),
-  [Input('G_dropdown-columns', 'options')],
-  [State('G_dropdown-columns', 'value'),
-   State('G_url', 'pathname'),
-   State('G_row_dropdown-columns', 'n_clicks')]
-  )
-def update_columns_value(options, prev_value, url, n_clicks):
-  value = prev_value
-  all_options = [s['value'] for s in options]
-
-  for td in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
-    if td in all_options:
-      if td not in value:
-        value.append(td)
-    else:
-      if td in value:
-        value.remove(td)
-
-  if n_clicks is None or n_clicks == 0:
-    valid_flag, dd = lib.parse_valid_url_path_batch(url)
-    if valid_flag:
-      value = []
-      alphabetical_options = sorted(all_options)
-      for idx, flag in enumerate(dd['chosen_columns']):
-        if flag == '1':
-          value.append(alphabetical_options[idx])
-
-  return value
-
 
 ##
 # Stats table callbacks
@@ -791,9 +817,9 @@ def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_directio
    State('G_submit_button', 'n_clicks'),
    ])
 def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, rows, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
-  if not bool(nc1 or nc2) and nc_submit == 1:
+  if not bool(nc1 and nc2) and nc_submit == 1:
     # On page load, select row from URL
-    valid_flag, dd = lib.parse_valid_url_path_batch(url)
+    valid_flag, dd = lib.parse_valid_url_path_gene(url)
     if valid_flag:
       if dd['row_select'] != '-':
         return [int(dd['row_select'])]
@@ -1182,3 +1208,21 @@ def download_csv_gene():
     as_attachment = True,
   )
 
+
+##
+# Page link callback
+##
+@app.callback(
+  Output('G_page-link', 'href'),
+  [Input('G_genome-radio', 'value'),
+   Input('G_gene-dropdown', 'value'),
+   Input('G_celltype_dropdown', 'value'),
+   Input('G_dropdown-columns', 'value'),
+   Input('G_dropdown-columns', 'options'),
+   Input('G_dropdown-sortcol', 'value'),
+   Input('G_sortdirection', 'value'),
+   Input('G_table-stats', 'selected_row_indices'),
+  ])
+def update_pagelink(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row):
+  url = 'https://www.crisprindelphi.design%s' % (lib.encode_url_path_gene(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row))
+  return url

@@ -210,6 +210,69 @@ def transform_empty_value_to_dash(val):
 __init_chars()
 __init_mappers()
 
+
+###############################################
+# Gene
+###############################################
+
+def parse_valid_url_path_gene(url_path):
+  dd = dict()
+  if url_path[:len('/gene_')] != '/gene_':
+    return False, dd
+
+  url_path = url_path.replace('/gene_', '')
+  if len(url_path) == 0 or '_' not in url_path:
+    return False, dd
+
+  parts = url_path.split('_')
+  cats = ['genome_build', 'gene', 'celltype', 'chosen_columns', 'sort_by', 'sort_dir', 'row_select']
+  if len(parts) != len(cats):
+    return False, dd
+  for idx, cat in enumerate(cats):
+    dd[cat] = parts[idx]
+
+  if dd['sort_dir'] == '1':
+    dd['sort_dir'] = 'Ascending'
+  else:
+    dd['sort_dir'] = 'Descending'
+
+  return True, dd
+
+
+def encode_url_path_gene(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row):
+  binary_flags_chosen_cols = ''
+  for co in sorted([s['value'] for s in column_options]):
+    if co in chosen_columns:
+      binary_flags_chosen_cols += '1'
+    else:
+      binary_flags_chosen_cols += '0'
+
+  if sort_by is not None:
+    sort_by = sorted(chosen_columns).index(sort_by)
+  else: 
+    sort_by = '-'
+
+  if sort_dir == 'Ascending':
+    sort_dir_val = '1'
+  else:
+    sort_dir_val = '0'
+
+  if selected_row == []:
+    selected_row_val = '-'
+  else:
+    selected_row_val = selected_row[0]
+
+  items = [
+    genome_build,
+    gene,
+    celltype,
+    binary_flags_chosen_cols, 
+    sort_by, 
+    sort_dir_val, 
+    selected_row_val,
+  ]
+  return '/gene_%s' % ('_'.join([str(s) for s in items]))
+
 ###############################################
 # Compbio operations
 ###############################################
