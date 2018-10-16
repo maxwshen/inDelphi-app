@@ -651,6 +651,30 @@ def update_gene_dropdown_choices(genome_build):
   elif genome_build == 'hg38':
     return generalStats.hg38_choices
 
+@app.callback(
+  Output('G_submit_button', 'children'),
+  [Input('G_gene-dropdown', 'value')],
+  [State('G_submit_button', 'children')])
+def update_submit_button_text(selected_gene, prev_value):
+  if selected_gene is None:
+    return 'SELECT A GENE'
+  else:
+    return 'SUBMIT'
+
+
+@app.callback(
+  Output('G_submit_button', 'style'),
+  [Input('G_gene-dropdown', 'value')],
+  [State('G_submit_button', 'style')])
+def update_submit_button_style(selected_gene, style):
+  if selected_gene is None:
+    style['backgroundColor'] = '#86898C'
+    style['color'] = 'white'
+  else:
+    style['backgroundColor'] = '#00A0DC'
+    style['color'] = 'white'
+  return style
+
 
 ##
 # AWS S3 download callback
