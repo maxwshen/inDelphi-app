@@ -35,25 +35,6 @@ modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoom
 layout = html.Div([
 
   ###################################################
-  # Hidden divs for light data storage
-  ###################################################
-  html.Div(
-    [
-      html.Div(
-        id = 'GUIDE_hidden-counter',
-        children = 'init'
-      ),
-      dcc.Location(
-        id = 'GUIDE_url',
-        refresh = False,
-      ),
-    ],
-    style = dict(
-      display = 'none',
-    ),
-  ),
-
-  ###################################################
   # Header
   ###################################################
   html.Div(
