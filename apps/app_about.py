@@ -181,3 +181,8 @@ layout = html.Div([
 #######################################################################
 #########################      CALLBACKS      #########################
 #######################################################################
+
+@app.server.route('/assets/<resource>')
+def serve_image_assets_about(resource):
+  # BE VERY CAREFUL NOT TO SERVE ARBITRARY FILES
+  return flask.send_from_directory(os.getcwd() + '/assets/', resource)
