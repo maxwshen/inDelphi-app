@@ -379,7 +379,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-pies.PNG')),
+                html.Img(src = '/assets/fig-pies.PNG'),
                 html.Div(
                   [
                     'Fig. 1: Observed breakdown of DNA repair types by cell-type. MH: microhomology. Endo.: endogenous.'
@@ -425,7 +425,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-indel-len.gif')),
+                html.Img(src = '/assets/fig-indel-len.gif'),
                 html.Div(
                   [
                     'Fig. 2: Example inDelphi predictions. inDelphi predicts +1 bp insertions and 1- to 60-bp deletions (negative indel length) separated into microhomology deletions (red) and microhomology-less deletions (orange).'
@@ -451,7 +451,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-mechanism.PNG')),
+                html.Img(src = '/assets/fig-mechanism.PNG'),
                 html.Div(
                   [
                     'Fig. 3: DNA repair mechanisms leading to microhomology and microhomology-less deletions. Left: microhomology-mediated end-joining (MMEJ). Right: canonical non-homologous end-joining (c-NHEJ) mediated by Lig4.'
@@ -486,7 +486,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-1bpins.PNG')),
+                html.Img(src = '/assets/fig-1bpins.PNG'),
                 html.Div(
                   [
                     'Fig. 4: 1-bp insertions copy the 5\' adjacent nucleotide (a), and occur at a frequency related to a DNA motif in mESCs (b) and U2OS cells (c).'
@@ -516,7 +516,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-pies.PNG')),
+                html.Img(src = '/assets/fig-pies.PNG'),
                 html.Div(
                   [
                     'Fig. 1: Observed breakdown of DNA repair types by cell-type. MH: microhomology. Endo.: endogenous.'
@@ -551,7 +551,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-mhless.png')),
+                html.Img(src = '/assets/fig-mhless.png'),
                 html.Div(
                   [
                     'Fig. 5: Example of separating microhomology-less deletions of a single deletion length into genotype-resolution predictions.'
@@ -639,7 +639,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-batch.gif')),
+                html.Img(src = '/assets/fig-batch.gif'),
                 html.Div(
                   [
                     'Fig. 6: Example usage of batch mode, showcasing gRNA selection and sorting.'
@@ -762,7 +762,7 @@ layout = html.Div([
 
             html.Div(
               [
-                html.Img(src = app.get_asset_url('fig-gene.gif')),
+                html.Img(src = '/assets/fig-gene.gif'),
                 html.Div(
                   [
                     'Fig. 7: Example usage of gene mode on IL32 in hg38.'
@@ -897,3 +897,9 @@ layout = html.Div([
 #######################################################################
 #########################      CALLBACKS      #########################
 #######################################################################
+
+
+@app.server.route('/assets/<resource>')
+def serve_image_assets(resource):
+  # BE VERY CAREFUL NOT TO SERVE ARBITRARY FILES
+  return flask.send_from_directory(os.getcwd() + '/assets/', resource)
