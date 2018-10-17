@@ -136,7 +136,7 @@ layout = html.Div([
 
               inDelphi is a computational model that predicts the heterogeneous (100+ unique) mixture of indels resulting from non-homologous end-joining at a CRISPR-induced cut. inDelphi synthesizes known biological mechanisms of DNA repair with machine learning and achieves strong accuracy.
 
-              In our study, we used inDelphi to identify a previously underappreciated class of disease-related mutations that could be corrected to its common, healthy DNA sequence, with high efficiency, using the "noisy" NHEJ pathway. We believe that our study suggests that, with inDelphi, NHEJ can be reinterpreted from an undesirable yet efficient DNA repair pathway, into an efficient DNA repair pathway (1) whose heterogeneity can be predicted and thereby controlled, and (2) that is useful for certain genome editing applications and .
+              In our study, we used inDelphi to identify a previously underappreciated class of disease-related mutations that could be corrected to its common, healthy DNA sequence, with high efficiency, using the "noisy" NHEJ pathway. We believe that our study suggests that, with inDelphi, NHEJ can be reinterpreted from an undesirable yet efficient DNA repair pathway, into an efficient DNA repair pathway (1) whose heterogeneity can be predicted and thereby controlled, and (2) that is useful for certain genome editing applications.
 
               #### Some applications:
               - Identify gRNAs that have extremely high frameshift frequencies to more efficiently knock down genes
