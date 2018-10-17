@@ -73,7 +73,7 @@ def get_navigation_header(page_nm):
           ),
           html.A(
             'User guide',
-            href = 'https://www.crisprindelphi.design/usage',
+            href = 'https://www.crisprindelphi.design/guide',
             style = styles['guide'],
             className = 'dynamicunderline',
           ),
