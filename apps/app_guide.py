@@ -79,8 +79,6 @@ layout = html.Div([
   # Side bar
   html.Div(
     [
-
-
       ## 
       html.Div([
         html.A('Overview', 
@@ -93,28 +91,28 @@ layout = html.Div([
         html.A('Description', 
           href = 'guide#overview2', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Overview of models', 
           href = 'guide#overview3', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('General website features', 
           href = 'guide#overview4', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Python implementation', 
           href = 'guide#overview5', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       ##
@@ -123,41 +121,41 @@ layout = html.Div([
           href = 'guide#single', 
           className = 'dynamicunderline',
           style = dict(color = 'black', textDecoration = 'none')),
-      ], style = dict(marginBottom = '8px')),
+      ], style = dict(marginBottom = '8px', marginTop = '20px')),
 
       html.Div([
         html.A('inDelphi predicts 80-95% of editing outcomes', 
           href = 'guide#single', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Microhomology and overlap length inform deletions', 
           href = 'guide#single2', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('1-bp insertions depend on cell-type, DNA motif, and gRNA orientation', 
           href = 'guide#single3', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Microhomology-less deletions are noisy', 
           href = 'guide#single4', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Features: Single mode', 
           href = 'guide#single5', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       ##
@@ -166,27 +164,27 @@ layout = html.Div([
           href = 'guide#batch', 
           className = 'dynamicunderline',
           style = dict(color = 'black', textDecoration = 'none')),
-      ], style = dict(marginBottom = '8px')),
+      ], style = dict(marginBottom = '8px', marginTop = '20px')),
 
       html.Div([
         html.A('Features', 
           href = 'guide#batch2', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Processing limitations', 
           href = 'guide#batch3', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Summary statistics', 
           href = 'guide#batch4', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       ##
@@ -195,20 +193,20 @@ layout = html.Div([
           href = 'guide#gene', 
           className = 'dynamicunderline',
           style = dict(color = 'black', textDecoration = 'none')),
-      ], style = dict(marginBottom = '8px')),
+      ], style = dict(marginBottom = '8px', marginTop = '20px')),
 
       html.Div([
         html.A('Features', 
           href = 'guide#gene2', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       html.Div([
         html.A('Summary statistics', 
           href = 'guide#gene3', 
           className = 'dynamicunderline',
-          style = dict(color = 'black', textDecoration = 'none')),
+          style = dict(color = 'gray', textDecoration = 'none')),
       ], style = dict(paddingLeft = '24px', marginBottom = '8px')),
 
       ##
@@ -217,7 +215,7 @@ layout = html.Div([
           href = 'guide#faq', 
           className = 'dynamicunderline',
           style = dict(color = 'black', textDecoration = 'none')),
-      ], style = dict(marginBottom = '8px')),
+      ], style = dict(marginBottom = '8px', marginTop = '20px')),
 
 
     ],
@@ -225,7 +223,7 @@ layout = html.Div([
       backgroundColor = 'white',
       opacity = 0.9,
       zIndex = 20,
-      top = '15%',
+      top = '12%',
       left = '2%',
       overflowX = 'hidden',
       position = 'fixed',
