@@ -21,6 +21,8 @@ sklearn = "*"
 scikit-learn = "==0.18.1"
 rq = "*"
 "boto3" = "*"
+flask-caching = "*"
+redis = "*"
 
 [requires]
 python_version = "3.6"

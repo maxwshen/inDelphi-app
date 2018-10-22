@@ -1106,6 +1106,7 @@ def update_pred_df(text1, text2, celltype):
    Input('S_hidden-chosen-celltype', 'children')])
 def update_pred_stats(text1, text2, celltype):
   seq = text1 + text2
+  seq = seq.upper()
   cutsite = len(text1)
   pred_df, stats = inDelphi.predict(seq, cutsite, celltype)
   return pd.DataFrame(stats, index = [0]).to_csv()
