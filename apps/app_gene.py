@@ -14,6 +14,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import flask
 import plotly
+from flask_caching import Cache
 
 import inDelphi
 import generalStats
@@ -30,6 +31,15 @@ if not os.path.isdir('local-s3/'):
   os.mkdir('local-s3/')
 else:
   subprocess.check_output('rm -rf local-s3/*', shell = True)
+
+# Set up flask caching
+CACHE_CONFIG = {
+  'CACHE_TYPE': 'redis',
+  'CACHE_REDIS_URL': os.environ.get('REDIS_URL', '')
+}
+cache = Cache()
+cache.init_app(app.server, config = CACHE_CONFIG)
+cache_timeout = 120
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
@@ -49,7 +59,7 @@ layout = html.Div([
   html.Div(
     [
       html.Div(
-        id = 'G_hidden-pred-df-stats',
+        id = 'G_hidden-pred-df-stats-signal',
         children = 'init'
       ),
       html.Div(
@@ -716,14 +726,10 @@ def update_submit_button_style(selected_gene, style):
 ##
 # AWS S3 download callback
 ##
-@app.callback(
-  Output('G_hidden-pred-df-stats', 'children'),
-  [Input('G_submit_button', 'n_clicks')],
-  [State('G_genome-radio', 'value'),
-   State('G_gene-dropdown', 'value'),
-   State('G_celltype_dropdown', 'value')]
-)
-def update_df_stats(n_clicks, genome_build, gene, celltype):
+@cache.memoize()
+def grab_s3_stats_cache(parameters):
+  genome_build, gene, celltype = parameters
+
   query_fn = '%s_%s_SpCas9_%s.csv' % (genome_build, celltype, gene)
   local_dir = 'local-s3/'
   s3.Bucket('indelphi-storage').download_file(query_fn, local_dir + query_fn)
@@ -755,7 +761,19 @@ def update_df_stats(n_clicks, genome_build, gene, celltype):
   all_stats['Distance to 5\' exon boundary'] = all_stats['Cutsite distance to 5p boundary']
   all_stats['Distance to 3\' exon boundary'] = all_stats['Cutsite distance to 3p boundary']
 
-  return all_stats.to_csv()
+  return all_stats
+
+@app.callback(
+  Output('G_hidden-pred-df-stats-signal', 'children'),
+  [Input('G_submit_button', 'n_clicks')],
+  [State('G_genome-radio', 'value'),
+   State('G_gene-dropdown', 'value'),
+   State('G_celltype_dropdown', 'value')]
+)
+def update_df_stats(n_clicks, genome_build, gene, celltype):
+  parameters = (genome_build, gene, celltype)
+  grab_s3_stats_cache(parameters)
+  return parameters
 
 ##
 # Module header callbacks, Advanced options hiding/showing
@@ -785,12 +803,12 @@ def update_sortcol_options(values):
 @app.callback(
   Output('G_dropdown-kgid', 'options'),
   [Input('G_dropdown-kgid', 'value')],
-  [State('G_hidden-pred-df-stats', 'children')]
+  [State('G_hidden-pred-df-stats-signal', 'children')]
 )
-def update_dropdown_kgid_options(value, all_stats_string):
-  if all_stats_string == 'init':
+def update_dropdown_kgid_options(value, signal):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = grab_s3_stats_cache(signal)
   kgids = list(set(stats['kgID']))
   sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
   options = []
@@ -805,12 +823,12 @@ def update_dropdown_kgid_options(value, all_stats_string):
 
 @app.callback(
   Output('G_dropdown-kgid', 'value'),
-  [Input('G_hidden-pred-df-stats', 'children')]
+  [Input('G_hidden-pred-df-stats-signal', 'children')]
 )
-def update_dropdown_kgid_value(all_stats_string):
-  if all_stats_string == 'init':
+def update_dropdown_kgid_value(signal):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = grab_s3_stats_cache(signal)
   kgids = set(stats['kgID'])
   sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
   kgids_sorted = [x for _,x in sorted(zip(sizes, kgids))]
@@ -825,16 +843,16 @@ def update_dropdown_kgid_value(all_stats_string):
 ## 
 @app.callback(
   Output('G_table-stats', 'rows'), 
-  [Input('G_hidden-pred-df-stats', 'children'),
+  [Input('G_hidden-pred-df-stats-signal', 'children'),
    Input('G_dropdown-columns', 'value'),
    Input('G_dropdown-sortcol', 'value'),
    Input('G_sortdirection', 'value'),
    Input('G_dropdown-kgid', 'value'),
   ])
-def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction, kgids):
-  if all_stats_string == 'init':
+def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = grab_s3_stats_cache(signal)
 
   # Drop unselected kgids
   stats = stats[stats['kgID'].isin(kgids)]
@@ -1257,11 +1275,11 @@ def update_hist_plot(rows, selected_row_indices):
 ##
 @app.callback(
   Output('G_download-link', 'href'), 
-  [Input('G_hidden-pred-df-stats', 'children')])
-def update_link(all_stats_string):
-  if all_stats_string == 'init':
+  [Input('G_hidden-pred-df-stats-signal', 'children')])
+def update_link(signal):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = grab_s3_stats_cache(signal)
 
   # Drop extra cols
   drop_cols = [
@@ -1319,11 +1337,11 @@ def update_link(all_stats_string):
 
 @app.callback(
   Output('G_download-link', 'children'), 
-  [Input('G_hidden-pred-df-stats', 'children')])
-def update_link_text(all_stats_string):
-  if all_stats_string == 'init':
+  [Input('G_hidden-pred-df-stats-signal', 'children')])
+def update_link_text(signal):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = grab_s3_stats_cache(signal)
   num_grnas = len(stats)
   num_kgids = len(set(stats['kgID']))
   return '📑 Download full table of predictions for %s gRNAs and %s kgIDs' % (num_grnas, num_kgids)

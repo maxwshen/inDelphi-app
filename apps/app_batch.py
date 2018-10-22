@@ -14,6 +14,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import flask
 import plotly
+from flask_caching import Cache
 
 import inDelphi
 import generalStats
@@ -27,6 +28,15 @@ if not os.path.isdir('user-csvs/'):
   os.mkdir('user-csvs/')
 else:
   subprocess.check_output('rm -rf user-csvs/*', shell = True)
+
+# Set up flask caching
+CACHE_CONFIG = {
+  'CACHE_TYPE': 'redis',
+  'CACHE_REDIS_URL': os.environ.get('REDIS_URL', ''),
+}
+cache = Cache()
+cache.init_app(app.server, config = CACHE_CONFIG)
+cache_timeout = 120
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
@@ -46,7 +56,7 @@ layout = html.Div([
   html.Div(
     [
       html.Div(
-        id = 'B_hidden-pred-df-stats',
+        id = 'B_hidden-pred-df-stats-signal',
         children = 'init'
       ),
       html.Div(
@@ -1006,18 +1016,9 @@ def update_submit_button_style(est_runtime_text, style):
 ##
 # Prediction callback
 ##
-@app.callback(
-  Output('B_hidden-pred-df-stats', 'children'),
-  [Input('B_submit_button', 'n_clicks')],
-  [State('B_textarea', 'value'),
-   State('B_textbox_pam', 'value'),
-   State('B_celltype_dropdown', 'value'),
-   State('B_adv_matchseq', 'value'),
-   State('B_adv_position_of_interest', 'value'),
-   State('B_adv_delstart', 'value'),
-   State('B_adv_delend', 'value'),
-  ])
-def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend):
+@cache.memoize(timeout = cache_timeout)
+def indelphi_predict_batch_cache(parameters):
+  seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend = parameters
   # When submit button clicked, find all gRNAs matching PAM in sequence.
   # Advanced options:
   #   if matchseq is provided, include a column on
@@ -1141,22 +1142,36 @@ def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv
   all_stats = all_stats.reset_index(drop = True)
 
   all_stats['ID'] = all_stats.index + 1
+  return all_stats
 
-  return all_stats.to_csv()
-  # return (pred_df.to_csv(), pd.DataFrame(stats, index = [0]).to_csv())
+@app.callback(
+  Output('B_hidden-pred-df-stats-signal', 'children'),
+  [Input('B_submit_button', 'n_clicks')],
+  [State('B_textarea', 'value'),
+   State('B_textbox_pam', 'value'),
+   State('B_celltype_dropdown', 'value'),
+   State('B_adv_matchseq', 'value'),
+   State('B_adv_position_of_interest', 'value'),
+   State('B_adv_delstart', 'value'),
+   State('B_adv_delend', 'value'),
+  ])
+def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend):
+  parameters = (seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend)
+  indelphi_predict_batch_cache(parameters)
+  return parameters
 
 ##
 # Module header callbacks, Advanced options hiding/showing
 ##
 @app.callback(
   Output('B_postcomp_module_header', 'children'),
-  [Input('B_hidden-pred-df-stats', 'children')],
+  [Input('B_hidden-pred-df-stats-signal', 'children')],
   [State('B_textarea', 'value'),
    State('B_textbox_pam', 'value')])
-def update_postcomp_module_header(all_stats_string, seq, pam):
-  if all_stats_string == 'init':
+def update_postcomp_module_header(signal, seq, pam):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = indelphi_predict_batch_cache(signal)
   return 'Results of %s gRNAs with %s PAM found in %s-bp query' % (len(stats), pam, len(seq))
 
 @app.callback(
@@ -1225,11 +1240,11 @@ def update_sortcol_value_from_url(options, url, prev_value, nc1, nc2, nc3):
 
 @app.callback(
   Output('B_dropdown-columns', 'options'),
-  [Input('B_hidden-pred-df-stats', 'children')],
+  [Input('B_hidden-pred-df-stats-signal', 'children')],
   [State('B_dropdown-columns', 'options')]
   )
-def update_columns_options(all_stats_string, prev_options):
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+def update_columns_options(signal, prev_options):
+  stats = indelphi_predict_batch_cache(signal)
   options = prev_options
 
   for d in ['Repairs to spec.', 'Deletes spec.', 'Dist. to POI']:
@@ -1289,15 +1304,15 @@ def update_sortdir_from_url(sort_options, url, prev_value):
 ## 
 @app.callback(
   Output('B_table-stats', 'rows'), 
-  [Input('B_hidden-pred-df-stats', 'children'),
+  [Input('B_hidden-pred-df-stats-signal', 'children'),
    Input('B_dropdown-columns', 'value'),
    Input('B_dropdown-sortcol', 'value'),
    Input('B_sortdirection', 'value'),
   ])
-def update_stats_table(all_stats_string, chosen_columns, sort_col, sort_direction):
-  if all_stats_string == 'init':
+def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
+  if signal == 'init':
     assert False, 'init'
-  stats = pd.read_csv(StringIO(all_stats_string), index_col = 0)
+  stats = indelphi_predict_batch_cache(signal)
 
   # Drop extra cols
   drop_cols = [

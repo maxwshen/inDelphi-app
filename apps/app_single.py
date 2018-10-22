@@ -15,6 +15,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import flask
 import plotly
+from flask_caching import Cache
 
 import inDelphi
 import generalStats
@@ -35,6 +36,15 @@ except FileExistsError:
 else:
   subprocess.check_output('rm -rf user-csvs/*', shell = True)
 
+# Set up flask caching
+CACHE_CONFIG = {
+  'CACHE_TYPE': 'redis',
+  'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'localhost:6379')
+}
+cache = Cache()
+cache.init_app(app.server, config = CACHE_CONFIG)
+cache_timeout = 120   # seconds
+
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
 
@@ -53,11 +63,7 @@ layout = html.Div([
   html.Div(
     [
       html.Div(
-        id = 'S_hidden-pred-df',
-        children = 'init'
-      ),
-      html.Div(
-        id = 'S_hidden-pred-stats',
+        id = 'S_hidden-pred-signal',
         children = 'init'
       ),
       html.Div(
@@ -65,7 +71,7 @@ layout = html.Div([
         children = 'mESC'
       ),
       html.Div(
-        id = 'S_hidden-pred-df-summary',
+        id = 'S_hidden-pred-df-summary-signal',
         children = 'init'
       ),
       html.Div(
@@ -812,6 +818,7 @@ layout = html.Div([
             className = 'row',
           ),
 
+          # Download link
           html.Div([
             html.Div(
               html.A(
@@ -1087,8 +1094,14 @@ def update_summary_module_header(text1, text2):
 ##
 # Prediction callback
 ##
+@cache.memoize(timeout = cache_timeout)
+def indelphi_predict_cache(seq, cutsite, celltype):
+  pred_df, stats = inDelphi.predict(seq, int(cutsite), celltype)
+  stats = pd.DataFrame(stats, index = [0])
+  return pred_df, stats
+
 @app.callback(
-  Output('S_hidden-pred-df', 'children'),
+  Output('S_hidden-pred-signal', 'children'),
   [Input('S_textbox1', 'value'),
    Input('S_textbox2', 'value'),
    Input('S_hidden-chosen-celltype', 'children')])
@@ -1096,20 +1109,8 @@ def update_pred_df(text1, text2, celltype):
   seq = text1 + text2
   seq = seq.upper()
   cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite, celltype)
-  return pred_df.to_csv()
-
-@app.callback(
-  Output('S_hidden-pred-stats', 'children'),
-  [Input('S_textbox1', 'value'),
-   Input('S_textbox2', 'value'),
-   Input('S_hidden-chosen-celltype', 'children')])
-def update_pred_stats(text1, text2, celltype):
-  seq = text1 + text2
-  seq = seq.upper()
-  cutsite = len(text1)
-  pred_df, stats = inDelphi.predict(seq, cutsite, celltype)
-  return pd.DataFrame(stats, index = [0]).to_csv()
+  indelphi_predict_cache(seq, cutsite, celltype)
+  return '%s,%s,%s' % (seq, cutsite, celltype)
 
 ## 
 # Style callbacks: Hide figures on page load until processing is complete
@@ -1129,29 +1130,33 @@ def update_plots_body_style(fig, prev_style):
 ##
 # Summary of predictions callbacks
 ##
-@app.callback(
-  Output('S_hidden-pred-df-summary', 'children'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-  ])
-def update_pred_df_top10_summary(pred_df_string, pred_stats_string):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+def indelphi_summary_cache(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats, length_cutoff = 6)
   inDelphi.add_genotype_column(mhless_gt_df, stats)
   top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
-  return top10.to_csv()
-
+  return top10
 
 @app.callback(
+  Output('S_hidden-pred-df-summary-signal', 'children'),
+  [Input('S_hidden-pred-signal', 'children')])
+def update_pred_df_top10_summary(signal):
+  indelphi_summary_cache(signal)
+  return signal
+
+# change
+@app.callback(
   Output('S_summary-alignment-table', 'figure'),
-  [Input('S_hidden-pred-df-summary', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
+  [Input('S_hidden-pred-df-summary-signal', 'children'),
+   Input('S_hidden-pred-signal', 'children'),
   ])
-def update_summary_alignment_text(pred_df_summary_string, pred_stats_string):
-  top10 = pd.read_csv(StringIO(pred_df_summary_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+def update_summary_alignment_text(summary_signal, signal):
+  top10 = indelphi_summary_cache(summary_signal)
+
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
   
   # mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats)
   # top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
@@ -1212,15 +1217,17 @@ def update_summary_alignment_text(pred_df_summary_string, pred_stats_string):
     ),
   )
 
+# change
 @app.callback(
   Output('S_summary-alignment-barchart', 'figure'),
-  [Input('S_hidden-pred-df-summary', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
+  [Input('S_hidden-pred-df-summary-signal', 'children'),
+   Input('S_hidden-pred-signal', 'children'),
   ])
-def update_summary_alignment_barchart(pred_df_summary_string, pred_stats_string):
-  top10 = pd.read_csv(StringIO(pred_df_summary_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
-  
+def update_summary_alignment_barchart(summary_signal, signal):
+  top10 = indelphi_summary_cache(summary_signal)
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   # mhless_gt_df = inDelphi.add_mhless_genotypes(pred_df, stats)
   # inDelphi.add_genotype_column(mhless_gt_df, stats)
   # top10 = mhless_gt_df.sort_values('Predicted frequency', ascending = False).iloc[:10]
@@ -1275,13 +1282,11 @@ def update_summary_alignment_barchart(pred_df_summary_string, pred_stats_string)
 ##
 @app.callback(
   Output('S_plot-genstats-precision', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def plot_genstats_precision(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def plot_genstats_precision(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = stats['Precision'].iloc[0]
   return dict(
     data = [
@@ -1292,13 +1297,11 @@ def plot_genstats_precision(pred_df_string, pred_stats_string, celltype):
 
 @app.callback(
   Output('S_plot-genstats-logphi', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def plot_genstats_logphi(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def plot_genstats_logphi(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = np.log(stats['Phi'].iloc[0])
   return dict(
     data = [
@@ -1309,13 +1312,11 @@ def plot_genstats_logphi(pred_df_string, pred_stats_string, celltype):
 
 @app.callback(
   Output('S_plot-genstats-frameshift', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def plot_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def plot_genstats_frameshift(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = stats['Frameshift frequency'].iloc[0]
   return dict(
     data = [
@@ -1328,13 +1329,11 @@ def plot_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
 ## General stats text
 @app.callback(
   Output('S_text-genstats-precision', 'children'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def text_genstats_precision(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def text_genstats_precision(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = stats['Precision'].iloc[0]
   cum, var_text, var_color = generalStats.GSD[(celltype, 'Precision')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_precision(var_text)
@@ -1369,13 +1368,11 @@ def text_genstats_precision(pred_df_string, pred_stats_string, celltype):
 
 @app.callback(
   Output('S_text-genstats-logphi', 'children'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def text_genstats_logphi(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def text_genstats_logphi(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = np.log(stats['Phi'].iloc[0])
   cum, var_text, var_color = generalStats.GSD[(celltype, 'Phi')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_phi(var_text)
@@ -1410,13 +1407,11 @@ def text_genstats_logphi(pred_df_string, pred_stats_string, celltype):
 
 @app.callback(
   Output('S_text-genstats-frameshift', 'children'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-   Input('S_hidden-chosen-celltype', 'children')
-  ])
-def text_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def text_genstats_frameshift(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
+
   xval = stats['Frameshift frequency'].iloc[0]
   cum, var_text, var_color = generalStats.GSD[(celltype, 'Frameshift frequency')].cumulative(xval)
   tooltip_msg = generalStats.get_tooltip_frameshift(var_text)
@@ -1453,10 +1448,11 @@ def text_genstats_frameshift(pred_df_string, pred_stats_string, celltype):
 # Indel length and frameshift callbacks
 @app.callback(
   Output('S_plot-indel-len', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
+  [Input('S_hidden-pred-signal', 'children'),
   ])
-def plot_indel_len(pred_df_string):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+def plot_indel_len(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   if False:
     lendf = inDelphi.get_indel_length_fqs(pred_df)
@@ -1564,10 +1560,11 @@ def plot_indel_len(pred_df_string):
 
 @app.callback(
   Output('S_plot-fs', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
+  [Input('S_hidden-pred-signal', 'children'),
   ])
-def plot_fs(pred_df_string):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
+def plot_fs(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   fs_df = inDelphi.get_frameshift_fqs(pred_df)
   X = ['+0', '+1', '+2']
@@ -1634,16 +1631,15 @@ def plot_fs(pred_df_string):
 ##
 @app.callback(
   Output('S_plot-table-genotypes-v2', 'figure'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
+  [Input('S_hidden-pred-signal', 'children'),
    Input('S_dropdown-indel-type', 'value'),
    Input('S_dropdown-sort', 'value'),
    Input('S_rangeslider-freq', 'value'),
    Input('S_rangeslider-indel-len', 'value'),
   ])
-def update_genotype_table_v2(pred_df_string, pred_stats_string, indel_types, sort_col, freq_range, indel_len_range):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+def update_genotype_table_v2(signal, indel_types, sort_col, freq_range, indel_len_range):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   # Filter indel types and by indel length range
   filter_1bp_ins = bool(indel_len_range[0] > 0)
@@ -1832,12 +1828,10 @@ def update_genotype_table_v2(pred_df_string, pred_stats_string, indel_types, sor
 ##
 @app.callback(
   Output('S_csv-download-link', 'href'), 
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children'),
-  ])
-def update_link(pred_df_string, pred_stats_string):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+  [Input('S_hidden-pred-signal', 'children')])
+def update_link(signal):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   pdf = inDelphi.add_mhless_genotypes(pred_df, stats)
   # inDelphi.add_genotype_column(pred_df, stats)
@@ -1853,12 +1847,11 @@ def update_link(pred_df_string, pred_stats_string):
 
 @app.callback(
   Output('S_summary-download-link', 'href'),
-  [Input('S_hidden-pred-df', 'children'),
-   Input('S_hidden-pred-stats', 'children')],
+  [Input('S_hidden-pred-signal', 'children')],
   [State('S_page-link', 'href')])
-def update_summary_link(pred_df_string, pred_stats_string, pagelink):
-  pred_df = pd.read_csv(StringIO(pred_df_string), index_col = 0)
-  stats = pd.read_csv(StringIO(pred_stats_string), index_col = 0)
+def update_summary_link(signal, pagelink):
+  seq, cutsite, celltype = signal.split(',')
+  pred_df, stats = indelphi_predict_cache(seq, cutsite, celltype)
 
   stats['URL'] = pagelink
 
