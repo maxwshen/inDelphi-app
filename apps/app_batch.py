@@ -1,4 +1,4 @@
-import pickle, copy, os, datetime, subprocess
+import pickle, copy, os, datetime, subprocess, json
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -32,7 +32,7 @@ else:
 # Set up flask caching
 CACHE_CONFIG = {
   'CACHE_TYPE': 'redis',
-  'CACHE_REDIS_URL': os.environ.get('REDIS_URL', ''),
+  'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'localhost:6379'),
 }
 cache = Cache()
 cache.init_app(app.server, config = CACHE_CONFIG)
@@ -57,6 +57,10 @@ layout = html.Div([
     [
       html.Div(
         id = 'B_hidden-pred-df-stats-signal',
+        children = 'init'
+      ),
+      html.Div(
+        id = 'B_table-stats-signal',
         children = 'init'
       ),
       html.Div(
@@ -910,6 +914,9 @@ def update_estimated_runtime(seq, pam):
    Input('B_textarea', 'value')])
 def update_position_of_interest_selected_seq(poi, seq):
   # poi is 1-indexed
+  if poi is None:
+    assert False, 'init'
+
   poi_0idx = int(poi) - 1
   buff = 7
   if poi_0idx < buff or poi_0idx > len(seq) - buff:
@@ -944,6 +951,9 @@ def update_position_of_interest_selected_seq(poi, seq):
    Input('B_adv_delend', 'value'),
    Input('B_textarea', 'value')])
 def update_selected_delseq(del_start, del_end, seq):
+  if del_start is None:
+    assert False, 'init'
+
   # poi is 1-indexed, convert to 0-idx
   del_start = int(del_start) - 1
   del_end = int(del_end) - 1
@@ -1156,6 +1166,8 @@ def indelphi_predict_batch_cache(parameters):
    State('B_adv_delend', 'value'),
   ])
 def update_pred_df_stats(nclicks, seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend):
+  if nclicks == 0 or nclicks is None:
+    assert False, 'init'
   parameters = (seq, pam, celltype, adv_matchseq, adv_poi, adv_delstart, adv_delend)
   indelphi_predict_batch_cache(parameters)
   return parameters
@@ -1198,6 +1210,8 @@ def update_adv_options_body_style(n_clicks, url, prev_style):
   [Input('B_advanced_options_header', 'n_clicks')],
   [State('B_advanced_options_header_text', 'children')])
 def update_adv_options_header_text(n_clicks, prev_text):
+  if n_clicks is None:
+    assert False, 'init'
   if n_clicks > 0:
     if '▶' in prev_text:
       new_arrow = '▼'
@@ -1244,6 +1258,8 @@ def update_sortcol_value_from_url(options, url, prev_value, nc1, nc2, nc3):
   [State('B_dropdown-columns', 'options')]
   )
 def update_columns_options(signal, prev_options):
+  if signal == 'init':
+    assert False, 'init'
   stats = indelphi_predict_batch_cache(signal)
   options = prev_options
 
@@ -1302,16 +1318,10 @@ def update_sortdir_from_url(sort_options, url, prev_value):
 ##
 # Stats table callbacks
 ## 
-@app.callback(
-  Output('B_table-stats', 'rows'), 
-  [Input('B_hidden-pred-df-stats-signal', 'children'),
-   Input('B_dropdown-columns', 'value'),
-   Input('B_dropdown-sortcol', 'value'),
-   Input('B_sortdirection', 'value'),
-  ])
-def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
-  if signal == 'init':
-    assert False, 'init'
+@cache.memoize(timeout = cache_timeout)
+def make_table_stats_cache(parameters):
+  parameters = json.loads(parameters)
+  signal, chosen_columns, sort_col, sort_direction = parameters
   stats = indelphi_predict_batch_cache(signal)
 
   # Drop extra cols
@@ -1352,7 +1362,23 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
 
   # Reorder columns
   stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
-  return stats.to_dict('records')
+  return stats
+
+@app.callback(
+  Output('B_table-stats-signal', 'children'), 
+  [Input('B_hidden-pred-df-stats-signal', 'children'),
+   Input('B_dropdown-columns', 'value'),
+   Input('B_dropdown-sortcol', 'value'),
+   Input('B_sortdirection', 'value'),
+  ])
+def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
+  if signal == 'init':
+    assert False, 'init'
+
+  parameters = (signal, chosen_columns, sort_col, sort_direction)
+  parameters = json.dumps(parameters)
+  make_table_stats_cache(parameters)
+  return parameters
 
 @app.callback(
   Output('B_table-stats', 'selected_row_indices'),
@@ -1360,7 +1386,7 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
    Input('B_hidden-cache-submit-button', 'children'),
    Input('B_dropdown-columns', 'value'),
    Input('B_dropdown-sortcol', 'value'),
-   Input('B_table-stats', 'rows')],
+   Input('B_table-stats-signal', 'children')],
   [State('B_table-stats', 'selected_row_indices'),
    State('B_hidden-sort-module-interaction', 'children'),
    State('B_hidden-selected-id', 'children'),
@@ -1369,7 +1395,7 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction):
    State('B_plot-stats-div', 'n_clicks'),
    State('B_submit_button', 'n_clicks'),
    ])
-def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, rows, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
+def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, table_signal, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
   if not bool(nc1 or nc2) and nc_submit == 1:
     # On page load, select row from URL
     valid_flag, dd = lib.parse_valid_url_path_batch(url)
@@ -1398,7 +1424,7 @@ def update_statstable_selected(clickData, submit_time, col_values, sortcol_value
   if sort_intxn and prev_id != '':
     # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
     selected_row_indices = []
-    df = pd.DataFrame(rows)
+    df = make_table_stats_cache(table_signal)
 
     id_list = list(df['ID'])
     real_new_idx = id_list.index(int(prev_id))
@@ -1424,12 +1450,12 @@ def update_statstable_selected(clickData, submit_time, col_values, sortcol_value
 @app.callback(
   Output('B_hidden-selected-id', 'children'),
   [Input('B_table-stats', 'selected_row_indices')],
-  [State('B_table-stats', 'rows')])
-def update_hidden_selected_id(selected_idx, rows):
+  [State('B_table-stats-signal', 'children')])
+def update_hidden_selected_id(selected_idx, table_signal):
   if len(selected_idx) == 0:
     return ''
   idx = selected_idx[0]
-  df = pd.DataFrame(rows)
+  df = make_table_stats_cache(table_signal)
   id_list = list(df['ID'])[::-1]
   print('Selected id: %s' % (id_list[idx]))
   return id_list[idx]
@@ -1469,10 +1495,10 @@ def update_postcomputation_settings_style(fig):
 ########################################################
 @app.callback(
     Output('B_plot-stats', 'figure'),
-    [Input('B_table-stats', 'rows'),
+    [Input('B_table-stats-signal', 'children'),
      Input('B_table-stats', 'selected_row_indices')])
-def update_stats_plot(rows, selected_row_indices):
-  df = pd.DataFrame(rows)
+def update_stats_plot(table_signal, selected_row_indices):
+  df = make_table_stats_cache(table_signal)
   # Determine statistics to plot
   stats_cols = lib.order_chosen_columns(list(df.columns))
 
@@ -1616,10 +1642,10 @@ def update_stats_plot(rows, selected_row_indices):
 
 @app.callback(
     Output('B_hist-stats', 'figure'),
-    [Input('B_table-stats', 'rows'),
+    [Input('B_table-stats-signal', 'children'),
      Input('B_table-stats', 'selected_row_indices')])
-def update_hist_plot(rows, selected_row_indices):
-  df = pd.DataFrame(rows)
+def update_hist_plot(table_signal, selected_row_indices):
+  df = make_table_stats_cache(table_signal)
 
   # if len(df) <= 5:
     # return ''
@@ -1713,9 +1739,10 @@ def update_hist_plot(rows, selected_row_indices):
 ##
 @app.callback(
   Output('B_download-link', 'href'), 
-  [Input('B_table-stats', 'rows')])
-def update_link(rows):
-  df = pd.DataFrame(rows)
+  [Input('B_table-stats-signal', 'children')])
+def update_link(table_signal):
+  df = make_table_stats_cache(table_signal)
+
   stats_cols = list(df.columns)
   nonstat_cols = ['gRNA', 'gRNA orientation', 'PAM', 'URL', 'ID', 'Celltype']
   for nonstat_col in nonstat_cols:

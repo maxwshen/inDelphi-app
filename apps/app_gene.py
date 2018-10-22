@@ -1,4 +1,4 @@
-import pickle, copy, os, datetime, subprocess
+import pickle, copy, os, datetime, subprocess, json
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -60,6 +60,10 @@ layout = html.Div([
     [
       html.Div(
         id = 'G_hidden-pred-df-stats-signal',
+        children = 'init'
+      ),
+      html.Div(
+        id = 'G_table-stats-signal',
         children = 'init'
       ),
       html.Div(
@@ -780,12 +784,12 @@ def update_df_stats(n_clicks, genome_build, gene, celltype):
 ##
 @app.callback(
   Output('G_postcomp_module_header', 'children'),
-  [Input('G_table-stats', 'rows')],
+  [Input('G_table-stats-signal', 'children')],
   [State('G_genome-radio', 'value'),
    State('G_gene-dropdown', 'value')]
 )
-def update_postcomp_module_header(rows, genome_build, gene):
-  df = pd.DataFrame(rows)
+def update_postcomp_module_header(table_signal, genome_build, gene):
+  df = make_table_stats_cache(table_signal)
   return 'Results of %s SpCas9 (NGG) gRNAs targeting %s in %s' % (len(df), gene, genome_build)
 
 ##
@@ -841,17 +845,11 @@ def update_dropdown_kgid_value(signal):
 ##
 # Stats table callbacks
 ## 
-@app.callback(
-  Output('G_table-stats', 'rows'), 
-  [Input('G_hidden-pred-df-stats-signal', 'children'),
-   Input('G_dropdown-columns', 'value'),
-   Input('G_dropdown-sortcol', 'value'),
-   Input('G_sortdirection', 'value'),
-   Input('G_dropdown-kgid', 'value'),
-  ])
-def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
-  if signal == 'init':
-    assert False, 'init'
+@cache.memoize(timeout = cache_timeout)
+def make_table_stats_cache(parameters):
+  parameters = json.loads(parameters)
+  signal, chosen_columns, sort_col, sort_direction, kgids = parameters
+
   stats = grab_s3_stats_cache(signal)
 
   # Drop unselected kgids
@@ -918,7 +916,26 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
 
   # Reorder columns
   stats = stats[nonstat_cols + lib.order_chosen_columns(chosen_columns)]
-  return stats.to_dict('records')
+  stats = stats.reset_index(drop = True)
+  return stats
+
+@app.callback(
+  Output('G_table-stats-signal', 'children'), 
+  [Input('G_hidden-pred-df-stats-signal', 'children'),
+   Input('G_dropdown-columns', 'value'),
+   Input('G_dropdown-sortcol', 'value'),
+   Input('G_sortdirection', 'value'),
+   Input('G_dropdown-kgid', 'value'),
+  ])
+def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
+  if signal == 'init':
+    assert False, 'init'
+
+  parameters = (signal, chosen_columns, sort_col, sort_direction, kgids)
+  parameters = json.dumps(parameters)
+  make_table_stats_cache(parameters)
+  return parameters
+
 
 @app.callback(
   Output('G_table-stats', 'selected_row_indices'),
@@ -926,7 +943,7 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
    Input('G_hidden-cache-submit-button', 'children'),
    Input('G_dropdown-columns', 'value'),
    Input('G_dropdown-sortcol', 'value'),
-   Input('G_table-stats', 'rows')],
+   Input('G_table-stats-signal', 'children')],
   [State('G_table-stats', 'selected_row_indices'),
    State('G_hidden-sort-module-interaction', 'children'),
    State('G_hidden-selected-id', 'children'),
@@ -935,7 +952,7 @@ def update_stats_table(signal, chosen_columns, sort_col, sort_direction, kgids):
    State('G_plot-stats-div', 'n_clicks'),
    State('G_submit_button', 'n_clicks'),
    ])
-def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, rows, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
+def update_statstable_selected(clickData, submit_time, col_values, sortcol_value, table_signal, selected_row_indices, sort_time, prev_id, url, nc1, nc2, nc_submit):
   if not bool(nc1 and nc2) and nc_submit == 1:
     # On page load, select row from URL
     valid_flag, dd = lib.parse_valid_url_path_gene(url)
@@ -964,7 +981,8 @@ def update_statstable_selected(clickData, submit_time, col_values, sortcol_value
   if sort_intxn and prev_id != '':
     # If changing sort col or direction, clear the selected rows. Otherwise, the wrong row is selected after sorting. Preferably, keep the selected row and update the index.
     selected_row_indices = []
-    df = pd.DataFrame(rows)
+    df = make_table_stats_cache(table_signal)
+
     # new_idx = int(df[df['ID'] == int(prev_id)].index[0])
     id_list = list(df['ID'])
     real_new_idx = id_list.index(int(prev_id))
@@ -988,12 +1006,12 @@ def update_statstable_selected(clickData, submit_time, col_values, sortcol_value
 @app.callback(
   Output('G_hidden-selected-id', 'children'),
   [Input('G_table-stats', 'selected_row_indices')],
-  [State('G_table-stats', 'rows')])
-def update_hidden_selected_id(selected_idx, rows):
+  [State('G_table-stats-signal', 'children')])
+def update_hidden_selected_id(selected_idx, table_signal):
   if len(selected_idx) == 0:
     return ''
   idx = selected_idx[0]
-  df = pd.DataFrame(rows)
+  df = make_table_stats_cache(table_signal)
   return list(df['ID'])[idx]
 
 
@@ -1033,10 +1051,10 @@ def update_postcomputation_settings_style(fig):
 ########################################################
 @app.callback(
     Output('G_plot-stats', 'figure'),
-    [Input('G_table-stats', 'rows'),
+    [Input('G_table-stats-signal', 'children'),
      Input('G_table-stats', 'selected_row_indices')])
-def update_stats_plot(rows, selected_row_indices):
-  df = pd.DataFrame(rows)
+def update_stats_plot(table_signal, selected_row_indices):
+  df = make_table_stats_cache(table_signal)
   # Determine statistics to plot
   stats_cols = lib.order_chosen_columns(list(df.columns))
 
@@ -1180,10 +1198,10 @@ def update_stats_plot(rows, selected_row_indices):
 
 @app.callback(
     Output('G_hist-stats', 'figure'),
-    [Input('G_table-stats', 'rows'),
+    [Input('G_table-stats-signal', 'children'),
      Input('G_table-stats', 'selected_row_indices')])
-def update_hist_plot(rows, selected_row_indices):
-  df = pd.DataFrame(rows)
+def update_hist_plot(table_signal, selected_row_indices):
+  df = make_table_stats_cache(table_signal)
 
   # if len(df) <= 5:
     # return ''
