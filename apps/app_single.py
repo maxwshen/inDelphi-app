@@ -43,10 +43,16 @@ CACHE_CONFIG = {
 }
 cache = Cache()
 cache.init_app(app.server, config = CACHE_CONFIG)
-cache_timeout = 120   # seconds
+cache_timeout = 300
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
+
+# Random default, which is cached on filesystem
+default_left_text = ''.join([random.choice(list('ACGT')) for s in range(60)])
+default_right_text = ''.join([random.choice(list('ACGT')) for s in range(4)]) + 'GG' + ''.join([random.choice(list('ACGT')) for s in range(54)])
+if os.path.isfile('single_default.pkl'):
+  subprocess.check_output('rm -rf single_default.pkl', shell = True)
 
 ## Parameters
 
@@ -125,8 +131,7 @@ layout = html.Div([
             dcc.Input(
               id = 'S_textbox1', 
               size = 28,
-              # value = 'TAGTTTCTAGCACAGCGCTGGTGTGGC',
-              value = ''.join([random.choice(list('ACGT')) for s in range(60)]),
+              value = default_left_text,
               type = 'text',
               autofocus = True,
               style = dict(
@@ -148,7 +153,7 @@ layout = html.Div([
               id = 'S_textbox2', 
               size = 28,
               # value = 'GTGTGGCTGAAGGCATAGTAATTCTGA',
-              value = ''.join([random.choice(list('ACGT')) for s in range(4)]) + 'GG' + ''.join([random.choice(list('ACGT')) for s in range(54)]),
+              value = default_right_text,
               type = 'text',
               style = dict(
                 textAlign = 'left',
@@ -1096,8 +1101,21 @@ def update_summary_module_header(text1, text2):
 ##
 @cache.memoize(timeout = cache_timeout)
 def indelphi_predict_cache(seq, cutsite, celltype):
-  pred_df, stats = inDelphi.predict(seq, int(cutsite), celltype)
-  stats = pd.DataFrame(stats, index = [0])
+  # if default
+  if seq == default_left_text + default_right_text and cutsite == 60 and celltype == 'mESC':
+    pkl_fn = 'single_default.pkl'
+    if os.path.isfile(pkl_fn):
+      ans = pickle.load(open(pkl_fn, 'rb'))
+      pred_df, stats = ans
+    else:
+      pred_df, stats = inDelphi.predict(seq, int(cutsite), celltype)
+      stats = pd.DataFrame(stats, index = [0])
+      with open(pkl_fn, 'wb') as f:
+        pickle.dump(tuple([pred_df, stats]), f)
+  # If not default
+  else:
+    pred_df, stats = inDelphi.predict(seq, int(cutsite), celltype)
+    stats = pd.DataFrame(stats, index = [0])
   return pred_df, stats
 
 @app.callback(

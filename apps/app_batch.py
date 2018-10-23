@@ -36,7 +36,7 @@ CACHE_CONFIG = {
 }
 cache = Cache()
 cache.init_app(app.server, config = CACHE_CONFIG)
-cache_timeout = 120
+cache_timeout = 300
 
 # Remove these plotly modebar buttons to limit interactivity
 modebarbuttons_2d = ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleSpikelines']
