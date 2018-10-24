@@ -872,6 +872,9 @@ layout = html.Div([
               #### The website is slow and/or jobs are not being completed.
               Try again at a time with fewer concurrent users. If a job takes more than 30 seconds, it will automatically fail. Parameters are restricted such that most jobs in most situations should not exceed 30 seconds, but this can occur if there are a large number of concurrent users.
 
+              #### What is a kgID / why are there fewer coding exons than the UCSC version of the gene?
+              A kgID is a version of a known gene. inDelphi gene mode uses all the same kgIDs for the genome build (hg38, mm10) as the UCSC genome browser. Certain kgIDs have significantly fewer exons than other kgIDs - if you find that inDelphi gene mode reports fewer coding exons than the UCSC genome browser, simply select the correct kgID. Since inDelphi gene mode is restricted to a maximum of 1,000 gRNAs displayed in the online interactive tool, it may not be possible to visualize all gRNAs for your kgID of interest. You can, however, view all statistics of all gRNAs in the downloadable table.
+
               '''),
               className = 'markdown_style',
             ),

@@ -861,8 +861,17 @@ def update_dropdown_kgid_value(signal):
   stats = grab_s3_stats_cache(signal)
   kgids = set(stats['kgID'])
   sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
-  kgids_sorted = [x for _,x in sorted(zip(sizes, kgids))]
-  sizes_sorted = sorted(sizes)
+  kgids_sorted = [x for _,x in sorted(zip(sizes, kgids), reverse = True)]
+  sizes_sorted = sorted(sizes, reverse = True)
+
+  # Select the largest possible
+  for idx in range(len(sizes_sorted)):
+    if sizes_sorted[idx] > 1000:
+      sizes_sorted = sizes_sorted[1:]
+      kgids_sorted = kgids_sorted[1:]
+    else:
+      break
+
   for idx in range(1, len(sizes_sorted)):
     if sum(sizes_sorted[:idx]) > 1000:
       return kgids_sorted[:idx - 1]
