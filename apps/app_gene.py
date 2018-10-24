@@ -863,10 +863,10 @@ def update_dropdown_kgid_value(signal):
   sizes = [len(stats[stats['kgID'] == kgid]) for kgid in kgids]
   kgids_sorted = [x for _,x in sorted(zip(sizes, kgids))]
   sizes_sorted = sorted(sizes)
-  for idx in range(1, len(sizes_sorted) + 1):
+  for idx in range(1, len(sizes_sorted)):
     if sum(sizes_sorted[:idx]) > 1000:
-      break
-  return kgids_sorted[:idx - 1]
+      return kgids_sorted[:idx - 1]
+  return kgids_sorted
 
 ##
 # Stats table callbacks
