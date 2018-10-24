@@ -67,6 +67,14 @@ layout = html.Div([
         children = 'init'
       ),
       html.Div(
+        id = 'G_hidden-selected-genome',
+        children = 'init'
+      ),
+      html.Div(
+        id = 'G_hidden-selected-gene',
+        children = 'init'
+      ),
+      html.Div(
         id = 'G_hidden-cache-submit-button',
         children = '%s' % (time.time())
       ),
@@ -754,9 +762,11 @@ def grab_s3_stats_cache(parameters):
       dd['Strand'].append('-')
 
     if row['Exon strand'] == '+':
-      cutsite_coord = row['Exon start'] + row['Cutsite distance to 5p boundary']
+      cutsite_coord = int(row['Exon start']) + int(row['Cutsite distance to 5p boundary'])
     else:
-      cutsite_coord = row['Exon start'] + row['Cutsite distance to 3p boundary']
+      # for col in all_stats.columns:
+        # print(col, row[col])
+      cutsite_coord = int(row['Exon start']) + int(row['Cutsite distance to 3p boundary'])
     dd['Cutsite coordinate'].append(cutsite_coord)
 
   for col in dd:
@@ -783,10 +793,26 @@ def update_df_stats(n_clicks, genome_build, gene, celltype):
 # Module header callbacks, Advanced options hiding/showing
 ##
 @app.callback(
-  Output('G_postcomp_module_header', 'children'),
+  Output('G_hidden-selected-genome', 'children'),
   [Input('G_table-stats-signal', 'children')],
-  [State('G_genome-radio', 'value'),
-   State('G_gene-dropdown', 'value')]
+  [State('G_genome-radio', 'value')]
+)
+def update_hidden_selected_genome(signal, genome):
+  return genome
+
+@app.callback(
+  Output('G_hidden-selected-gene', 'children'),
+  [Input('G_table-stats-signal', 'children')],
+  [State('G_gene-dropdown', 'value')]
+)
+def update_hidden_selected_gene(signal, gene):
+  return gene
+
+@app.callback(
+  Output('G_postcomp_module_header', 'children'),
+  [Input('G_table-stats-signal', 'children'),
+   Input('G_hidden-selected-genome', 'children'),
+   Input('G_hidden-selected-gene', 'children')]
 )
 def update_postcomp_module_header(table_signal, genome_build, gene):
   df = make_table_stats_cache(table_signal)
