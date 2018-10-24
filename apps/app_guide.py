@@ -724,6 +724,14 @@ layout = html.Div([
 
                   Expected indel length (Exp. indel len): The average indel length out of all 1-bp insertions and 1- to 60-bp deletions. Does not consider wild-type outcomes. Positive numbers here indicate deletion length.
 
+                  Advanced statistics (only available if you specify advanced options):
+
+                  Repairs to spec.: Frequency of gRNA repairing to a specified genotype in advanced options..
+
+                  Dist. to POI: Distance to position of interest represented by a specific nucleotide in advanced options. 
+
+                  Deletes spec.: Frequency of gRNA deleting a specified range of nucleotides in advanced options.
+
                   '''),
                   className = 'markdown_style',
                 ),
