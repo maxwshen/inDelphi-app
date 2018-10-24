@@ -135,7 +135,6 @@ layout = html.Div([
               type = 'text',
               autofocus = True,
               style = dict(
-                textAlign = 'right',
                 direction = 'rtl',
                 fontFamily = 'monospace',
                 fontSize = 16,

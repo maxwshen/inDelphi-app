@@ -1100,6 +1100,7 @@ def indelphi_predict_batch_cache(parameters):
         dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
 
         if adv_matchseq_flag or adv_del_flag:
+          stats = pd.DataFrame(stats, index = [0])
           pred_df = inDelphi.add_mhless_genotypes(pred_df, stats)
 
         # Handle advanced options

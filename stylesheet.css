@@ -148,6 +148,10 @@
     pointer-events: none;
   }
 
+  .inputright {
+    text-align: right;
+  }
+
   /* Module styles */
   .module_header {
     background-color: rgba(0, 0, 0, 0.05);
