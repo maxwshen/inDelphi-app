@@ -452,7 +452,7 @@ layout = html.Div([
                 html.Img(src = '/assets/fig-mechanism.PNG'),
                 html.Div(
                   [
-                    'Fig. 3: DNA repair mechanisms leading to microhomology and microhomology-less deletions. Left: microhomology-mediated end-joining (MMEJ). Right: canonical non-homologous end-joining (c-NHEJ) mediated by Lig4.'
+                    'Fig. 3: DNA repair mechanisms leading to microhomology and microhomology-less deletions. Left: microhomology-mediated end-joining (MMEJ). Right: End-joining mediated by Lig4 that can produce microhomology-less deletions.'
                   ],
                   style = dict(
                     fontStyle = 'italic',
