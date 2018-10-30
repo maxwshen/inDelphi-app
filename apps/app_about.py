@@ -102,6 +102,8 @@ layout = html.Div([
 
               Max W. Shen*, Mandana Arbab*, Jonathan Y. Hsu, Daniel Worstell, Sannie J. Culbertson, Olga Krabbe, Christopher A. Cassa, David R. Liu, David K. Gifford, and Richard I. Sherwood. "Predictable and precise template-free editing of pathogenic variants." _Nature_, in press, 2018. 
 
+              By using this online tool, you agree to our [terms of use](https://www.crisprindelphi.design/termsofuse).
+
               #### Briefly...
               '''),
               className = 'markdown_style',

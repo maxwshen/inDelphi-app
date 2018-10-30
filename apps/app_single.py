@@ -847,7 +847,9 @@ layout = html.Div([
           ),
 
           html.Div(
-            'Copyright MIT 2018.\nAll Rights Reserved.',
+            dcc.Markdown(
+              'Copyright MIT 2018.\nAll Rights Reserved. [Terms of use](https://www.crisprindelphi.design/termsofuse)',
+            ),
             style = dict(
               textAlign = 'center',
               height = '40px',
