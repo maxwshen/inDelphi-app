@@ -848,7 +848,7 @@ layout = html.Div([
 
           html.Div(
             dcc.Markdown(
-              'Copyright MIT 2018.\nAll Rights Reserved. [Terms of use](https://www.crisprindelphi.design/termsofuse)',
+              'Copyright MIT 2018.\nAll Rights Reserved. [Terms of use](/termsofuse)',
             ),
             style = dict(
               textAlign = 'center',
@@ -1926,5 +1926,5 @@ def serve_image():
 def update_pagelink(text1, text2, celltype):
   seq = text1 + text2
   cutsite = len(text1)
-  return 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_single(seq, cutsite, celltype))
+  return '%s' % (lib.encode_dna_to_url_path_single(seq, cutsite, celltype))
 

@@ -1097,7 +1097,7 @@ def indelphi_predict_batch_cache(parameters):
         
         # Detailed link
         sm_link = lib.encode_dna_to_url_path_single(local_seq, local_cutsite, celltype)
-        dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
+        dd['URL'].append('%s' % (sm_link))
 
         if adv_matchseq_flag or adv_del_flag:
           stats = pd.DataFrame(stats, index = [0])
@@ -1793,5 +1793,5 @@ def download_csv_batch():
   ])
 def update_pagelink(textarea, pam, celltype, adv_style, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row):
   adv_flag = bool('display' not in adv_style)
-  url = 'https://www.crisprindelphi.design%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, celltype, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
+  url = '%s' % (lib.encode_dna_to_url_path_batch(textarea, pam, celltype, adv_flag, adv_seq_spec, adv_poi, adv_delstart, adv_delend, chosen_columns, column_options, sort_by, sort_dir, selected_row))
   return url

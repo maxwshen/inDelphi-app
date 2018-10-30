@@ -46,7 +46,7 @@ def get_navigation_header(page_nm):
         [
           html.A(
             'Single mode',
-            href = 'https://www.crisprindelphi.design/single',
+            href = 'single',
             style = styles['single'],
             className = 'dynamicunderline',
           ),
@@ -55,7 +55,7 @@ def get_navigation_header(page_nm):
           ),
           html.A(
             'Batch mode',
-            href = 'https://www.crisprindelphi.design/batch',
+            href = 'batch',
             style = styles['batch'],
             className = 'dynamicunderline',
           ),
@@ -64,7 +64,7 @@ def get_navigation_header(page_nm):
           ),
           html.A(
             'Gene mode',
-            href = 'https://www.crisprindelphi.design/gene',
+            href = 'gene',
             style = styles['gene'],
             className = 'dynamicunderline',
           ),
@@ -73,7 +73,7 @@ def get_navigation_header(page_nm):
           ),
           html.A(
             'User guide',
-            href = 'https://www.crisprindelphi.design/guide',
+            href = 'guide',
             style = styles['guide'],
             className = 'dynamicunderline',
           ),
@@ -82,7 +82,7 @@ def get_navigation_header(page_nm):
           ),
           html.A(
             'About',
-            href = 'https://www.crisprindelphi.design/about',
+            href = 'about',
             style = styles['about'],
             className = 'dynamicunderline',
           ),

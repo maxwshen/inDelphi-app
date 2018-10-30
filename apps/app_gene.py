@@ -754,7 +754,7 @@ def grab_s3_stats_cache(parameters):
   dd = defaultdict(list)
   for idx, row in all_stats.iterrows():
     sm_link = lib.encode_dna_to_url_path_single(row['Local context'], 60, celltype)
-    dd['URL'].append('https://www.crisprindelphi.design%s' % (sm_link))
+    dd['URL'].append('%s' % (sm_link))
 
     if row['Exon strand'] == row['gRNA strand w.r.t. exon strand']:
       dd['Strand'].append('+')
@@ -1431,5 +1431,5 @@ def download_csv_gene():
    Input('G_table-stats', 'selected_row_indices'),
   ])
 def update_pagelink(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row):
-  url = 'https://www.crisprindelphi.design%s' % (lib.encode_url_path_gene(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row))
+  url = '%s' % (lib.encode_url_path_gene(genome_build, gene, celltype, chosen_columns, column_options, sort_by, sort_dir, selected_row))
   return url
