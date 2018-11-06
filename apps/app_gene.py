@@ -256,9 +256,9 @@ layout = html.Div([
                 [
                   dcc.Dropdown(
                     options = [
-                      {'label': 'HCT116', 'value': 'HCT116'},
-                      {'label': 'HEK293', 'value': 'HEK293'},
-                      {'label': 'K562', 'value': 'K562'},
+                      {'label': 'HCT116', 'value': 'HCT116', 'disabled': True},
+                      {'label': 'HEK293', 'value': 'HEK293', 'disabled': True},
+                      {'label': 'K562', 'value': 'K562', 'disabled': True},
                       {'label': 'mESC', 'value': 'mESC'},
                       {'label': 'U2OS', 'value': 'U2OS'},
                     ],
