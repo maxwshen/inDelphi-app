@@ -97,7 +97,7 @@ layout = html.Div([
 
               You will redistribute modifications, if any, under the same terms as this license and only to non-profits and US government institutions;
 
-              You must credit the authors of the Code: David K. Gifford, Jonathan Yee-Ting Hsu and Max Walt Shen and cite Predictable and precise template-free editing of pathogenic mutations by CRISPR-Cas9 nuclease", Nature, 2018, in press; and
+              You must credit the authors of the Code: David K. Gifford, Jonathan Yee-Ting Hsu and Max Walt Shen and cite "Predictable and precise template-free editing of pathogenic mutations by CRISPR-Cas9 nuclease", Nature, 2018, doi:10.1038/s41586-018-0686-x; and
 
               You understand that neither the names of the Owners nor the names of the authors may be used to endorse or promote products derived from this software without specific prior written permission.
               '''),

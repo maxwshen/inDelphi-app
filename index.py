@@ -79,6 +79,12 @@ def favicon():
 
 # As of 0.22.0, served automatically from /assets/
 
+# Google analytics tracker
+@app.server.route('/static/gtag.js')
+def serve_gtag():
+  return flask.send_from_directory(css_directory, 'gtag.js')
+
+app.scripts.append_script({'external_url': '/static/gtag.js'})
 
 ###################################################################
 if __name__ == '__main__':

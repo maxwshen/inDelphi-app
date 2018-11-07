@@ -100,7 +100,9 @@ layout = html.Div([
             dcc.Markdown(dedent('''
               inDelphi is a machine learning algorithm that is aimed to assist scientists using CRISPR. Here, we provide a layperson-friendly description of inDelphi. For a more scientifically accurate description, please refer to the User Guide page and our manuscript:
 
-              Max W. Shen*, Mandana Arbab*, Jonathan Y. Hsu, Daniel Worstell, Sannie J. Culbertson, Olga Krabbe, Christopher A. Cassa, David R. Liu, David K. Gifford, and Richard I. Sherwood. "Predictable and precise template-free editing of pathogenic variants." _Nature_, in press, 2018. 
+              Max W. Shen*, Mandana Arbab*, Jonathan Y. Hsu, Daniel Worstell, Sannie J. Culbertson, Olga Krabbe, Christopher A. Cassa, David R. Liu, David K. Gifford, and Richard I. Sherwood. "Predictable and precise template-free editing of pathogenic variants." _Nature_, 2018. doi:10.1038/s41586-018-0686-x
+
+              [Full article (non-paywall)](https://rdcu.be/baVVn)
 
               By using this online tool, you agree to our [terms of use](/termsofuse).
 
