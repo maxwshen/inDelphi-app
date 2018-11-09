@@ -623,6 +623,9 @@ layout = html.Div([
       ],
       id = 'single',
       className = 'hashbuffer',
+      style = dict(
+        marginTop = '100px',
+      ),
     ),
 
     ###################################################
@@ -753,6 +756,9 @@ layout = html.Div([
       ],
       id = 'batch',
       className = 'hashbuffer',
+      style = dict(
+        marginTop = '100px',
+      ),
     ),
 
 
@@ -858,6 +864,9 @@ layout = html.Div([
       ],
       id = 'gene',
       className = 'hashbuffer',
+      style = dict(
+        marginTop = '100px',
+      ),
     ),
 
     ###################################################
@@ -891,6 +900,9 @@ layout = html.Div([
       ],
       id = 'faq',
       className = 'hashbuffer',
+      style = dict(
+        marginTop = '100px',
+      ),
     ),
 
 
